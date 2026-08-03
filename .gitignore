@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Audio output (ไม่ push ไฟล์เพลง)
+Audio/*.mp3
+Audio/*.mp4
+Audio/*.webm
+Audio/*.webp
+Audio/AlbumArtSmall.jpg
+Audio/Folder.jpg
+
+# Windows
+Thumbs.db
+Desktop.ini
