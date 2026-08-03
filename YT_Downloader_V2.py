@@ -23,23 +23,23 @@ def show_notify(title, msg):
         except: pass
 
 # ── Design Tokens ─────────────────────────────────────────────────────────────
-BG        = "#0F0F23"
-SURFACE   = "#1A1A35"
-SURFACE2  = "#22223D"
-BORDER    = "#312E81"
-PRIMARY   = "#4338CA"
-ACCENT    = "#22C55E"
+BG        = "#0A0A16"   # Deep void black for background
+SIDEBAR   = "#06060F"   # Even darker for sidebar depth
+SURFACE   = "#13132B"   # Elevated card background
+SURFACE2  = "#1D1D3A"   # Secondary elevation (inputs)
+BORDER    = "#282846"   # Soft borders
+PRIMARY   = "#4F46E5"   # Vibrant Indigo
+ACCENT    = "#22C55E"   # Neon Green
 ACCENT_HV = "#16A34A"
 TEXT      = "#F8FAFC"
-MUTED     = "#94A3B8"
+MUTED     = "#8B9BB4"   # High legibility muted text
 ERROR     = "#EF4444"
 WARN      = "#F59E0B"
-GLOW      = "#4338CA"
 
-FONT_H  = ("Poppins", 18, "bold")
-FONT_MD = ("Poppins", 13, "bold")
-FONT_SM = ("Poppins", 11)
-FONT_XS = ("Poppins", 9)
+FONT_H  = ("Segoe UI", 26, "bold")
+FONT_MD = ("Segoe UI", 16, "bold")
+FONT_SM = ("Segoe UI", 13)
+FONT_XS = ("Segoe UI", 11)
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -73,11 +73,11 @@ LOCALES = {
     "Video  —  MP4 Max": {"en": "Video  —  MP4 Max", "th": "วิดีโอ  —  MP4 ชัดสุด"},
 }
 
-def _btn(parent, text, cmd, fg=None, hv=None, width=120, **kw):
+def _btn(parent, text, cmd, fg=None, hv=None, width=120, height=36, **kw):
     return ctk.CTkButton(
         parent, text=text, command=cmd,
         fg_color=fg or PRIMARY, hover_color=hv or fg or PRIMARY,
-        font=FONT_SM, corner_radius=8, width=width, **kw
+        font=FONT_SM, corner_radius=8, width=width, height=height, **kw
     )
 
 def _label(parent, text, font=FONT_SM, color=TEXT, **kw):
@@ -138,16 +138,16 @@ class App(ctk.CTk):
         return LOCALES.get(key, {}).get(self.lang, key)
 
     def _build_ui(self):
-        sidebar = ctk.CTkFrame(self, width=180, fg_color=SURFACE, corner_radius=0)
+        sidebar = ctk.CTkFrame(self, width=200, fg_color=SIDEBAR, corner_radius=0)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
 
         logo_frame = ctk.CTkFrame(sidebar, fg_color="transparent")
-        logo_frame.pack(fill="x", pady=(24, 8), padx=16)
-        _label(logo_frame, "▶  NexusTube",   font=("Poppins", 15, "bold"), color=ACCENT).pack(anchor="w")
+        logo_frame.pack(fill="x", pady=(28, 12), padx=20)
+        _label(logo_frame, "▶  NexusTube",   font=FONT_MD, color=ACCENT).pack(anchor="w")
         _label(logo_frame, "Music Downloader", font=FONT_XS, color=MUTED).pack(anchor="w")
-        _label(logo_frame, "by herlove",       font=("Poppins", 8), color="#4338CA").pack(anchor="w")
-        _label(logo_frame, f"v{VERSION}",      font=("Poppins", 8), color=MUTED).pack(anchor="w")
+        _label(logo_frame, "by herlove",       font=FONT_XS, color=PRIMARY).pack(anchor="w", pady=(4, 0))
+        _label(logo_frame, f"v{VERSION}",      font=FONT_XS, color=MUTED).pack(anchor="w")
 
         self._update_banner = ctk.CTkFrame(logo_frame, fg_color="#1a3a1a", corner_radius=6)
         self._update_btn = ctk.CTkButton(
@@ -223,15 +223,15 @@ class App(ctk.CTk):
         row.pack(fill="x", padx=16, pady=12)
         self.search_entry = ctk.CTkEntry(
             row, placeholder_text="URL / Search...",
-            font=FONT_SM, corner_radius=8,
-            fg_color=SURFACE2, border_color=BORDER, text_color=TEXT,
-            placeholder_text_color=MUTED, height=38,
+            font=FONT_SM, corner_radius=22,
+            fg_color=SURFACE2, border_color=BORDER, border_width=1, text_color=TEXT,
+            placeholder_text_color=MUTED, height=44,
         )
-        self.search_entry.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        self.search_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         self.search_entry.bind("<Return>", lambda e: self._do_search())
-        _btn(row, self.t("Search"), self._do_search, fg=PRIMARY, hv=GLOW, width=70).pack(side="left", padx=(0, 6))
-        _btn(row, self.t("+ Add URL"), self._quick_add, fg=ACCENT, hv=ACCENT_HV, width=70).pack(side="left", padx=(0, 6))
-        _btn(row, self.t("Import TXT"), self._import_txt, fg=SURFACE2, width=80).pack(side="left")
+        _btn(row, self.t("Search"), self._do_search, fg=PRIMARY, width=80, height=36, corner_radius=18).pack(side="left", padx=(0, 8))
+        _btn(row, self.t("+ Add URL"), self._quick_add, fg=ACCENT, hv=ACCENT_HV, width=80, height=36, corner_radius=18).pack(side="left", padx=(0, 8))
+        _btn(row, self.t("Import TXT"), self._import_txt, fg=SURFACE2, width=80, height=36, corner_radius=18).pack(side="left")
 
         _label(page, self.t("Results"), font=FONT_MD, color=MUTED).pack(anchor="w", padx=24, pady=(4, 4))
         self.results_scroll = ctk.CTkScrollableFrame(
@@ -293,13 +293,13 @@ class App(ctk.CTk):
             dur      = item.get("duration") or 0
             url      = item.get("webpage_url", "")
             mins, secs = int(dur) // 60, int(dur) % 60
-            card = ctk.CTkFrame(self.results_scroll, fg_color=SURFACE, corner_radius=10,
+            card = ctk.CTkFrame(self.results_scroll, fg_color=SURFACE, corner_radius=12,
                                 border_width=1, border_color=BORDER)
-            card.pack(fill="x", pady=4, padx=4)
+            card.pack(fill="x", pady=5, padx=6)
             info = ctk.CTkFrame(card, fg_color="transparent")
-            info.pack(side="left", fill="x", expand=True, padx=14, pady=10)
+            info.pack(side="left", fill="x", expand=True, padx=16, pady=12)
             _label(info, title[:72] + ("…" if len(title) > 72 else ""),
-                   font=("Poppins", 11, "bold"), anchor="w").pack(anchor="w")
+                   font=FONT_SM, anchor="w").pack(anchor="w")
             _label(info, f"{uploader}  ·  {mins}:{secs:02d}",
                    font=FONT_XS, color=MUTED, anchor="w").pack(anchor="w", pady=(2, 0))
             _btn(card, "Download", lambda u=url, t=title: self.add_to_queue(u, t),
@@ -370,11 +370,11 @@ class App(ctk.CTk):
 
     def add_to_queue(self, url, title=""):
         self._switch_tab("queue")
-        card = ctk.CTkFrame(self.queue_scroll, fg_color=SURFACE, corner_radius=10, border_width=1, border_color=BORDER)
-        card.pack(fill="x", pady=5, padx=4)
+        card = ctk.CTkFrame(self.queue_scroll, fg_color=SURFACE, corner_radius=12, border_width=1, border_color=BORDER)
+        card.pack(fill="x", pady=6, padx=6)
         top = ctk.CTkFrame(card, fg_color="transparent")
-        top.pack(fill="x", padx=14, pady=(10, 4))
-        lbl  = _label(top, (title or url)[:70], font=("Poppins", 11, "bold"), anchor="w")
+        top.pack(fill="x", padx=16, pady=(12, 6))
+        lbl  = _label(top, (title or url)[:70], font=FONT_SM, anchor="w")
         lbl.pack(side="left", fill="x", expand=True)
         stat = _label(top, "Waiting…", font=FONT_XS, color=MUTED)
         stat.pack(side="right")
@@ -404,16 +404,16 @@ class App(ctk.CTk):
             return
         for f in files:
             path = os.path.join(outdir, f)
-            card = ctk.CTkFrame(self.lib_scroll, fg_color=SURFACE, corner_radius=8)
-            card.pack(fill="x", pady=4, padx=4)
+            card = ctk.CTkFrame(self.lib_scroll, fg_color=SURFACE, corner_radius=12, border_width=1, border_color=BORDER)
+            card.pack(fill="x", pady=5, padx=6)
             _label(card, f[:60], font=FONT_SM).pack(side="left", padx=14, pady=12)
-            _btn(card, "✂️ " + self.t("Trim"), lambda p=path: self._open_trim_dialog(p), fg=SURFACE2, width=60).pack(side="right", padx=(0, 10))
+            _btn(card, "✂️ " + self.t("Trim"), lambda p=path: self._open_trim_dialog(p), fg=SURFACE2, width=65, height=30, corner_radius=15).pack(side="right", padx=(0, 10))
             
             def play_media(p=path):
                 if self.is_win: os.startfile(p)
                 elif self.is_mac: subprocess.call(["open", p])
                 else: subprocess.call(["xdg-open", p])
-            _btn(card, "▶️ " + self.t("Play"), play_media, fg=PRIMARY, width=60).pack(side="right", padx=(0, 10))
+            _btn(card, "▶️ " + self.t("Play"), play_media, fg=PRIMARY, width=65, height=30, corner_radius=15).pack(side="right", padx=(0, 10))
 
     def _open_trim_dialog(self, path):
         top = ctk.CTkToplevel(self)
@@ -453,21 +453,21 @@ class App(ctk.CTk):
         _label(hdr, self.t("Settings"), font=FONT_H).pack(anchor="w")
         _label(hdr, self.t("Customize your download preferences"), font=FONT_XS, color=MUTED).pack(anchor="w")
 
-        fc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=12)
-        fc.pack(fill="x", padx=24, pady=(0, 10))
-        _label(fc, self.t("Format"), font=FONT_MD).pack(anchor="w", padx=16, pady=(12, 6))
-        ctk.CTkFrame(fc, fg_color=BORDER, height=1).pack(fill="x", padx=12)
+        fc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=16)
+        fc.pack(fill="x", padx=24, pady=(0, 16))
+        _label(fc, self.t("Format"), font=FONT_MD).pack(anchor="w", padx=20, pady=(16, 8))
+        ctk.CTkFrame(fc, fg_color=BORDER, height=1).pack(fill="x", padx=16)
         self.type_var = tk.StringVar(value="audio")
         for val, txt in [("audio", self.t("Audio  —  MP3 320kbps")), ("video", self.t("Video  —  MP4 Max"))]:
             row = ctk.CTkFrame(fc, fg_color="transparent")
-            row.pack(fill="x", padx=16, pady=6)
+            row.pack(fill="x", padx=20, pady=8)
             ctk.CTkRadioButton(row, text=txt, variable=self.type_var, value=val, font=FONT_SM, fg_color=ACCENT, hover_color=ACCENT_HV).pack(side="left")
-        ctk.CTkFrame(fc, fg_color="transparent", height=6).pack()
+        ctk.CTkFrame(fc, fg_color="transparent", height=10).pack()
 
-        oc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=12)
-        oc.pack(fill="x", padx=24, pady=(0, 10))
-        _label(oc, self.t("Options"), font=FONT_MD).pack(anchor="w", padx=16, pady=(12, 6))
-        ctk.CTkFrame(oc, fg_color=BORDER, height=1).pack(fill="x", padx=12)
+        oc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=16)
+        oc.pack(fill="x", padx=24, pady=(0, 16))
+        _label(oc, self.t("Options"), font=FONT_MD).pack(anchor="w", padx=20, pady=(16, 8))
+        ctk.CTkFrame(oc, fg_color=BORDER, height=1).pack(fill="x", padx=16)
         self.sponsor_var, self.meta_var, self.playlist_var, self.lyrics_var = tk.BooleanVar(), tk.BooleanVar(value=True), tk.BooleanVar(), tk.BooleanVar()
         for var, txt in [
             (self.sponsor_var,  "SponsorBlock (Remove ads)"),
@@ -475,47 +475,47 @@ class App(ctk.CTk):
             (self.playlist_var, "Download full playlist (Legacy)"),
             (self.lyrics_var,   "Embed Lyrics"),
         ]:
-            ctk.CTkCheckBox(oc, text=txt, variable=var, font=FONT_SM, fg_color=ACCENT, hover_color=ACCENT_HV, checkmark_color=BG, corner_radius=4).pack(anchor="w", padx=16, pady=5)
-        ctk.CTkFrame(oc, fg_color="transparent", height=4).pack()
+            ctk.CTkCheckBox(oc, text=txt, variable=var, font=FONT_SM, fg_color=ACCENT, hover_color=ACCENT_HV, checkmark_color=BG, corner_radius=6).pack(anchor="w", padx=20, pady=6)
+        ctk.CTkFrame(oc, fg_color="transparent", height=10).pack()
 
-        lc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=12)
-        lc.pack(fill="x", padx=24, pady=(0, 10))
-        _label(lc, self.t("Language"), font=FONT_MD).pack(anchor="w", padx=16, pady=(12, 6))
-        ctk.CTkFrame(lc, fg_color=BORDER, height=1).pack(fill="x", padx=12)
+        lc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=16)
+        lc.pack(fill="x", padx=24, pady=(0, 16))
+        _label(lc, self.t("Language"), font=FONT_MD).pack(anchor="w", padx=20, pady=(16, 8))
+        ctk.CTkFrame(lc, fg_color=BORDER, height=1).pack(fill="x", padx=16)
         lrow = ctk.CTkFrame(lc, fg_color="transparent")
-        lrow.pack(fill="x", padx=16, pady=10)
+        lrow.pack(fill="x", padx=20, pady=12)
         def _set_lang(v):
             self.config["lang"] = v
             with open(self.config_path, "w") as f: json.dump(self.config, f)
             messagebox.showinfo("Language", "Please restart the app to apply language changes.")
         self.lang_var = tk.StringVar(value=self.lang)
-        ctk.CTkRadioButton(lrow, text="English", variable=self.lang_var, value="en", command=lambda: _set_lang("en"), font=FONT_SM, fg_color=ACCENT).pack(side="left", padx=10)
-        ctk.CTkRadioButton(lrow, text="ภาษาไทย", variable=self.lang_var, value="th", command=lambda: _set_lang("th"), font=FONT_SM, fg_color=ACCENT).pack(side="left", padx=10)
+        ctk.CTkRadioButton(lrow, text="English", variable=self.lang_var, value="en", command=lambda: _set_lang("en"), font=FONT_SM, fg_color=ACCENT).pack(side="left", padx=(0, 16))
+        ctk.CTkRadioButton(lrow, text="ภาษาไทย", variable=self.lang_var, value="th", command=lambda: _set_lang("th"), font=FONT_SM, fg_color=ACCENT).pack(side="left")
 
-        tc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=12)
-        tc.pack(fill="x", padx=24, pady=(0, 10))
-        _label(tc, self.t("Theme Accent Color"), font=FONT_MD).pack(anchor="w", padx=16, pady=(12, 6))
-        ctk.CTkFrame(tc, fg_color=BORDER, height=1).pack(fill="x", padx=12)
+        tc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=16)
+        tc.pack(fill="x", padx=24, pady=(0, 16))
+        _label(tc, self.t("Theme Accent Color"), font=FONT_MD).pack(anchor="w", padx=20, pady=(16, 8))
+        ctk.CTkFrame(tc, fg_color=BORDER, height=1).pack(fill="x", padx=16)
         trow = ctk.CTkFrame(tc, fg_color="transparent")
-        trow.pack(fill="x", padx=16, pady=10)
+        trow.pack(fill="x", padx=16, pady=12)
         def _set_color(c):
             self.config["accent"] = c
             with open(self.config_path, "w") as f: json.dump(self.config, f)
             messagebox.showinfo("Theme", "Color saved! Please restart the app to apply.")
-        colors = [("Green", "#22C55E"), ("Pink", "#EC4899"), ("Yellow", "#EAB308"), ("Cyan", "#06B6D4")]
+        colors = [("Green", "#22C55E"), ("Indigo", "#4F46E5"), ("Pink", "#EC4899"), ("Yellow", "#EAB308"), ("Cyan", "#06B6D4")]
         for name, hx in colors:
-            btn = ctk.CTkButton(trow, text="", width=30, height=30, corner_radius=15, fg_color=hx, hover_color=hx, command=lambda c=hx: _set_color(c))
-            btn.pack(side="left", padx=4)
+            btn = ctk.CTkButton(trow, text="", width=32, height=32, corner_radius=16, fg_color=hx, hover_color=hx, command=lambda c=hx: _set_color(c))
+            btn.pack(side="left", padx=6)
 
-        dc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=12)
-        dc.pack(fill="x", padx=24, pady=(0, 10))
-        _label(dc, self.t("Output Folder"), font=FONT_MD).pack(anchor="w", padx=16, pady=(12, 6))
-        ctk.CTkFrame(dc, fg_color=BORDER, height=1).pack(fill="x", padx=12)
+        dc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=16)
+        dc.pack(fill="x", padx=24, pady=(0, 16))
+        _label(dc, self.t("Output Folder"), font=FONT_MD).pack(anchor="w", padx=20, pady=(16, 8))
+        ctk.CTkFrame(dc, fg_color=BORDER, height=1).pack(fill="x", padx=16)
         row = ctk.CTkFrame(dc, fg_color="transparent")
-        row.pack(fill="x", padx=16, pady=10)
+        row.pack(fill="x", padx=16, pady=12)
         self.out_var = tk.StringVar(value=self._default_outdir)
-        ctk.CTkEntry(row, textvariable=self.out_var, state="readonly", font=FONT_SM, fg_color=SURFACE2, border_color=BORDER, text_color=MUTED, corner_radius=8).pack(side="left", fill="x", expand=True, padx=(0, 8))
-        _btn(row, self.t("Browse"), self._browse_out, fg=PRIMARY, hv=GLOW, width=72).pack(side="left")
+        ctk.CTkEntry(row, textvariable=self.out_var, state="readonly", font=FONT_SM, fg_color=SURFACE2, border_color=BORDER, text_color=MUTED, corner_radius=8, height=36).pack(side="left", fill="x", expand=True, padx=(0, 12))
+        _btn(row, self.t("Browse"), self._browse_out, fg=PRIMARY, width=80).pack(side="left")
         return page
 
     def _browse_out(self):
