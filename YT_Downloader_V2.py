@@ -3,7 +3,7 @@ NexusTube — YT Downloader Pro
 Design system: Dark OLED · Indigo/Green · Poppins · ui-ux-pro-max
 """
 
-VERSION     = "1.0.0"
+VERSION     = "1.0.1"
 GITHUB_REPO = "masuzu2/NexusTube"
 
 import customtkinter as ctk
@@ -327,32 +327,75 @@ class App(ctk.CTk):
         folder = filedialog.askdirectory()
         if folder: self.out_var.set(folder)
 
-    # ── Engine update (yt-dlp) ────────────────────────────────────────────────
+    # ── Engine update (yt-dlp & ffmpeg) ───────────────────────────────────────
     def _check_engine(self):
+        def _set_status(msg): self.after(0, lambda: self.status_var.set(msg))
+        
+        # 1. yt-dlp check
         if not os.path.exists(self.ytdlp):
-            self.after(0, lambda: self.status_var.set("Downloading yt-dlp…"))
+            _set_status("Downloading yt-dlp…")
             try:
-                data = requests.get(
-                    "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
-                    timeout=60).content
+                data = requests.get("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe", timeout=60).content
                 with open(self.ytdlp, "wb") as f: f.write(data)
             except Exception as e:
-                self.after(0, lambda: self.status_var.set(f"❌ {e}"))
+                _set_status(f"❌ yt-dlp dl error: {e}")
                 return
-        self.after(0, lambda: self.status_var.set("Checking engine…"))
+
+        # 2. ffmpeg check
+        ffmpeg_ver_file = os.path.join(self.appdata_dir, "ffmpeg_version.txt")
+        if not os.path.exists(self.ffmpeg):
+            _set_status("Downloading ffmpeg (~30MB)…")
+            try:
+                import zipfile, io
+                resp = requests.get("https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest", timeout=10).json()
+                tag = resp["tag_name"]
+                url = next(a["browser_download_url"] for a in resp["assets"] if a["name"] == "ffmpeg-master-latest-win64-gpl.zip")
+                zip_data = requests.get(url, timeout=120).content
+                with zipfile.ZipFile(io.BytesIO(zip_data)) as z:
+                    exe_path = next(name for name in z.namelist() if name.endswith("bin/ffmpeg.exe"))
+                    with open(self.ffmpeg, "wb") as f:
+                        f.write(z.read(exe_path))
+                with open(ffmpeg_ver_file, "w") as f: f.write(tag)
+            except Exception as e:
+                _set_status(f"❌ ffmpeg dl error: {e}")
+                return
+
+        # 3. Check for updates
+        _set_status("Checking engine updates…")
         try:
-            resp    = requests.get("https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest", timeout=8)
-            latest  = resp.json()["tag_name"]
-            current = subprocess.check_output([self.ytdlp, "--version"], text=True).strip()
-            if current != latest:
-                self.after(0, lambda: self.status_var.set(f"Updating to {latest}…"))
-                url = next(a["browser_download_url"] for a in resp.json()["assets"] if a["name"] == "yt-dlp.exe")
+            # yt-dlp update
+            resp_yt = requests.get("https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest", timeout=8).json()
+            latest_yt = resp_yt["tag_name"]
+            current_yt = subprocess.check_output([self.ytdlp, "--version"], text=True).strip()
+            
+            if current_yt != latest_yt:
+                _set_status(f"Updating yt-dlp to {latest_yt}…")
+                url = next(a["browser_download_url"] for a in resp_yt["assets"] if a["name"] == "yt-dlp.exe")
                 with open(self.ytdlp, "wb") as f: f.write(requests.get(url, timeout=60).content)
-                self.after(0, lambda: self.status_var.set("Engine updated ✅"))
-            else:
-                self.after(0, lambda: self.status_var.set("Up to date ✅"))
+                _set_status("yt-dlp updated ✅")
+
+            # ffmpeg update
+            resp_ff = requests.get("https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest", timeout=8).json()
+            latest_ff = resp_ff["tag_name"]
+            current_ff = open(ffmpeg_ver_file, "r").read().strip() if os.path.exists(ffmpeg_ver_file) else ""
+            
+            if current_ff != latest_ff:
+                _set_status(f"Updating ffmpeg to {latest_ff}…")
+                import zipfile, io
+                url = next(a["browser_download_url"] for a in resp_ff["assets"] if a["name"] == "ffmpeg-master-latest-win64-gpl.zip")
+                zip_data = requests.get(url, timeout=120).content
+                with zipfile.ZipFile(io.BytesIO(zip_data)) as z:
+                    exe_path = next(name for name in z.namelist() if name.endswith("bin/ffmpeg.exe"))
+                    with open(self.ffmpeg, "wb") as f: f.write(z.read(exe_path))
+                with open(ffmpeg_ver_file, "w") as f: f.write(latest_ff)
+                _set_status("ffmpeg updated ✅")
+
+            if current_yt == latest_yt and current_ff == latest_ff:
+                _set_status("Engines up to date ✅")
+
         except Exception:
-            self.after(0, lambda: self.status_var.set("Offline mode ⚠️"))
+            _set_status("Offline mode ⚠️")
+
 
     # ── App self-update (NexusTube) ───────────────────────────────────────────
     def _check_app_update(self):
