@@ -3,7 +3,7 @@ NexusTube — YT Downloader Pro
 Design system: Dark OLED · Indigo/Green · Poppins · ui-ux-pro-max
 """
 
-VERSION     = "1.0.1"
+VERSION     = "1.0.2"
 GITHUB_REPO = "masuzu2/NexusTube"
 
 import customtkinter as ctk
@@ -194,6 +194,9 @@ class App(ctk.CTk):
         threading.Thread(target=self._search_thread, args=(q,), daemon=True).start()
 
     def _search_thread(self, q):
+        while getattr(self, "_engine_busy", False):
+            self.after(0, lambda: self.status_var.set("Waiting for engine setup…"))
+            import time; time.sleep(1)
         try:
             proc = subprocess.Popen(
                 [self.ytdlp, f"ytsearch8:{q}", "--dump-json",
@@ -329,6 +332,7 @@ class App(ctk.CTk):
 
     # ── Engine update (yt-dlp & ffmpeg) ───────────────────────────────────────
     def _check_engine(self):
+        self._engine_busy = True
         def _set_status(msg): self.after(0, lambda: self.status_var.set(msg))
         
         # 1. yt-dlp check
@@ -339,6 +343,7 @@ class App(ctk.CTk):
                 with open(self.ytdlp, "wb") as f: f.write(data)
             except Exception as e:
                 _set_status(f"❌ yt-dlp dl error: {e}")
+                self._engine_busy = False
                 return
 
         # 2. ffmpeg check
@@ -358,6 +363,7 @@ class App(ctk.CTk):
                 with open(ffmpeg_ver_file, "w") as f: f.write(tag)
             except Exception as e:
                 _set_status(f"❌ ffmpeg dl error: {e}")
+                self._engine_busy = False
                 return
 
         # 3. Check for updates
@@ -395,6 +401,8 @@ class App(ctk.CTk):
 
         except Exception:
             _set_status("Offline mode ⚠️")
+        finally:
+            self._engine_busy = False
 
 
     # ── App self-update (NexusTube) ───────────────────────────────────────────
@@ -498,6 +506,10 @@ class App(ctk.CTk):
         card = task["card"]
 
         def ui(fn): self.after(0, fn)
+        
+        while getattr(self, "_engine_busy", False):
+            ui(lambda: stat.configure(text="Waiting for engine setup…", text_color=WARN))
+            import time; time.sleep(1)
 
         ui(lambda: stat.configure(text="Starting…", text_color=PRIMARY))
         ui(lambda: card.configure(border_color=PRIMARY))
