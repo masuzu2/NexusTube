@@ -3,7 +3,7 @@ NexusTube — YT Downloader Pro
 Design system: Dark OLED · Indigo/Green · Poppins · ui-ux-pro-max
 """
 
-VERSION     = "1.0.3"
+VERSION     = "1.0.4"
 GITHUB_REPO = "masuzu2/NexusTube"
 
 import customtkinter as ctk
@@ -55,11 +55,15 @@ class App(ctk.CTk):
         self.configure(fg_color=BG)
 
         if getattr(sys, "frozen", False):
-            base_dir = os.path.dirname(sys.executable)
+            base_dir = sys._MEIPASS
             self._exe_path = sys.executable
         else:
             base_dir = os.path.dirname(os.path.abspath(__file__))
             self._exe_path = None
+
+        icon_path = os.path.join(base_dir, "icon.ico")
+        if os.path.exists(icon_path):
+            self.iconbitmap(icon_path)
 
         self.appdata_dir = os.path.join(os.getenv("APPDATA"), "YTDownloaderPro")
         os.makedirs(self.appdata_dir, exist_ok=True)
