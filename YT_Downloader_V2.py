@@ -3,7 +3,7 @@ NexusTube — YT Downloader Pro
 Design system: Dark OLED · Indigo/Green · Poppins · ui-ux-pro-max
 """
 
-VERSION     = "1.0.5"
+VERSION     = "1.0.7"
 GITHUB_REPO = "masuzu2/NexusTube"
 
 import customtkinter as ctk
