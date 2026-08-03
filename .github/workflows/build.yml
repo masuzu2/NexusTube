@@ -1,33 +1,76 @@
-name: Build & Release
+name: CI/CD Pipeline
 
 on:
   push:
     tags:
-      - "v*"          # trigger เมื่อ push tag เช่น v1.0.1, v1.1.0
+      - "v*"
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
-  contents: write   # ต้องการสำหรับสร้าง release
+  contents: write
 
 jobs:
-  build:
-    runs-on: windows-latest
-
+  lint:
+    name: Syntax & Lint Check
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Check Python Syntax
+        run: python -m py_compile YT_Downloader_V2.py
 
-      - name: Install dependencies
+  build:
+    name: Build Windows Executable
+    needs: lint
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Cache PyInstaller
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Roaming\pyinstaller
+          key: ${{ runner.os }}-pyinstaller-${{ hashFiles('**/*.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pyinstaller-
+
+      - name: Install Dependencies
         run: pip install customtkinter requests pyinstaller
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --icon=icon.ico --add-data="icon.ico;." --name "NexusTube" YT_Downloader_V2.py
+          pyinstaller --noconfirm --clean --onefile --windowed --icon=icon.ico --add-data="icon.ico;." --name "NexusTube" YT_Downloader_V2.py
 
-      - name: Upload to GitHub Release
+      - name: Compress to ZIP
+        run: Compress-Archive -Path dist\NexusTube.exe -DestinationPath dist\NexusTube_Windows.zip
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/NexusTube.exe
+          files: |
+            dist/NexusTube.exe
+            dist/NexusTube_Windows.zip
           generate_release_notes: true
+          fail_on_unmatched_files: true
+
+      - name: Upload Artifact (Dev Build)
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexusTube-Windows-Dev
+          path: dist/NexusTube.exe
+          retention-days: 7
