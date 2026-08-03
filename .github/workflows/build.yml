@@ -1,0 +1,32 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*"          # trigger เมื่อ push tag เช่น v1.0.1, v1.1.0
+
+permissions:
+  contents: write   # ต้องการสำหรับสร้าง release
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install customtkinter requests pyinstaller
+
+      - name: Build EXE
+        run: pyinstaller --onefile --windowed --name NexusTube YT_Downloader_V2.py
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/NexusTube.exe
+          generate_release_notes: true
