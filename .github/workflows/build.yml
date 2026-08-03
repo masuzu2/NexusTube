@@ -48,7 +48,7 @@ jobs:
             ${{ runner.os }}-pyinstaller-
 
       - name: Install Dependencies
-        run: pip install customtkinter requests pyinstaller
+        run: pip install customtkinter requests pyinstaller plyer
 
       - name: Build with PyInstaller
         run: |
