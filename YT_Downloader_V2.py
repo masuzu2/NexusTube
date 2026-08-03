@@ -3,7 +3,7 @@ NexusTube — YT Downloader Pro
 Design system: Dark OLED · Indigo/Green · Poppins · ui-ux-pro-max
 """
 
-VERSION     = "1.0.2"
+VERSION     = "1.0.3"
 GITHUB_REPO = "masuzu2/NexusTube"
 
 import customtkinter as ctk
@@ -18,7 +18,7 @@ SURFACE   = "#1A1A35"
 SURFACE2  = "#22223D"
 BORDER    = "#312E81"
 PRIMARY   = "#4338CA"
-ACCENT    = "#22C55E"
+ACCENT    = "#22C55E"  # Will be overridden by config
 ACCENT_HV = "#16A34A"
 TEXT      = "#F8FAFC"
 MUTED     = "#94A3B8"
@@ -35,10 +35,10 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 
-def _btn(parent, text, cmd, fg=PRIMARY, hv=None, width=120, **kw):
+def _btn(parent, text, cmd, fg=None, hv=None, width=120, **kw):
     return ctk.CTkButton(
         parent, text=text, command=cmd,
-        fg_color=fg, hover_color=hv or fg,
+        fg_color=fg or PRIMARY, hover_color=hv or fg or PRIMARY,
         font=FONT_SM, corner_radius=8, width=width, **kw
     )
 
@@ -59,10 +59,20 @@ class App(ctk.CTk):
             self._exe_path = sys.executable
         else:
             base_dir = os.path.dirname(os.path.abspath(__file__))
-            self._exe_path = None   # running as .py — ไม่ swap ตัวเอง
+            self._exe_path = None
 
         self.appdata_dir = os.path.join(os.getenv("APPDATA"), "YTDownloaderPro")
         os.makedirs(self.appdata_dir, exist_ok=True)
+        
+        # Load Config (Theme Accent)
+        self.config_path = os.path.join(self.appdata_dir, "config.json")
+        try:
+            with open(self.config_path, "r") as f: self.config = json.load(f)
+        except:
+            self.config = {"accent": "#22C55E"}
+            
+        global ACCENT
+        ACCENT = self.config.get("accent", "#22C55E")
 
         for fname in ("ffmpeg.exe", "yt-dlp.exe"):
             src = os.path.join(base_dir, fname)
@@ -86,7 +96,6 @@ class App(ctk.CTk):
 
     # ─────────────────────────────────────────────────────────────────────────
     def _build_ui(self):
-        # sidebar
         sidebar = ctk.CTkFrame(self, width=180, fg_color=SURFACE, corner_radius=0)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
@@ -98,7 +107,6 @@ class App(ctk.CTk):
         _label(logo_frame, "by herlove",       font=("Poppins", 8), color="#4338CA").pack(anchor="w")
         _label(logo_frame, f"v{VERSION}",      font=("Poppins", 8), color=MUTED).pack(anchor="w")
 
-        # update banner (ซ่อนไว้ก่อน)
         self._update_banner = ctk.CTkFrame(logo_frame, fg_color="#1a3a1a", corner_radius=6)
         self._update_btn = ctk.CTkButton(
             self._update_banner, text="🔄 Update!",
@@ -111,7 +119,12 @@ class App(ctk.CTk):
         ctk.CTkFrame(sidebar, fg_color=BORDER, height=1).pack(fill="x", padx=12, pady=8)
 
         self._active_tab = tk.StringVar(value="search")
-        nav_items = [("  Search", "search"), ("  Queue", "queue"), ("  Settings", "settings")]
+        nav_items = [
+            ("  Search", "search"), 
+            ("  Queue", "queue"), 
+            ("  Library", "library"),
+            ("  Settings", "settings")
+        ]
         self._nav_btns = {}
         for label, key in nav_items:
             btn = ctk.CTkButton(
@@ -130,13 +143,13 @@ class App(ctk.CTk):
         ctk.CTkLabel(sidebar, textvariable=self.status_var,
                      font=FONT_XS, text_color=MUTED, wraplength=160).pack(padx=10, pady=(4, 16))
 
-        # main
         self._main = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         self._main.pack(side="left", fill="both", expand=True)
 
         self._pages = {
             "search":   self._build_search_page(self._main),
             "queue":    self._build_queue_page(self._main),
+            "library":  self._build_library_page(self._main),
             "settings": self._build_settings_page(self._main),
         }
         self._switch_tab("search")
@@ -152,6 +165,8 @@ class App(ctk.CTk):
                 fg_color=SURFACE2 if k == key else "transparent",
                 text_color=ACCENT if k == key else TEXT,
             )
+        if key == "library":
+            self._refresh_library()
 
     # ── Search ────────────────────────────────────────────────────────────────
     def _build_search_page(self, parent):
@@ -237,13 +252,53 @@ class App(ctk.CTk):
 
     def _quick_add(self):
         url = self.search_entry.get().strip()
-        if "youtu" not in url:
-            messagebox.showerror("Error", "Please enter a valid YouTube URL.")
-            return
-        self.add_to_queue(url, url)
+        if not url: return
         self.search_entry.delete(0, "end")
+        if "list=" in url or "playlist" in url:
+            if messagebox.askyesno("Playlist", "Do you want to select specific videos from this playlist?"):
+                threading.Thread(target=self._fetch_playlist, args=(url,), daemon=True).start()
+                return
+        self.add_to_queue(url, url)
 
-    # ── Queue ─────────────────────────────────────────────────────────────────
+    def _fetch_playlist(self, url):
+        self.after(0, lambda: self.status_var.set("Fetching playlist..."))
+        try:
+            proc = subprocess.Popen([self.ytdlp, "--flat-playlist", "--dump-json", url], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            items = []
+            for line in proc.stdout:
+                try: items.append(json.loads(line.decode("utf-8")))
+                except: pass
+            proc.wait()
+            self.after(0, lambda: self._show_playlist_selector(items))
+            self.after(0, lambda: self.status_var.set("Ready"))
+        except Exception as e:
+            self.after(0, lambda: self.status_var.set(f"Error: {e}"))
+            
+    def _show_playlist_selector(self, items):
+        if not items:
+            messagebox.showinfo("Playlist", "No videos found in playlist.")
+            return
+        top = ctk.CTkToplevel(self)
+        top.title("Select Videos (Smart Playlist)")
+        top.geometry("500x600")
+        top.attributes("-topmost", True)
+        scroll = ctk.CTkScrollableFrame(top, fg_color=BG)
+        scroll.pack(fill="both", expand=True, padx=10, pady=10)
+        vars_list = []
+        for item in items:
+            var = tk.BooleanVar(value=True)
+            title = item.get("title", "Unknown")
+            url = item.get("url", "")
+            if not url: url = "https://youtube.com/watch?v=" + item.get("id", "")
+            ctk.CTkCheckBox(scroll, text=title[:60], variable=var, font=FONT_SM, text_color=TEXT, fg_color=ACCENT).pack(anchor="w", pady=2)
+            vars_list.append((var, url, title))
+        def do_dl():
+            top.destroy()
+            for var, url, title in vars_list:
+                if var.get(): self.add_to_queue(url, title)
+        _btn(top, "Download Selected", do_dl, fg=ACCENT).pack(pady=10)
+
+    # ── Queue ────────────────────────────────────────────────────────────────
     def _build_queue_page(self, parent):
         page = ctk.CTkFrame(parent, fg_color=BG, corner_radius=0)
         hdr = ctk.CTkFrame(page, fg_color="transparent")
@@ -276,6 +331,74 @@ class App(ctk.CTk):
         self.executor.submit(self._download_worker,
                              {"url": url, "lbl": lbl, "prog": prog, "stat": stat, "card": card})
 
+    # ── Library ──────────────────────────────────────────────────────────────
+    def _build_library_page(self, parent):
+        page = ctk.CTkFrame(parent, fg_color=BG, corner_radius=0)
+        hdr = ctk.CTkFrame(page, fg_color="transparent")
+        hdr.pack(fill="x", padx=24, pady=(20, 12))
+        _label(hdr, "Library", font=FONT_H).pack(side="left")
+        _btn(hdr, "🔄 Refresh", self._refresh_library, fg=SURFACE2, width=80).pack(side="right")
+        
+        self.lib_scroll = ctk.CTkScrollableFrame(
+            page, fg_color=BG,
+            scrollbar_button_color=SURFACE2, scrollbar_button_hover_color=PRIMARY,
+        )
+        self.lib_scroll.pack(fill="both", expand=True, padx=16, pady=(0, 12))
+        return page
+
+    def _refresh_library(self):
+        for w in self.lib_scroll.winfo_children(): w.destroy()
+        outdir = self.out_var.get()
+        if not os.path.exists(outdir): return
+        
+        files = [f for f in os.listdir(outdir) if f.endswith(".mp3") or f.endswith(".mp4") or f.endswith(".m4a")]
+        files.sort(key=lambda x: os.path.getmtime(os.path.join(outdir, x)), reverse=True)
+        
+        if not files:
+            _label(self.lib_scroll, "No files downloaded yet.", color=MUTED).pack(pady=20)
+            return
+            
+        for f in files:
+            path = os.path.join(outdir, f)
+            card = ctk.CTkFrame(self.lib_scroll, fg_color=SURFACE, corner_radius=8)
+            card.pack(fill="x", pady=4, padx=4)
+            _label(card, f[:60], font=FONT_SM).pack(side="left", padx=14, pady=12)
+            _btn(card, "✂️ Trim", lambda p=path: self._open_trim_dialog(p), fg=SURFACE2, width=60).pack(side="right", padx=(0, 10))
+            _btn(card, "▶️ Play", lambda p=path: os.startfile(p), fg=PRIMARY, width=60).pack(side="right", padx=(0, 10))
+
+    def _open_trim_dialog(self, path):
+        top = ctk.CTkToplevel(self)
+        top.title("Audio Trimmer")
+        top.geometry("300x250")
+        top.attributes("-topmost", True)
+        
+        _label(top, "Start Time (HH:MM:SS)", font=FONT_SM).pack(pady=(20, 0))
+        start_ent = ctk.CTkEntry(top, font=FONT_SM, fg_color=SURFACE2)
+        start_ent.insert(0, "00:00:00")
+        start_ent.pack()
+        
+        _label(top, "End Time (HH:MM:SS)", font=FONT_SM).pack(pady=(10, 0))
+        end_ent = ctk.CTkEntry(top, font=FONT_SM, fg_color=SURFACE2)
+        end_ent.insert(0, "00:01:00")
+        end_ent.pack()
+        
+        def do_trim():
+            start = start_ent.get().strip()
+            end = end_ent.get().strip()
+            top.destroy()
+            out_path = path.rsplit(".", 1)[0] + "_trimmed." + path.rsplit(".", 1)[1]
+            self.status_var.set("Trimming audio...")
+            def _trim_thread():
+                try:
+                    subprocess.run([self.ffmpeg, "-y", "-i", path, "-ss", start, "-to", end, "-c", "copy", out_path], check=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                    self.after(0, lambda: self.status_var.set("Trim complete ✅"))
+                    self.after(0, self._refresh_library)
+                except Exception as e:
+                    self.after(0, lambda: messagebox.showerror("Trim Error", str(e)))
+            threading.Thread(target=_trim_thread, daemon=True).start()
+            
+        _btn(top, "✂️ Trim Now", do_trim, fg=ACCENT).pack(pady=20)
+
     # ── Settings ──────────────────────────────────────────────────────────────
     def _build_settings_page(self, parent):
         page = ctk.CTkFrame(parent, fg_color=BG, corner_radius=0)
@@ -303,15 +426,34 @@ class App(ctk.CTk):
         self.sponsor_var  = tk.BooleanVar()
         self.meta_var     = tk.BooleanVar(value=True)
         self.playlist_var = tk.BooleanVar()
+        self.lyrics_var   = tk.BooleanVar()
         for var, txt in [
             (self.sponsor_var,  "SponsorBlock — remove sponsors & intros"),
             (self.meta_var,     "Embed metadata & thumbnail"),
-            (self.playlist_var, "Download full playlist"),
+            (self.playlist_var, "Download full playlist (Legacy)"),
+            (self.lyrics_var,   "Embed Lyrics (if available)"),
         ]:
             ctk.CTkCheckBox(oc, text=txt, variable=var, font=FONT_SM,
                             fg_color=ACCENT, hover_color=ACCENT_HV,
                             checkmark_color=BG, corner_radius=4).pack(anchor="w", padx=16, pady=5)
         ctk.CTkFrame(oc, fg_color="transparent", height=4).pack()
+
+        tc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=12)
+        tc.pack(fill="x", padx=24, pady=(0, 10))
+        _label(tc, "Theme Accent Color", font=FONT_MD).pack(anchor="w", padx=16, pady=(12, 6))
+        ctk.CTkFrame(tc, fg_color=BORDER, height=1).pack(fill="x", padx=12)
+        trow = ctk.CTkFrame(tc, fg_color="transparent")
+        trow.pack(fill="x", padx=16, pady=10)
+        
+        def _set_color(c):
+            self.config["accent"] = c
+            with open(self.config_path, "w") as f: json.dump(self.config, f)
+            messagebox.showinfo("Theme", "Color saved! Please restart the app to apply.")
+            
+        colors = [("Green", "#22C55E"), ("Pink", "#EC4899"), ("Yellow", "#EAB308"), ("Cyan", "#06B6D4")]
+        for name, hx in colors:
+            btn = ctk.CTkButton(trow, text="", width=30, height=30, corner_radius=15, fg_color=hx, hover_color=hx, command=lambda c=hx: _set_color(c))
+            btn.pack(side="left", padx=4)
 
         dc = ctk.CTkFrame(page, fg_color=SURFACE, corner_radius=12)
         dc.pack(fill="x", padx=24, pady=(0, 10))
@@ -335,7 +477,6 @@ class App(ctk.CTk):
         self._engine_busy = True
         def _set_status(msg): self.after(0, lambda: self.status_var.set(msg))
         
-        # 1. yt-dlp check
         if not os.path.exists(self.ytdlp):
             _set_status("Downloading yt-dlp…")
             try:
@@ -346,7 +487,6 @@ class App(ctk.CTk):
                 self._engine_busy = False
                 return
 
-        # 2. ffmpeg check
         ffmpeg_ver_file = os.path.join(self.appdata_dir, "ffmpeg_version.txt")
         if not os.path.exists(self.ffmpeg):
             _set_status("Downloading ffmpeg (~30MB)…")
@@ -366,10 +506,8 @@ class App(ctk.CTk):
                 self._engine_busy = False
                 return
 
-        # 3. Check for updates
         _set_status("Checking engine updates…")
         try:
-            # yt-dlp update
             resp_yt = requests.get("https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest", timeout=8).json()
             latest_yt = resp_yt["tag_name"]
             current_yt = subprocess.check_output([self.ytdlp, "--version"], text=True).strip()
@@ -380,7 +518,6 @@ class App(ctk.CTk):
                 with open(self.ytdlp, "wb") as f: f.write(requests.get(url, timeout=60).content)
                 _set_status("yt-dlp updated ✅")
 
-            # ffmpeg update
             resp_ff = requests.get("https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest", timeout=8).json()
             latest_ff = resp_ff["tag_name"]
             current_ff = open(ffmpeg_ver_file, "r").read().strip() if os.path.exists(ffmpeg_ver_file) else ""
@@ -404,10 +541,8 @@ class App(ctk.CTk):
         finally:
             self._engine_busy = False
 
-
     # ── App self-update (NexusTube) ───────────────────────────────────────────
     def _check_app_update(self):
-        """เช็ค GitHub Releases — ถ้ามี version ใหม่ → แสดง banner"""
         try:
             resp = requests.get(
                 f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
@@ -419,23 +554,19 @@ class App(ctk.CTk):
             latest = data.get("tag_name", "").lstrip("v")
             if not latest or latest == VERSION:
                 return
-            # หา asset NexusTube.exe
             asset = next(
                 (a for a in data.get("assets", []) if a["name"].lower() == "nexustube.exe"),
                 None,
             )
             self._pending_update_url = asset["browser_download_url"] if asset else None
             self._pending_update_ver = latest
-            # แสดง banner
             self.after(0, lambda: self._update_banner.pack(fill="x", pady=(4, 0)))
             self.after(0, lambda v=latest: self._update_btn.configure(text=f"🔄 v{v} available!"))
         except Exception:
-            pass  # offline — ข้ามไป
+            pass 
 
     def _do_app_update(self):
-        """กดปุ่ม update banner"""
         ver = self._pending_update_ver or "?"
-        # ถ้ารัน .py โดยตรง → บอกให้โหลดเอง
         if not self._exe_path:
             messagebox.showinfo(
                 "Update available",
@@ -443,7 +574,6 @@ class App(ctk.CTk):
                 f"https://github.com/{GITHUB_REPO}/releases/latest"
             )
             return
-        # ไม่มี asset EXE ใน release
         if not self._pending_update_url:
             messagebox.showinfo(
                 "Update",
@@ -458,15 +588,10 @@ class App(ctk.CTk):
         threading.Thread(target=self._apply_update, daemon=True).start()
 
     def _apply_update(self):
-        """
-        โหลด EXE ใหม่ → เขียน .bat → bat รอให้แอปปิด → copy ทับ → restart
-        ponytail: bat-swap trick เพราะ Windows ไม่ให้ overwrite running EXE ตรงๆ
-        """
         try:
             self.after(0, lambda: self._update_btn.configure(text="Downloading…", state="disabled"))
             tmp_exe = self._exe_path + ".new"
 
-            # stream download + progress
             with requests.get(self._pending_update_url, stream=True, timeout=120) as r:
                 total   = int(r.headers.get("content-length", 0))
                 written = 0
@@ -478,7 +603,6 @@ class App(ctk.CTk):
                             pct = written / total * 100
                             self.after(0, lambda p=pct: self.status_var.set(f"Downloading… {p:.0f}%"))
 
-            # เขียน bat ที่จะรันหลังจากแอปนี้ปิด
             bat = self._exe_path + ".update.bat"
             lines = [
                 "@echo off",
@@ -492,7 +616,7 @@ class App(ctk.CTk):
                 f.write("\n".join(lines))
 
             subprocess.Popen(["cmd", "/c", bat], creationflags=subprocess.CREATE_NO_WINDOW)
-            self.after(0, self.destroy)   # ปิดตัวเอง → bat จะเปิดตัวใหม่ให้
+            self.after(0, self.destroy)   
 
         except Exception as e:
             self.after(0, lambda: messagebox.showerror("Update failed", str(e)))
@@ -527,6 +651,10 @@ class App(ctk.CTk):
         ]
         if self.sponsor_var.get():  cmd += ["--sponsorblock-remove", "all"]
         if self.meta_var.get():     cmd += ["--embed-thumbnail", "--embed-metadata"]
+        
+        if self.lyrics_var.get():
+            cmd += ["--write-subs", "--sub-langs", "all", "--embed-subs"]
+            
         if fmt == "audio":
             cmd += ["-x", "--audio-format", "mp3", "--audio-quality", "0"]
         else:
@@ -536,7 +664,7 @@ class App(ctk.CTk):
 
         ansi = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
         try:
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, creationflags=subprocess.CREATE_NO_WINDOW)
             for raw in proc.stdout:
                 line = ansi.sub("", raw.decode("utf-8", errors="replace")).strip()
                 if "[download]" in line and "%" in line:
