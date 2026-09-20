@@ -129,42 +129,57 @@ pyinstaller --noconfirm NexusTube.spec
 NexusTube/
 ├── YT_Downloader_V2.py          # Native Python Application & NexusBridgeAPI IPC
 ├── nexus_audio.py               # Audio Subsystem (LRC, 5-Band EQ, URL Resolver, ID3 Tagger)
+├── nexus_discord.py             # Discord Rich Presence Subsystem
+├── nexus_doctor.py              # Environment Diagnostics & Self-Healing Engine
+├── nexus_hotkeys_tray.py        # System Tray, Notification & Global Hotkeys Engine
 ├── NexusTube.spec               # PyInstaller Bundling Specification
+├── build_installer.py           # WiX Toolset MSI Installer Builder
 ├── NexusTube by herlove.ico     # Official High-Resolution Application Icon
 ├── icon.ico                     # Fallback Application Icon
 ├── requirements.txt             # Python Package Dependencies
+├── docs/                        # Comprehensive Architecture & Design Specifications
+│   ├── ARCHITECTURE.md          # Technical Architecture, DSP & IPC Deep Dive
+│   ├── API_REFERENCE.md         # Complete NexusBridgeAPI Method Reference
+│   ├── DESIGN.md                # Formal UI/UX Design System Specification
+│   ├── USER_GUIDE.md            # Comprehensive User Manual (TH/EN)
+│   ├── DEVNOTES.md              # Developer Notes & Maintenance Guide
+│   └── BUILD_CHECKLIST.md       # Pre-flight Build & Verification Checklist
 ├── web/                         # Self-Contained WebUI Assets (Zero External CDN)
 │   ├── index.html               # Main Single-Page Desktop Application Layout
 │   ├── styles.css               # OLED Dark Glassmorphism Design System Stylesheet
 │   ├── app.js                   # Application State, Navigation, and Bridge Controllers
 │   └── tailwind.js              # Offline Standalone Tailwind Engine Core
-├── tests/                       # Automated Test Suite (74/74 Unit & Integration Tests)
+├── tests/                       # Automated Test Suite (170/170 Passing — 100%)
 │   ├── test_nexus_bridge.py     # Bridge IPC, Queue, Thumbnail, and Web UI Tests
-│   └── test_nexus_tube.py       # Audio Engine, Resolvers, Tagger, and Player Tests
-├── dist/                        # Compiled Standalone Windows Binary
-│   └── NexusTube.exe            # 41.3 MB Standalone Desktop Application
-├── README.md                    # Project Master Documentation
-├── DESIGN.md                    # Formal UI/UX Design System Specification
-├── ARCHITECTURE.md              # Technical Architecture & IPC Deep Dive
-├── USER_GUIDE.md                # Comprehensive User Manual (TH/EN)
-├── API_REFERENCE.md             # Complete Bridge API Documentation
-├── DEVNOTES.md                  # Developer Notes & Maintenance Guide
-└── CHANGELOG.md                 # Full Chronological Version History
+│   ├── test_nexus_tube.py       # Audio Engine, Resolvers, Tagger, and Player Tests
+│   ├── test_error_handling.py   # Crash Handling, Logging, and Diagnostics Tests
+│   ├── test_temp_dir_cleanup.py # GDI Font Redirection & Temporary Cleanup Tests
+│   ├── test_v340_features.py    # v3.4.0 Features Integration Tests
+│   ├── test_exe_lifecycle.py    # Live Standalone Binary Lifecycle & Exit Tests
+│   ├── test_web_contract.py     # Web UI ⟷ Python Bridge Contract Integrity Tests
+│   ├── test_resilience.py       # Network Outage, Rate Limit & File Error Resilience Tests
+│   └── test_installer_integrity.py # MSI & Packaged Bundle Integrity Tests
+├── installer/                   # WiX MSI Packaging Configuration & Assets
+├── README.md                    # Project Master Presentation & Overview
+├── CHANGELOG.md                 # Full Chronological Version History
+└── LICENSE                      # MIT Open-Source License
 ```
 
 ---
 
 ## 📜 Documentation Index
-- 🎨 [DESIGN.md](file:///C:/Users/Administrator/NexusTube/DESIGN.md) — ระบบการออกแบบ UI/UX Pro Max 9 บทฉบับเต็ม
-- 🏗️ [ARCHITECTURE.md](file:///C:/Users/Administrator/NexusTube/ARCHITECTURE.md) — สถาปัตยกรรมระบบ, การประมวลผลเสียง, และ IPC
-- 📖 [USER_GUIDE.md](file:///C:/Users/Administrator/NexusTube/USER_GUIDE.md) — คู่มือการใช้งานอย่างละเอียดแบบสองภาษา
-- 🔌 [API_REFERENCE.md](file:///C:/Users/Administrator/NexusTube/API_REFERENCE.md) — สเปกและเอกสารของ NexusBridgeAPI ทุกฟังก์ชัน
-- 📝 [DEVNOTES.md](file:///C:/Users/Administrator/NexusTube/DEVNOTES.md) — บันทึกการพัฒนาและการบำรุงรักษา
-- 📜 [CHANGELOG.md](file:///C:/Users/Administrator/NexusTube/CHANGELOG.md) — ประวัติการอัปเดตและการเปลี่ยนแปลงทุกเวอร์ชัน
+- 🎨 [DESIGN.md](docs/DESIGN.md) — ระบบการออกแบบ UI/UX Pro Max 9 บทฉบับเต็ม
+- 🏗️ [ARCHITECTURE.md](docs/ARCHITECTURE.md) — สถาปัตยกรรมระบบ, การประมวลผลเสียง, และ IPC
+- 📖 [USER_GUIDE.md](docs/USER_GUIDE.md) — คู่มือการใช้งานอย่างละเอียดแบบสองภาษา
+- 🔌 [API_REFERENCE.md](docs/API_REFERENCE.md) — สเปกและเอกสารของ NexusBridgeAPI ทุกฟังก์ชัน
+- 📝 [DEVNOTES.md](docs/DEVNOTES.md) — บันทึกการพัฒนาและการบำรุงรักษา
+- ✅ [BUILD_CHECKLIST.md](docs/BUILD_CHECKLIST.md) — รายการตรวจสอบความสมบูรณ์ก่อนบิลด์และแจกจ่าย
+- 📜 [CHANGELOG.md](CHANGELOG.md) — ประวัติการอัปเดตและการเปลี่ยนแปลงทุกเวอร์ชัน
 
 ---
 
 ## ⚖️ License & Credits
 - **Author & Architect**: by herlove
 - **Repository**: [https://github.com/masuzu2/NexusTube](https://github.com/masuzu2/NexusTube)
+- **License**: [MIT License](LICENSE)
 - **Design Standard**: Inspired by [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) and [web-skills](https://github.com/andreasbm/web-skills)
