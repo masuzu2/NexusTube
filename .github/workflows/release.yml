@@ -1,0 +1,223 @@
+# ============================================================
+# NexusTube — Release Workflow (release.yml)
+# ============================================================
+# Trigger: push ที่ tag v* เท่านั้น
+# ทำ full build + release ในครั้งเดียว (self-contained)
+# รวม release notes จาก CHANGELOG.md
+# ============================================================
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# สิทธิ์ในการสร้าง Release และ upload assets
+permissions:
+  contents: write
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  # ============================================================
+  # Job: release-build — Full build + GitHub Release
+  # ============================================================
+  release-build:
+    name: "🚀 Build & Publish Release"
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # ดึง full history เพื่อสามารถอ่าน CHANGELOG.md ย้อนหลังได้
+          fetch-depth: 0
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # Cache pip
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # Cache PyInstaller
+      - name: Cache PyInstaller bootloader
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Roaming\pyinstaller
+          key: ${{ runner.os }}-pyinstaller-${{ hashFiles('NexusTube.spec') }}
+          restore-keys: |
+            ${{ runner.os }}-pyinstaller-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ตรวจ syntax ก่อน build
+      - name: Syntax check core modules
+        run: |
+          python -m py_compile `
+            YT_Downloader_V2.py `
+            nexus_audio.py `
+            nexus_doctor.py `
+            nexus_hotkeys_tray.py `
+            nexus_discord.py
+          Write-Host "✅ Syntax check passed."
+
+      # ดึง VERSION จาก source code
+      - name: Extract VERSION
+        id: version
+        run: |
+          $ver = python -c "import re; content=open('YT_Downloader_V2.py','r',encoding='utf-8').read(); m=re.search(r'VERSION\s*=\s*[\"\']([\d.]+)[\"\'']', content); print(m.group(1) if m else '0.0.0')"
+          echo "VERSION=$ver" >> $env:GITHUB_OUTPUT
+          Write-Host "✅ VERSION = $ver"
+
+      # Build ด้วย PyInstaller
+      - name: Build with PyInstaller
+        run: |
+          Write-Host "=== Building NexusTube v${{ steps.version.outputs.VERSION }} ==="
+          pyinstaller NexusTube.spec --noconfirm --clean
+          Write-Host "✅ PyInstaller build complete."
+
+      # ตรวจว่า exe สร้างสำเร็จ
+      - name: Verify executable
+        run: |
+          if (!(Test-Path "dist\NexusTube.exe")) {
+            Write-Error "❌ Build artifact not found!"
+            exit 1
+          }
+          $size = (Get-Item "dist\NexusTube.exe").Length
+          Write-Host "✅ NexusTube.exe ($([math]::Round($size/1MB,2)) MB)"
+
+      # บีบอัดเป็น ZIP
+      - name: Compress to ZIP
+        run: |
+          Compress-Archive -Path dist\NexusTube.exe -DestinationPath dist\NexusTube_Windows.zip
+          Write-Host "✅ ZIP created."
+
+      # คำนวณ SHA256
+      - name: Compute SHA256 checksums
+        id: checksum
+        run: |
+          $sha    = (Get-FileHash "dist\NexusTube.exe"         -Algorithm SHA256).Hash
+          $shaZip = (Get-FileHash "dist\NexusTube_Windows.zip" -Algorithm SHA256).Hash
+          $size   = (Get-Item "dist\NexusTube.exe").Length
+          $sizeMB = [math]::Round($size / 1MB, 2)
+          echo "SHA256_EXE=$sha"    >> $env:GITHUB_OUTPUT
+          echo "SHA256_ZIP=$shaZip" >> $env:GITHUB_OUTPUT
+          echo "SIZE_BYTES=$size"   >> $env:GITHUB_OUTPUT
+          echo "SIZE_MB=$sizeMB"    >> $env:GITHUB_OUTPUT
+          Write-Host "SHA256 (exe): $sha"
+          Write-Host "SHA256 (zip): $shaZip"
+
+      # อ่าน CHANGELOG.md และดึง section ของ version ปัจจุบัน
+      - name: Extract changelog for this version
+        id: changelog
+        shell: python
+        run: |
+          import os, re
+
+          tag = os.environ.get("GITHUB_REF_NAME", "")
+          ver = "${{ steps.version.outputs.VERSION }}"
+
+          changelog_path = "CHANGELOG.md"
+          notes = ""
+
+          if os.path.exists(changelog_path):
+              with open(changelog_path, "r", encoding="utf-8") as f:
+                  content = f.read()
+
+              # ค้นหา section ที่ตรงกับ version (รองรับ ## [3.2.0] หรือ ## v3.2.0)
+              pattern = rf"(?:^|\n)(##[^\n]*(?:{re.escape(ver)}|{re.escape(tag)})[^\n]*\n)(.*?)(?=\n## |\Z)"
+              m = re.search(pattern, content, re.DOTALL)
+              if m:
+                  notes = m.group(2).strip()
+
+          if not notes:
+              notes = f"Release {tag} — see repository history for changes."
+
+          # เขียนผ่าน environment file (รองรับ multiline)
+          env_file = os.environ.get("GITHUB_OUTPUT", "")
+          if env_file:
+              with open(env_file, "a", encoding="utf-8") as f:
+                  f.write("CHANGELOG_NOTES<<CHANGELOG_EOF\n")
+                  f.write(notes + "\n")
+                  f.write("CHANGELOG_EOF\n")
+
+          print(f"Extracted {len(notes)} chars of release notes.")
+
+      # เขียน Step Summary
+      - name: Write release summary
+        run: |
+          $ver    = "${{ steps.version.outputs.VERSION }}"
+          $sha    = "${{ steps.checksum.outputs.SHA256_EXE }}"
+          $shaZip = "${{ steps.checksum.outputs.SHA256_ZIP }}"
+          $sizeMB = "${{ steps.checksum.outputs.SIZE_MB }}"
+          $tag    = "${{ github.ref_name }}"
+
+          @"
+          ## 🚀 NexusTube Release $tag
+
+          | Field | Value |
+          |-------|-------|
+          | **Version** | ``$ver`` |
+          | **Tag** | ``$tag`` |
+          | **EXE Size** | $sizeMB MB |
+          | **Triggered by** | ${{ github.actor }} |
+
+          ### 🔐 SHA256 Checksums
+          | File | SHA256 |
+          |------|--------|
+          | ``NexusTube.exe`` | ``$sha`` |
+          | ``NexusTube_Windows.zip`` | ``$shaZip`` |
+          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+
+      # สร้าง GitHub Release พร้อม release notes จาก CHANGELOG.md
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "NexusTube v${{ steps.version.outputs.VERSION }}"
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
+          files: |
+            dist/NexusTube.exe
+            dist/NexusTube_Windows.zip
+          body: |
+            ## NexusTube v${{ steps.version.outputs.VERSION }}
+
+            ${{ steps.changelog.outputs.CHANGELOG_NOTES }}
+
+            ---
+
+            ### 📥 Downloads
+
+            | File | Description |
+            |------|-------------|
+            | `NexusTube.exe` | Windows standalone executable (no installation required) |
+            | `NexusTube_Windows.zip` | ZIP archive for manual distribution |
+
+            ### 🔐 SHA256 Checksums (verify your download)
+            ```
+            NexusTube.exe         : ${{ steps.checksum.outputs.SHA256_EXE }}
+            NexusTube_Windows.zip : ${{ steps.checksum.outputs.SHA256_ZIP }}
+            ```
+
+            ### ℹ️ Build Info
+            - **Python**: 3.12
+            - **Packager**: PyInstaller
+            - **Commit**: `${{ github.sha }}`
+            - **Build**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          fail_on_unmatched_files: true

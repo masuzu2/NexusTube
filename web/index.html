@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="application-name" content="NexusTube v3.2.0 - v3.4.0">
+  <title>NexusTube — Next-Gen Music Suite</title>
+
+  <!-- Google Fonts Preconnect & High-Fidelity Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Offline Tailwind JIT Core Engine (Pre-configured for Instant Boot) -->
+  <script>
+    window.tailwind = {
+      config: {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', '"Noto Sans Thai"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+              mono: ['"JetBrains Mono"', '"SF Mono"', 'Consolas', 'monospace'],
+            },
+            colors: {
+              oled: 'var(--bg-oled)',
+              sidebar: 'var(--bg-sidebar)',
+              card: 'var(--bg-card)',
+              'card-hover': 'var(--bg-card-hover)',
+              modal: 'var(--bg-modal)',
+              player: 'var(--bg-player)',
+              'input-box': 'var(--bg-input)',
+              accent: 'var(--accent)',
+              'accent-hover': 'var(--accent-hover)',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <script src="tailwind.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-oled text-slate-100 select-none overflow-hidden font-sans">
+
+  <!-- Desktop App Container -->
+  <div id="app-root" class="flex flex-col h-screen w-screen overflow-hidden bg-oled">
+
+    <!-- Top Window Titlebar / Drag Region -->
+    <header class="pywebview-drag-region flex items-center justify-between px-4 h-11 bg-sidebar border-b border-white/[0.06] z-50 select-none flex-shrink-0 relative">
+      <!-- Specular Highlight Sheen -->
+      <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent pointer-events-none"></div>
+
+      <div class="flex items-center space-x-3 pointer-events-auto">
+        <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-[var(--accent)] to-indigo-500 flex items-center justify-center shadow-[0_0_14px_var(--accent-glow)]">
+          <svg class="w-3.5 h-3.5 text-black fill-current" viewBox="0 0 24 24">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        </div>
+        <div class="flex items-baseline space-x-2">
+          <span class="font-extrabold text-sm tracking-tight text-white">NexusTube</span>
+          <span class="text-[10px] text-slate-400 font-medium">by herlove</span>
+          <span class="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.08] border border-white/[0.08] text-slate-300 font-mono" id="app-version-badge">v3.4.0</span>
+        </div>
+      </div>
+
+      <!-- Center Subtle Studio Status -->
+      <div class="flex items-center space-x-2 text-[11px] text-slate-400 font-medium pointer-events-none">
+        <span class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent-glow)]"></span>
+        <span class="tracking-wide text-slate-300">Studio Audio Engine Active</span>
+      </div>
+
+      <!-- Engine Health Pill, Sleep Timer, Shortcuts, Mini-Player & Window Controls -->
+      <div class="flex items-center space-x-2 sm:space-x-3 pointer-events-auto">
+        <div id="engine-status-pill" class="pywebview-no-drag flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] text-slate-300 cursor-pointer hover:border-[var(--accent)] hover:bg-white/[0.07] transition-all" title="Click to view engine health">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="engine-status-dot"></span>
+          <span id="engine-status-text" class="font-medium">Engines: Checking…</span>
+        </div>
+
+        <!-- Sleep Timer Header Button -->
+        <button id="btn-sleep-timer" class="pywebview-no-drag flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] text-slate-300 hover:border-[var(--accent)] hover:bg-white/[0.07] transition-all cursor-pointer" title="Sleep Timer">
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <span id="sleep-timer-label" class="font-medium" data-i18n="Sleep Timer">Sleep Timer</span>
+          <span id="sleep-timer-badge" class="hidden px-1.5 py-0.2 rounded-full bg-[var(--accent)] text-black text-[9px] font-bold font-mono">Off</span>
+        </button>
+
+        <!-- Mini-Player Header Button -->
+        <button id="btn-header-mini-player" class="pywebview-no-drag w-7 h-7 rounded-lg hover:bg-white/[0.08] flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer" title="Mini-Player / PiP Mode (Ctrl+Alt+M)">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><rect x="12" y="9" width="8" height="6" rx="1" fill="currentColor" fill-opacity="0.3"></rect></svg>
+        </button>
+
+        <!-- Keyboard Shortcuts Help Button -->
+        <button id="btn-keyboard-shortcuts" class="pywebview-no-drag w-7 h-7 rounded-lg hover:bg-white/[0.08] flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer" title="Keyboard Shortcuts (?)">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </button>
+
+        <!-- Window Controls (Minimize / Maximize / Close) -->
+        <div class="flex items-center space-x-1 pl-2">
+          <button id="btn-win-min" class="pywebview-no-drag w-7 h-7 rounded-lg hover:bg-white/[0.08] flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer" title="Minimize">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <button id="btn-win-max" class="pywebview-no-drag w-7 h-7 rounded-lg hover:bg-white/[0.08] flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer" title="Maximize">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>
+          </button>
+          <button id="btn-win-close" class="pywebview-no-drag w-7 h-7 rounded-lg hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center text-slate-400 transition-colors cursor-pointer" title="Close">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace (Sidebar + Dynamic Pages) -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+      <!-- Left Sidebar -->
+      <aside class="w-60 bg-sidebar border-r border-white/[0.06] flex flex-col justify-between flex-shrink-0 z-20 select-none">
+        <!-- Navigation Links -->
+        <div class="p-3 space-y-1">
+          <div class="px-3 pt-3 pb-2 text-[10px] font-bold tracking-wider text-slate-400 uppercase" data-i18n="MENU">Navigation</div>
+
+          <!-- Search Tab -->
+          <button class="nav-item active flex items-center justify-start w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer group" data-tab="search" title="Search & Discover">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 bg-white/[0.04] group-hover:bg-[var(--accent)] group-hover:text-black transition-colors text-slate-300 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <span class="flex-1 text-left" data-i18n="Search">Search & Discover</span>
+          </button>
+
+          <!-- Queue Tab -->
+          <button class="nav-item flex items-center justify-start w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer group" data-tab="queue" title="Download Queue">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 bg-white/[0.04] group-hover:bg-[var(--accent)] group-hover:text-black transition-colors text-slate-300 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </div>
+            <span class="flex-1 text-left" data-i18n="Queue">Download Queue</span>
+            <span id="queue-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--accent)] text-black">0</span>
+          </button>
+
+          <!-- Library Tab -->
+          <button class="nav-item flex items-center justify-start w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer group" data-tab="library" title="Music Library">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 bg-white/[0.04] group-hover:bg-[var(--accent)] group-hover:text-black transition-colors text-slate-300 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            </div>
+            <span class="flex-1 text-left" data-i18n="Library">Music Library</span>
+            <span id="library-count-badge" class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-white/[0.06] text-slate-400">0</span>
+          </button>
+
+          <div class="pt-4 pb-1.5 px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase" data-i18n="STUDIO_TOOLS">Studio Tools</div>
+
+          <!-- Equalizer Tab -->
+          <button class="nav-item flex items-center justify-start w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer group" data-tab="equalizer" title="Studio Equalizer">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 bg-white/[0.04] group-hover:bg-[var(--accent)] group-hover:text-black transition-colors text-slate-300 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+            </div>
+            <span class="flex-1 text-left" data-i18n="Equalizer">Studio Equalizer</span>
+          </button>
+
+          <!-- Lyrics Tab -->
+          <button class="nav-item flex items-center justify-start w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer group" data-tab="lyrics" title="Karaoke Lyrics">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 bg-white/[0.04] group-hover:bg-[var(--accent)] group-hover:text-black transition-colors text-slate-300 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+            </div>
+            <span class="flex-1 text-left" data-i18n="Lyrics">Karaoke Lyrics</span>
+          </button>
+
+          <!-- Settings Tab -->
+          <button class="nav-item flex items-center justify-start w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer group" data-tab="settings" title="Settings">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 bg-white/[0.04] group-hover:bg-[var(--accent)] group-hover:text-black transition-colors text-slate-300 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </div>
+            <span class="flex-1 text-left" data-i18n="Settings">Settings</span>
+          </button>
+        </div>
+
+        <!-- Sidebar Bottom: Storage & Folder Card -->
+        <div class="p-3">
+          <div class="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-2 card-glass">
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span class="flex items-center space-x-1.5 font-medium">
+                <svg class="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                <span data-i18n="Output Folder">Output Folder</span>
+              </span>
+              <button id="btn-quick-open-folder" class="hover:text-white transition-colors cursor-pointer text-[10px] font-bold text-[var(--accent)] hover:underline" title="Open in Explorer" data-i18n="Open">Open</button>
+            </div>
+            <div id="quick-folder-path" class="text-[10px] text-slate-400 truncate font-mono bg-black/40 px-2 py-1.5 rounded-lg border border-white/[0.04]">C:\Downloads\NexusTube</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Dynamic Page Container -->
+      <main class="flex-1 flex flex-col overflow-y-auto bg-oled custom-scrollbar relative" id="pages-wrapper">
+
+        <!-- ================= PAGE 1: SEARCH & DISCOVER ================= -->
+        <section id="page-search" class="page-view p-8 space-y-8 max-w-6xl mx-auto w-full">
+          <!-- Hero Banner (Linear Caliber Glassmorphism) -->
+          <div class="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-r from-indigo-950/40 via-purple-950/25 to-black/60 border border-white/[0.08] shadow-2xl spotlight-card hero-spotlight">
+            <div class="absolute -right-16 -top-16 w-80 h-80 bg-[var(--accent)]/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="relative z-10 space-y-3">
+              <div class="flex items-center space-x-2.5">
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[var(--accent)] text-black uppercase tracking-wider shadow-[0_0_12px_var(--accent-glow)]">Universal Resolver</span>
+                <span class="text-xs text-slate-300 font-medium">YouTube · Spotify · Apple Music · SoundCloud</span>
+              </div>
+              <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight" data-i18n="Search_Hero">
+                Download Ultra High-Res Audio & 4K Video
+              </h1>
+              <p class="text-sm text-slate-300 max-w-2xl leading-relaxed" data-i18n="Search_Sub">
+                Paste any music link or type any song title to instantly stream, tag with ID3, extract LRC lyrics, and download at studio master quality.
+              </p>
+              <div class="pt-1 flex items-center space-x-2 text-[11px] text-slate-400 font-mono">
+                <span class="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/[0.08] text-slate-300 font-bold">Ctrl + V</span>
+                <span>Instant Paste & Stream</span>
+                <span class="text-slate-600">·</span>
+                <span class="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/[0.08] text-slate-300 font-bold">Ctrl + K</span>
+                <span>Focus Search</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search & Input Box (Tactile Command Bar Aesthetic) -->
+          <div class="space-y-4">
+            <div class="relative flex items-center">
+              <div class="absolute left-4 text-slate-400 pointer-events-none">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </div>
+              <input type="text" id="search-input" class="w-full bg-card border border-white/[0.1] rounded-2xl pl-12 pr-40 py-4 text-base text-white placeholder-slate-500 focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/30 transition-all duration-200 shadow-xl" placeholder="Paste YouTube, Spotify, Apple Music URL or search music...">
+
+              <!-- Action buttons in input -->
+              <div class="absolute right-3 flex items-center space-x-2">
+                <button id="btn-paste-search" class="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-semibold text-slate-200 transition-all duration-150 flex items-center space-x-1.5 cursor-pointer active:scale-95 border border-white/[0.06]">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  <span data-i18n="Paste">Paste</span>
+                </button>
+                <button id="btn-execute-search" class="px-4 py-2 rounded-xl bg-[var(--accent)] hover:brightness-110 text-black font-extrabold text-xs shadow-[0_0_15px_var(--accent-glow)] transition-all duration-150 flex items-center space-x-1.5 cursor-pointer active:scale-95">
+                  <svg id="search-spinner" class="w-3.5 h-3.5 hidden animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                  <span data-i18n="SearchBtn">Search</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Platform Detection Badge -->
+            <div id="platform-detection-indicator" class="hidden flex items-center space-x-2 text-xs text-slate-400 pl-2">
+              <span class="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" id="platform-dot"></span>
+              <span id="platform-text" class="font-semibold">Detected Platform</span>
+            </div>
+
+            <!-- Trending Vibes & Discovery Tags Carousel -->
+            <div class="space-y-2 pt-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
+                  <svg class="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  <span data-i18n="Trending Vibes">Trending Vibes & Discovery</span>
+                </span>
+              </div>
+              <div class="flex items-center space-x-2 overflow-x-auto pb-1 custom-scrollbar" id="trending-vibes-carousel">
+                <button class="vibe-tag px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-[var(--accent)] hover:text-black border border-white/[0.06] text-xs font-semibold text-slate-300 transition-all cursor-pointer whitespace-nowrap active:scale-95" data-vibe="Chill Lo-Fi Beats">🎧 Lo-Fi Chill</button>
+                <button class="vibe-tag px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-[var(--accent)] hover:text-black border border-white/[0.06] text-xs font-semibold text-slate-300 transition-all cursor-pointer whitespace-nowrap active:scale-95" data-vibe="Synthwave 80s Retro">⚡ Synthwave</button>
+                <button class="vibe-tag px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-[var(--accent)] hover:text-black border border-white/[0.06] text-xs font-semibold text-slate-300 transition-all cursor-pointer whitespace-nowrap active:scale-95" data-vibe="Top Hits 2026">🔥 Top Hits 2026</button>
+                <button class="vibe-tag px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-[var(--accent)] hover:text-black border border-white/[0.06] text-xs font-semibold text-slate-300 transition-all cursor-pointer whitespace-nowrap active:scale-95" data-vibe="Acoustic Unplugged">☕ Acoustic Vibe</button>
+                <button class="vibe-tag px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-[var(--accent)] hover:text-black border border-white/[0.06] text-xs font-semibold text-slate-300 transition-all cursor-pointer whitespace-nowrap active:scale-95" data-vibe="Phonk Drift Night">🚗 Phonk Drift</button>
+                <button class="vibe-tag px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-[var(--accent)] hover:text-black border border-white/[0.06] text-xs font-semibold text-slate-300 transition-all cursor-pointer whitespace-nowrap active:scale-95" data-vibe="Rock Anthem">🎸 Rock Anthem</button>
+                <button class="vibe-tag px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-[var(--accent)] hover:text-black border border-white/[0.06] text-xs font-semibold text-slate-300 transition-all cursor-pointer whitespace-nowrap active:scale-95" data-vibe="Anime OST Epic">🌌 Anime OST</button>
+              </div>
+            </div>
+
+            <!-- Recent Searches Row -->
+            <div id="recent-searches-container" class="hidden flex items-center space-x-2 text-xs text-slate-400 overflow-x-auto pb-1 pt-0.5">
+              <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex-shrink-0" data-i18n="Recent Searches">Recent:</span>
+              <div id="recent-searches-tags" class="flex items-center space-x-1.5 flex-nowrap"></div>
+              <button id="btn-clear-recent" class="text-[10px] text-slate-500 hover:text-red-400 px-1.5 py-0.5 rounded cursor-pointer transition-colors flex-shrink-0" title="Clear Recent">✕</button>
+            </div>
+          </div>
+
+          <!-- Format Selector & Advanced Options -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- Format Card Selector -->
+            <div class="md:col-span-2 p-6 rounded-2xl bg-card border border-white/[0.08] space-y-4 card-glass">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider" data-i18n="Default Format">Download Format</span>
+                <span class="text-[11px] text-[var(--accent)] font-mono font-bold" id="format-tag-preview">MP3 320kbps CBR</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="format-picker-group">
+                <button class="fmt-btn active p-3.5 rounded-xl text-left transition-all cursor-pointer" data-fmt="mp3_320">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-white">MP3 320k</span>
+                    <span class="badge-audio badge-gold">320k CBR</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400 pt-1">Extreme Studio CBR</div>
+                </button>
+                <button class="fmt-btn p-3.5 rounded-xl text-left transition-all cursor-pointer" data-fmt="m4a_best">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-white">M4A / AAC</span>
+                    <span class="badge-audio badge-cyan">SOURCE</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400 pt-1">Source Audio Quality</div>
+                </button>
+                <button class="fmt-btn p-3.5 rounded-xl text-left transition-all cursor-pointer" data-fmt="flac">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-white">FLAC</span>
+                    <span class="badge-audio badge-purple">LOSSLESS</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400 pt-1">Studio Master Audio</div>
+                </button>
+                <button class="fmt-btn p-3.5 rounded-xl text-left transition-all cursor-pointer" data-fmt="mp4_best">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-white">MP4 4K</span>
+                    <span class="badge-audio badge-red">4K UHD</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400 pt-1">Maximum Video Quality</div>
+                </button>
+                <button class="fmt-btn p-3.5 rounded-xl text-left transition-all cursor-pointer" data-fmt="mp4_1080">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-white">MP4 1080p</span>
+                    <span class="badge-audio badge-cyan">1080p FHD</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400 pt-1">Full HD Crisp Video</div>
+                </button>
+                <button class="fmt-btn p-3.5 rounded-xl text-left transition-all cursor-pointer" data-fmt="mp4_720">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-white">MP4 720p</span>
+                    <span class="badge-audio badge-cyan">720p HD</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400 pt-1">Standard HD Video</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Download Switches Card -->
+            <div class="p-6 rounded-2xl bg-card border border-white/[0.08] space-y-4 flex flex-col justify-between card-glass">
+              <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider" data-i18n="Download Options">Studio Options</span>
+              <div class="space-y-3">
+                <label class="flex items-center justify-between text-xs text-slate-300 cursor-pointer hover:text-white transition-colors">
+                  <span data-i18n="Embed thumbnail / album art">Embed Cover Art</span>
+                  <input type="checkbox" id="opt-embed-thumb" checked class="accent-[var(--accent)] w-4 h-4 rounded cursor-pointer">
+                </label>
+                <label class="flex items-center justify-between text-xs text-slate-300 cursor-pointer hover:text-white transition-colors">
+                  <span data-i18n="Embed metadata & artist info">Embed ID3 Tags</span>
+                  <input type="checkbox" id="opt-embed-meta" checked class="accent-[var(--accent)] w-4 h-4 rounded cursor-pointer">
+                </label>
+                <label class="flex items-center justify-between text-xs text-slate-300 cursor-pointer hover:text-white transition-colors">
+                  <span data-i18n="Embed lyrics / subtitles">Embed LRC Lyrics</span>
+                  <input type="checkbox" id="opt-embed-lyrics" class="accent-[var(--accent)] w-4 h-4 rounded cursor-pointer">
+                </label>
+                <label class="flex items-center justify-between text-xs text-slate-300 cursor-pointer hover:text-white transition-colors">
+                  <span data-i18n="SponsorBlock">SponsorBlock Skip</span>
+                  <input type="checkbox" id="opt-sponsorblock" checked class="accent-[var(--accent)] w-4 h-4 rounded cursor-pointer">
+                </label>
+                <label class="flex items-center justify-between text-xs text-slate-300 cursor-pointer hover:text-white transition-colors">
+                  <span data-i18n="Volume Normalization">Volume Normalization</span>
+                  <input type="checkbox" id="opt-loudnorm" class="accent-[var(--accent)] w-4 h-4 rounded cursor-pointer">
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- URL Resolved Instant Preview Card -->
+          <div id="url-resolved-card" class="hidden p-6 rounded-2xl bg-card border border-[var(--accent)]/40 shadow-[0_0_30px_var(--accent-glow-subtle)] space-y-4 transition-all card-glass">
+            <div class="flex items-start space-x-5">
+              <div class="w-28 h-28 rounded-xl overflow-hidden bg-black/50 flex-shrink-0 relative group">
+                <img id="res-card-thumb" src="" alt="Thumbnail" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button id="btn-preview-resolved" class="w-10 h-10 rounded-full bg-[var(--accent)] text-black flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="flex-1 space-y-2">
+                <div class="flex items-center space-x-2">
+                  <span id="res-card-platform" class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-500/20 text-red-400">YouTube</span>
+                  <span id="res-card-duration" class="text-xs text-slate-400 font-mono">03:45</span>
+                </div>
+                <h3 id="res-card-title" class="text-lg font-bold text-white leading-snug line-clamp-2">Song Title Here</h3>
+                <p id="res-card-artist" class="text-sm text-slate-400">Artist Name</p>
+                <div class="flex items-center space-x-3 pt-2">
+                  <button id="btn-download-resolved" class="px-5 py-2.5 rounded-xl bg-[var(--accent)] hover:brightness-110 text-black font-extrabold text-sm shadow-[0_0_20px_var(--accent-glow)] flex items-center space-x-2 transition-all cursor-pointer active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span data-i18n="Download">Download Now</span>
+                  </button>
+                  <button id="btn-trim-resolved" class="px-4 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white font-semibold text-sm flex items-center space-x-2 transition-all cursor-pointer active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+                    <span data-i18n="Trim">Trim & Slice</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- YouTube Search Results Container -->
+          <div id="search-results-section" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-base font-extrabold text-white flex items-center space-x-2">
+                <span data-i18n="Results">Search Results</span>
+                <span id="results-count" class="text-xs px-2.5 py-0.5 rounded-full bg-white/[0.08] text-slate-300 font-mono font-bold">0</span>
+              </h2>
+            </div>
+            <div id="results-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <!-- Result cards injected dynamically -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= PAGE 2: DOWNLOAD QUEUE ================= -->
+        <section id="page-queue" class="page-view p-8 space-y-6 max-w-6xl mx-auto w-full hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+            <div>
+              <h1 class="text-2xl font-extrabold text-white tracking-tight" data-i18n="Download Queue">Download Queue</h1>
+              <p class="text-xs text-slate-400" data-i18n="Queue_Sub">Track active downloads with real-time speed, ETA, and progress.</p>
+            </div>
+            <div class="flex items-center space-x-2 sm:space-x-3">
+              <button id="btn-cancel-all-queue" class="px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-400 transition-colors cursor-pointer border border-red-500/20 active:scale-95" data-i18n="Cancel All">Cancel All</button>
+              <button id="btn-clear-finished-queue" class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06]" data-i18n="Clear Finished">Clear Finished</button>
+              <button id="btn-open-queue-folder" class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06]" data-i18n="Open Downloads Folder">Open Folder</button>
+            </div>
+          </div>
+
+          <!-- Queue Statistics Bar -->
+          <div id="queue-stats-bar" class="grid grid-cols-1 sm:grid-cols-3 gap-3 hidden">
+            <div class="p-3.5 rounded-2xl bg-card border border-white/[0.06] flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-white/[0.04] flex items-center justify-center text-slate-300 flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              </div>
+              <div class="min-w-0">
+                <div class="text-[10px] text-slate-400 uppercase tracking-wider font-bold" data-i18n="Total Downloads">Total Tasks</div>
+                <div id="queue-stat-total" class="text-base font-extrabold text-white">0</div>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-card border border-white/[0.06] flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              </div>
+              <div class="min-w-0">
+                <div class="text-[10px] text-slate-400 uppercase tracking-wider font-bold" data-i18n="Active">Active</div>
+                <div id="queue-stat-active" class="text-base font-extrabold text-[var(--accent)]">0</div>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-card border border-white/[0.06] flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div class="min-w-0">
+                <div class="text-[10px] text-slate-400 uppercase tracking-wider font-bold" data-i18n="Completed">Completed</div>
+                <div id="queue-stat-completed" class="text-base font-extrabold text-green-400">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Task Cards List -->
+          <div id="queue-tasks-list" class="space-y-3">
+            <!-- Dynamic task cards -->
+          </div>
+
+          <!-- Empty Queue Placeholder -->
+          <div id="queue-empty-placeholder" class="py-24 flex flex-col items-center justify-center text-center space-y-3">
+            <div class="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </div>
+            <p class="text-sm text-slate-400 font-medium" data-i18n="No active downloads">No active downloads in queue.</p>
+            <button class="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-black font-extrabold text-xs cursor-pointer hover:brightness-110 shadow-[0_0_15px_var(--accent-glow)] transition-all active:scale-95" onclick="switchTab('search')">Go to Search</button>
+          </div>
+        </section>
+
+        <!-- ================= PAGE 3: MUSIC LIBRARY ================= -->
+        <section id="page-library" class="page-view p-8 space-y-6 max-w-6xl mx-auto w-full hidden">
+          <!-- Library Header -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-white/[0.06]">
+            <div>
+              <h1 class="text-2xl font-extrabold text-white tracking-tight" data-i18n="Library">Music Library</h1>
+              <p class="text-xs text-slate-400"><span id="lib-total-songs" class="font-bold text-slate-300">0 tracks</span> · <span id="lib-total-size" class="font-mono">0 MB</span></p>
+            </div>
+            
+            <!-- Library Actions & View Switcher -->
+            <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+              <!-- Play All & Shuffle All -->
+              <button id="btn-play-all-lib" class="px-3.5 py-2 rounded-xl bg-[var(--accent)] hover:brightness-110 text-black font-extrabold text-xs shadow-[0_0_12px_var(--accent-glow)] flex items-center space-x-1.5 transition-all cursor-pointer active:scale-95">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span data-i18n="Play All">Play All</span>
+              </button>
+              <button id="btn-shuffle-all-lib" class="px-3 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-200 transition-colors cursor-pointer border border-white/[0.06] flex items-center space-x-1.5 active:scale-95" title="Shuffle All">
+                <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                <span data-i18n="Shuffle All">Shuffle</span>
+              </button>
+
+              <!-- Favorites Only Filter Chip -->
+              <button id="btn-filter-favorites" class="px-3 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-300 transition-all cursor-pointer border border-white/[0.06] flex items-center space-x-1.5 active:scale-95" title="Show Favorites Only">
+                <svg id="filter-heart-icon" class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                <span data-i18n="Favorites">Favorites</span>
+              </button>
+
+              <!-- Export M3U8 Playlist -->
+              <button id="btn-export-m3u8" class="p-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white transition-colors cursor-pointer border border-white/[0.06] active:scale-95" title="Export M3U8 Playlist">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              </button>
+
+              <!-- View Mode Toggle (Grid vs Table) -->
+              <div class="flex items-center bg-black/40 p-0.5 rounded-xl border border-white/[0.06]">
+                <button id="btn-view-grid" class="p-2 rounded-lg bg-white/[0.12] text-white transition-colors cursor-pointer" title="Grid View">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                </button>
+                <button id="btn-view-table" class="p-2 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer" title="Table / List View">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                </button>
+              </div>
+
+              <!-- Sort Selector -->
+              <select id="lib-sort-select" class="bg-card border border-white/[0.08] rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-[var(--accent)] cursor-pointer font-medium">
+                <option value="date">Sort: Recent</option>
+                <option value="title">Sort: Title</option>
+                <option value="artist">Sort: Artist</option>
+                <option value="duration">Sort: Duration</option>
+                <option value="size">Sort: File Size</option>
+              </select>
+
+              <!-- Filter input -->
+              <div class="relative">
+                <input type="text" id="lib-search-input" class="w-44 sm:w-52 bg-card border border-white/[0.08] rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[var(--accent)] transition-colors" placeholder="Filter songs or artists...">
+                <div class="absolute left-2.5 top-2.5 text-slate-400">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </div>
+              </div>
+
+              <!-- Refresh button -->
+              <button id="btn-refresh-library" class="p-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white transition-colors cursor-pointer border border-white/[0.06]" title="Refresh Library">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Library Grid View -->
+          <div id="library-items-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            <!-- Track cards injected dynamically -->
+          </div>
+
+          <!-- Library Table / List View Container (Toggleable) -->
+          <div id="library-table-container" class="hidden overflow-x-auto rounded-2xl border border-white/[0.06] bg-card card-glass">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-white/[0.06] text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-white/[0.02]">
+                  <th class="py-3.5 px-4 w-12 text-center">#</th>
+                  <th class="py-3.5 px-3">Title & Artist</th>
+                  <th class="py-3.5 px-3 w-28 text-center">Format</th>
+                  <th class="py-3.5 px-3 w-24 text-right">Time</th>
+                  <th class="py-3.5 px-3 w-24 text-right">Size</th>
+                  <th class="py-3.5 px-4 w-40 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="library-table-body" class="divide-y divide-white/[0.04] text-xs">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty Library Placeholder -->
+          <div id="library-empty-placeholder" class="py-24 flex flex-col items-center justify-center text-center space-y-3 hidden">
+            <div class="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            </div>
+            <p class="text-sm text-slate-400" data-i18n="No files downloaded yet.">No files downloaded yet.</p>
+          </div>
+        </section>
+
+        <!-- ================= PAGE 4: STUDIO EQUALIZER ================= -->
+        <section id="page-equalizer" class="page-view p-8 space-y-6 max-w-4xl mx-auto w-full hidden">
+          <div class="pb-3 border-b border-white/[0.06]">
+            <h1 class="text-2xl font-extrabold text-white tracking-tight" data-i18n="Audio Equalizer & Presets">Studio 5-Band Equalizer</h1>
+            <p class="text-xs text-slate-400">Hardware-accelerated live FFmpeg audio filtergraph with safety clamping [-15dB, +15dB].</p>
+          </div>
+
+          <!-- Presets Carousel -->
+          <div class="space-y-2">
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider" data-i18n="EQ Preset">DSP Presets</span>
+            <div class="flex flex-wrap gap-2.5" id="eq-presets-group">
+              <!-- Preset buttons dynamically injected -->
+            </div>
+          </div>
+
+          <!-- Frequency Response Curve Visualizer -->
+          <div class="p-6 rounded-2xl bg-card border border-white/[0.08] shadow-2xl space-y-4 card-glass">
+            <div class="relative w-full h-32 rounded-xl overflow-hidden bg-black/40 border border-white/[0.04]">
+              <canvas id="eq-curve-canvas" class="w-full h-full block"></canvas>
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-400 font-mono">
+              <span>20Hz</span>
+              <span>100Hz</span>
+              <span>1kHz</span>
+              <span>10kHz</span>
+              <span>20kHz</span>
+            </div>
+          </div>
+
+          <!-- DSP Mastering Enhancement Controls (Pre-amp, Sub-Bass Exciter, 3D Surround) -->
+          <div class="p-6 rounded-2xl bg-card border border-white/[0.08] shadow-2xl space-y-4 card-glass">
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
+              <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              <span>DSP Mastering Suite</span>
+            </span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+              <!-- Pre-Amp -->
+              <div class="space-y-2 p-3.5 rounded-xl bg-black/30 border border-white/[0.04]">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-slate-300 font-medium" data-i18n="Pre-Amp">Pre-Amp Gain</span>
+                  <span id="dsp-preamp-val" class="font-mono text-[var(--accent)] font-bold">0.0 dB</span>
+                </div>
+                <input type="range" id="dsp-preamp-slider" min="-6" max="6" step="0.5" value="0" class="w-full accent-[var(--accent)] h-1 bg-white/[0.15] rounded-full cursor-pointer">
+              </div>
+
+              <!-- Sub-Bass Exciter -->
+              <div class="space-y-2 p-3.5 rounded-xl bg-black/30 border border-white/[0.04]">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-slate-300 font-medium" data-i18n="Bass Boost Knob">Sub-Bass Exciter</span>
+                  <span id="dsp-bass-val" class="font-mono text-[var(--accent)] font-bold">0%</span>
+                </div>
+                <input type="range" id="dsp-bass-slider" min="0" max="100" step="5" value="0" class="w-full accent-[var(--accent)] h-1 bg-white/[0.15] rounded-full cursor-pointer">
+              </div>
+
+              <!-- 3D Spatial Surround Toggle -->
+              <div class="p-3.5 rounded-xl bg-black/30 border border-white/[0.04] flex items-center justify-between">
+                <div>
+                  <div class="text-xs text-slate-300 font-medium" data-i18n="3D Surround">3D Surround</div>
+                  <div class="text-[10px] text-slate-500">Stereo stage widening</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="dsp-surround-toggle" class="sr-only peer">
+                  <div class="w-9 h-5 bg-white/[0.15] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]"></div>
+                </label>
+              </div>
+
+              <!-- EBU R128 Audio Normalization Toggle -->
+              <div class="p-3.5 rounded-xl bg-black/30 border border-white/[0.04] flex items-center justify-between">
+                <div>
+                  <div class="text-xs text-slate-300 font-medium flex items-center space-x-1.5">
+                    <span data-i18n="Loudness Normalization">Loudness Norm</span>
+                    <span class="text-[9px] font-mono px-1 rounded bg-[var(--accent)]/20 text-[var(--accent)] font-bold">R128</span>
+                  </div>
+                  <div class="text-[10px] text-slate-500">Auto -14 LUFS level</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="dsp-normalize-toggle" class="sr-only peer">
+                  <div class="w-9 h-5 bg-white/[0.15] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5-Band Vertical Sliders Card -->
+          <div class="p-8 rounded-2xl bg-card border border-white/[0.08] shadow-2xl card-glass">
+            <div class="grid grid-cols-5 gap-4 items-center justify-items-center">
+              <!-- 60Hz -->
+              <div class="flex flex-col items-center space-y-4">
+                <span class="text-xs font-bold text-[var(--accent)] font-mono" id="eq-val-bass">+0.0 dB</span>
+                <input type="range" min="-12" max="12" step="0.5" value="0" class="eq-slider" data-band="bass">
+                <div class="text-center">
+                  <div class="text-xs font-bold text-white">60 Hz</div>
+                  <div class="text-[10px] text-slate-400">Sub Bass</div>
+                </div>
+              </div>
+              <!-- 250Hz -->
+              <div class="flex flex-col items-center space-y-4">
+                <span class="text-xs font-bold text-[var(--accent)] font-mono" id="eq-val-low_mid">+0.0 dB</span>
+                <input type="range" min="-12" max="12" step="0.5" value="0" class="eq-slider" data-band="low_mid">
+                <div class="text-center">
+                  <div class="text-xs font-bold text-white">250 Hz</div>
+                  <div class="text-[10px] text-slate-400">Low Mid</div>
+                </div>
+              </div>
+              <!-- 1kHz -->
+              <div class="flex flex-col items-center space-y-4">
+                <span class="text-xs font-bold text-[var(--accent)] font-mono" id="eq-val-mid">+0.0 dB</span>
+                <input type="range" min="-12" max="12" step="0.5" value="0" class="eq-slider" data-band="mid">
+                <div class="text-center">
+                  <div class="text-xs font-bold text-white">1 kHz</div>
+                  <div class="text-[10px] text-slate-400">Mid / Vocal</div>
+                </div>
+              </div>
+              <!-- 4kHz -->
+              <div class="flex flex-col items-center space-y-4">
+                <span class="text-xs font-bold text-[var(--accent)] font-mono" id="eq-val-high_mid">+0.0 dB</span>
+                <input type="range" min="-12" max="12" step="0.5" value="0" class="eq-slider" data-band="high_mid">
+                <div class="text-center">
+                  <div class="text-xs font-bold text-white">4 kHz</div>
+                  <div class="text-[10px] text-slate-400">High Mid</div>
+                </div>
+              </div>
+              <!-- 12kHz -->
+              <div class="flex flex-col items-center space-y-4">
+                <span class="text-xs font-bold text-[var(--accent)] font-mono" id="eq-val-treble">+0.0 dB</span>
+                <input type="range" min="-12" max="12" step="0.5" value="0" class="eq-slider" data-band="treble">
+                <div class="text-center">
+                  <div class="text-xs font-bold text-white">12 kHz</div>
+                  <div class="text-[10px] text-slate-400">Treble Air</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-6 mt-6 border-t border-white/[0.06] flex items-center justify-between">
+              <span class="text-xs text-slate-400">Current Preset: <strong id="current-eq-preset-label" class="text-white font-bold">Flat</strong></span>
+              <button id="btn-reset-eq" class="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-200 transition-colors cursor-pointer border border-white/[0.06]" data-i18n="Reset EQ">Reset to Flat</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= PAGE 5: KARAOKE LYRICS ================= -->
+        <section id="page-lyrics" class="page-view p-8 flex flex-col h-full max-w-4xl mx-auto w-full hidden relative">
+          <!-- Lyrics Header -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
+            <div class="flex items-center space-x-4 min-w-0">
+              <div class="w-12 h-12 rounded-xl overflow-hidden bg-black/40 border border-white/[0.08] flex-shrink-0 relative">
+                <img id="lyrics-track-thumb" src="" class="w-full h-full object-cover hidden">
+                <div id="lyrics-thumb-fallback" class="w-full h-full flex items-center justify-center text-slate-500">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                </div>
+              </div>
+              <div class="min-w-0">
+                <h1 id="lyrics-track-title" class="text-lg font-extrabold text-white leading-tight truncate">No track playing</h1>
+                <p id="lyrics-track-artist" class="text-xs text-slate-400 truncate">NexusTube Karaoke Engine</p>
+                <div class="flex items-center space-x-2 pt-1">
+                  <span id="lyrics-source-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white/[0.06] border border-white/[0.08] text-slate-300">Source: Checking…</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2 flex-wrap sm:flex-nowrap">
+              <div class="relative flex items-center">
+                <input type="text" id="lyrics-search-input" placeholder="Search song or artist..." class="bg-card border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 w-36 sm:w-44 focus:outline-none focus:border-[var(--accent)]">
+              </div>
+              <button id="btn-fetch-lyrics" class="px-3 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-white transition-colors cursor-pointer border border-white/[0.06]" data-i18n="Auto-Fetch">Fetch</button>
+              <button id="btn-copy-lyrics" class="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white transition-colors cursor-pointer border border-white/[0.06]" title="Copy Lyrics">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+              <!-- Lyrics Zoom Controls -->
+              <div class="flex items-center bg-black/40 p-0.5 rounded-xl border border-white/[0.06]">
+                <button id="btn-lyrics-zoom-out" class="px-2 py-1 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer font-bold" title="Decrease font size">A-</button>
+                <button id="btn-lyrics-zoom-in" class="px-2 py-1 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer font-bold" title="Increase font size">A+</button>
+              </div>
+              <button id="btn-fullscreen-lyrics" class="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white transition-colors cursor-pointer border border-white/[0.06]" title="Fullscreen Karaoke Mode">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+              </button>
+              <button id="btn-toggle-edit-lrc" class="px-3 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06]" data-i18n="Edit LRC">Edit LRC</button>
+              <button id="btn-save-lrc" class="px-3.5 py-2 rounded-xl bg-[var(--accent)] text-black font-extrabold text-xs shadow-[0_0_15px_var(--accent-glow)] hover:brightness-110 transition-all cursor-pointer active:scale-95" data-i18n="Save .LRC">Save .LRC</button>
+            </div>
+          </div>
+
+          <!-- Synchronized Lyrics Scrolling Container (Spotify / Apple Caliber) -->
+          <div id="lyrics-scroll-box" class="flex-1 overflow-y-auto py-12 space-y-6 text-center custom-scrollbar">
+            <!-- Lyrics lines injected dynamically -->
+          </div>
+
+          <!-- Raw LRC Editor Container (Toggleable) -->
+          <div id="lyrics-edit-box" class="flex-1 flex flex-col space-y-2 py-4 hidden">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-mono">
+              <span>Standard LRC Format: [mm:ss.xx] Lyrics text</span>
+              <span id="lyrics-editor-status" class="text-[var(--accent)] font-bold">Ready to edit</span>
+            </div>
+            <textarea id="lyrics-editor-textarea" class="flex-1 w-full bg-black/50 border border-white/[0.08] rounded-2xl p-4 text-xs font-mono text-slate-200 resize-none focus:outline-none focus:border-[var(--accent)] leading-relaxed custom-scrollbar" placeholder="[00:12.50]Paste or edit LRC lyrics here..."></textarea>
+          </div>
+        </section>
+
+        <!-- ================= PAGE 6: SETTINGS ================= -->
+        <section id="page-settings" class="page-view p-8 space-y-8 max-w-4xl mx-auto w-full hidden">
+          <div class="pb-3 border-b border-white/[0.06]">
+            <h1 class="text-2xl font-extrabold text-white tracking-tight" data-i18n="Settings_Title">Settings & Preferences</h1>
+            <p class="text-xs text-slate-400" data-i18n="Settings_Sub">Configure UI theme accents, language, downloads directory, and engines.</p>
+          </div>
+
+          <!-- Accent Palette Picker -->
+          <div class="p-6 rounded-2xl bg-card border border-white/[0.08] space-y-4 card-glass">
+            <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider" data-i18n="Theme Accent Color">Theme Accent Color</span>
+            <div class="flex items-center space-x-4" id="accent-colors-container">
+              <!-- Injected color buttons -->
+            </div>
+          </div>
+
+          <!-- Language Selector -->
+          <div class="p-6 rounded-2xl bg-card border border-white/[0.08] space-y-4 card-glass">
+            <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider" data-i18n="Language">Language</span>
+            <div class="flex items-center space-x-3">
+              <button class="lang-btn px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-white transition-all cursor-pointer border border-transparent" data-lang="en">
+                🇺🇸 English
+              </button>
+              <button class="lang-btn px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-white transition-all cursor-pointer border border-transparent" data-lang="th">
+                🇹🇭 ภาษาไทย
+              </button>
+            </div>
+          </div>
+
+          <!-- Output Folder Setting -->
+          <div class="p-6 rounded-2xl bg-card border border-white/[0.08] space-y-4 card-glass">
+            <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider" data-i18n="Output Folder">Output Folder</span>
+            <div class="flex items-center space-x-3">
+              <input type="text" id="setting-outdir" readonly class="flex-1 bg-black/40 border border-white/[0.08] rounded-xl px-4 py-2.5 text-xs text-slate-300 font-mono">
+              <button id="btn-browse-folder" class="px-5 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-xs font-bold text-white transition-all cursor-pointer border border-white/[0.06] active:scale-95" data-i18n="Browse">Browse</button>
+            </div>
+          </div>
+
+          <!-- Self-Healing Engine Health Status -->
+          <div class="p-6 rounded-2xl bg-card border border-white/[0.08] space-y-4 card-glass">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider" data-i18n="Engines Status">Self-Healing Engines Status</span>
+                <p class="text-xs text-slate-400 pt-1">Automated runtime integrity checker for yt-dlp, FFmpeg, FFprobe, and FFplay.</p>
+              </div>
+              <button id="btn-update-engines" class="px-4 py-2 rounded-xl bg-[var(--accent)] text-black font-extrabold text-xs shadow-[0_0_15px_var(--accent-glow)] hover:brightness-110 transition-all cursor-pointer active:scale-95" data-i18n="Update Engines Now">Check / Update Now</button>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 pt-2" id="engine-cards-group">
+              <!-- Engine cards injected -->
+            </div>
+          </div>
+
+          <!-- In-App yt-dlp Engine One-Click Updater -->
+          <div class="p-6 rounded-2xl bg-card border border-white/[0.08] space-y-4 card-glass">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>In-App yt-dlp Engine Updater</span>
+                </span>
+                <p class="text-xs text-slate-400 pt-1">One-click live engine update directly from official GitHub releases.</p>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button id="btn-check-ytdlp-update" class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-white transition-all cursor-pointer border border-white/[0.08] active:scale-95">Check Updates</button>
+                <button id="btn-update-ytdlp" class="px-4 py-2 rounded-xl bg-[var(--accent)] text-black font-extrabold text-xs shadow-[0_0_15px_var(--accent-glow)] hover:brightness-110 transition-all cursor-pointer active:scale-95 flex items-center space-x-1.5">
+                  <svg id="ytdlp-update-spinner" class="w-3.5 h-3.5 hidden animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                  <span id="btn-update-ytdlp-text">Update yt-dlp Now</span>
+                </button>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] flex items-center justify-between text-xs">
+              <div class="space-y-1">
+                <div class="flex items-center space-x-2">
+                  <span class="text-slate-400">Current yt-dlp Version:</span>
+                  <span id="setting-ytdlp-current-ver" class="font-mono font-bold text-white">Checking…</span>
+                  <span id="setting-ytdlp-update-badge" class="hidden text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[var(--accent)] text-black">UPDATE AVAILABLE</span>
+                </div>
+                <div id="setting-ytdlp-latest-info" class="text-[11px] text-slate-400 hidden">Latest Release: <span id="setting-ytdlp-latest-ver" class="font-mono font-bold text-[var(--accent)]"></span></div>
+              </div>
+              <span id="setting-ytdlp-status-text" class="text-slate-400 font-medium text-xs">Ready</span>
+            </div>
+          </div>
+
+          <!-- Discord Rich Presence (RPC) Settings Card -->
+          <div class="p-6 rounded-2xl bg-card border border-white/[0.08] space-y-4 card-glass">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-[#5865F2]/20 border border-[#5865F2]/30 flex items-center justify-center text-[#5865F2] flex-shrink-0 shadow-[0_0_15px_rgba(88,101,242,0.25)]">
+                  <svg class="w-5 h-5 fill-current" viewBox="0 0 127.14 96.36">
+                    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.91,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.91,96.12,53,91.08,65.69,84.69,65.69Z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="flex items-center space-x-2.5">
+                    <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider">Discord Rich Presence</span>
+                    <span id="discord-rpc-pill" class="status-pill-discord connected">
+                      <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                      <span id="discord-rpc-pill-text">Connected</span>
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-400 pt-0.5">Broadcast active track title, artist, elapsed progress bar, and album cover to your Discord profile.</p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="setting-discord-rpc" checked class="sr-only peer">
+                <div class="w-11 h-6 bg-white/[0.15] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--accent)]"></div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Global Media Hotkeys & System Tray Settings Card -->
+          <div class="p-6 rounded-2xl bg-card border border-white/[0.08] space-y-4 card-glass">
+            <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
+              <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"></path></svg>
+              <span>Global Shortcuts & System Tray Integration</span>
+            </span>
+
+            <div class="space-y-3 pt-1">
+              <!-- Global Hotkeys Toggle -->
+              <div class="p-3.5 rounded-xl bg-black/30 border border-white/[0.04] flex items-center justify-between">
+                <div>
+                  <div class="text-xs text-slate-300 font-medium">System-Wide Media Keys</div>
+                  <div class="text-[10px] text-slate-500">Keyboard Media Play/Pause, Next, Prev, and Ctrl+Alt+Space/Arrows active across all games and apps</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="setting-global-hotkeys" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-white/[0.15] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]"></div>
+                </label>
+              </div>
+
+              <!-- System Tray Toggle -->
+              <div class="p-3.5 rounded-xl bg-black/30 border border-white/[0.04] flex items-center justify-between">
+                <div>
+                  <div class="text-xs text-slate-300 font-medium">Windows System Tray Icon</div>
+                  <div class="text-[10px] text-slate-500">Enables tray notification icon with right-click menu and quick player controls</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="setting-system-tray" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-white/[0.15] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]"></div>
+                </label>
+              </div>
+
+              <!-- Minimize to Tray on Close -->
+              <div class="p-3.5 rounded-xl bg-black/30 border border-white/[0.04] flex items-center justify-between">
+                <div>
+                  <div class="text-xs text-slate-300 font-medium">Minimize to Tray on Close (X)</div>
+                  <div class="text-[10px] text-slate-500">Closing the window keeps music playing seamlessly in the background tray</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="setting-minimize-to-tray" class="sr-only peer">
+                  <div class="w-9 h-5 bg-white/[0.15] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Audio Playback Defaults Setting Card -->
+          <div class="p-6 rounded-2xl bg-card border border-white/[0.08] space-y-4 card-glass">
+            <span class="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
+              <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+              <span>Audio Playback & Normalization Defaults</span>
+            </span>
+            <div class="p-3.5 rounded-xl bg-black/30 border border-white/[0.04] flex items-center justify-between">
+              <div>
+                <div class="text-xs text-slate-300 font-medium">Default EBU R128 Loudness Normalization</div>
+                <div class="text-[10px] text-slate-500">Automatically level all audio tracks to streaming standard -14 LUFS upon playback</div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="setting-default-normalize" class="sr-only peer">
+                <div class="w-9 h-5 bg-white/[0.15] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]"></div>
+              </label>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Docked Persistent Bottom Player Bar (Spotify OLED Caliber) -->
+    <footer class="h-20 bg-player border-t border-white/[0.06] flex items-center justify-between px-4 sm:px-6 z-40 flex-shrink-0 select-none relative">
+      <!-- Top Specular Sheen Line -->
+      <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent pointer-events-none"></div>
+
+      <!-- Left: Cover Art & Metadata -->
+      <div class="flex items-center space-x-3 sm:space-x-4 w-44 sm:w-60 md:w-72 min-w-0 player-meta-side">
+        <div class="w-12 h-12 rounded-xl overflow-hidden bg-white/[0.04] border border-white/[0.08] flex-shrink-0 relative group shadow-md">
+          <img id="player-thumb" src="" alt="" class="w-full h-full object-cover">
+          <div id="player-thumb-fallback" class="absolute inset-0 flex items-center justify-center text-slate-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+          </div>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div id="player-title" class="text-sm font-extrabold text-white truncate">No track playing</div>
+          <div id="player-artist" class="text-xs text-slate-400 truncate">NexusTube Player</div>
+        </div>
+      </div>
+
+      <!-- Center: Controls & Scrubber & Dynamic 60fps Visualizer -->
+      <div class="flex flex-col items-center space-y-1.5 flex-1 max-w-2xl px-4">
+        <!-- Control Buttons Row -->
+        <div class="flex items-center space-x-4 sm:space-x-6">
+          <!-- Shuffle -->
+          <button id="btn-shuffle" class="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer relative active:scale-95" title="Shuffle: Off">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+            <span id="shuffle-dot" class="hidden absolute bottom-1 right-2 w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_6px_var(--accent-glow)]"></span>
+          </button>
+          <!-- Prev -->
+          <button id="btn-prev" class="p-2 text-slate-300 hover:text-white transition-colors cursor-pointer active:scale-95" title="Previous">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"></line></svg>
+          </button>
+          <!-- Play / Pause -->
+          <button id="btn-play-pause" class="w-10 h-10 rounded-full bg-[var(--accent)] text-black flex items-center justify-center shadow-[0_0_20px_var(--accent-glow)] hover:scale-105 active:scale-95 transition-transform cursor-pointer" title="Play/Pause">
+            <svg id="icon-play" class="w-5 h-5 fill-current translate-x-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg id="icon-pause" class="w-5 h-5 fill-current hidden" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          </button>
+          <!-- Next -->
+          <button id="btn-next" class="p-2 text-slate-300 hover:text-white transition-colors cursor-pointer active:scale-95" title="Next">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line></svg>
+          </button>
+          <!-- Repeat (Loop List / Single Track / Off) -->
+          <button id="btn-repeat" class="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer relative active:scale-95" title="Repeat: Off (Click to Loop List)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+            <span id="repeat-mode-badge" class="hidden absolute -top-1 -right-1 text-[8px] font-mono font-bold px-1 rounded-full bg-[var(--accent)] text-black">1</span>
+          </button>
+
+          <!-- 16-Bar Spectrum Audio Visualizer -->
+          <div class="flex items-end space-x-1 h-6 px-2.5 bg-black/50 rounded-lg border border-white/[0.06]" id="visualizer-bars-container" title="60 FPS Dynamic Audio Spectrum">
+            <!-- 16 visualizer bars generated by JS -->
+          </div>
+        </div>
+
+        <!-- Scrubber Row -->
+        <div class="flex items-center space-x-3 w-full">
+          <span id="time-current" class="text-[11px] text-slate-400 font-mono w-10 text-right">00:00</span>
+          <div class="relative flex-1 flex items-center group cursor-pointer" id="seek-bar-track">
+            <!-- Seek Hover Time Tooltip -->
+            <div id="seek-hover-tooltip" class="absolute -top-8 hidden px-2 py-0.5 bg-black/90 border border-white/20 rounded-md text-[10px] font-mono text-white pointer-events-none -translate-x-1/2 shadow-lg z-30">00:00</div>
+            <div class="w-full h-1 bg-white/[0.12] rounded-full overflow-hidden">
+              <div id="seek-bar-fill" class="h-full bg-[var(--accent)] w-0 rounded-full transition-[width] duration-75 shadow-[0_0_8px_var(--accent-glow)]"></div>
+            </div>
+            <input type="range" id="seek-range" min="0" max="100" value="0" class="absolute inset-0 opacity-0 cursor-pointer w-full">
+          </div>
+          <span id="time-total" class="text-[11px] text-slate-400 font-mono w-10 text-left">00:00</span>
+        </div>
+      </div>
+
+      <!-- Right: Normalization, Mini-Player, Visualizer, Speed, Lyrics, Equalizer & Volume -->
+      <div class="flex items-center space-x-2 sm:space-x-2.5 w-80 justify-end">
+        <!-- Audio Normalization Toggle/Badge -->
+        <button id="btn-player-loudnorm" class="px-2 py-1 rounded-lg text-[10px] font-mono font-bold text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition-all border border-white/[0.06] cursor-pointer" title="EBU R128 Loudness Normalization (Click to Toggle)">NORM</button>
+        <!-- Mini-Player Floating Mode Button -->
+        <button id="btn-player-mini" class="p-2 text-slate-400 hover:text-[var(--accent)] transition-colors cursor-pointer rounded-lg hover:bg-white/[0.04]" title="Mini-Player / PiP Mode (Ctrl+Alt+M)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><rect x="12" y="9" width="8" height="6" rx="1" fill="currentColor" fill-opacity="0.3"></rect></svg>
+        </button>
+        <!-- Fullscreen Ambient Visualizer Button -->
+        <button id="btn-open-visualizer" class="p-2 text-slate-400 hover:text-[var(--accent)] transition-colors cursor-pointer rounded-lg hover:bg-white/[0.04]" title="Full-Screen Ambient Visualizer (V)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"></path></svg>
+        </button>
+        <!-- Playback Speed Button -->
+        <button id="btn-playback-speed" class="px-2 py-1 rounded-lg text-xs font-mono font-bold text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition-colors border border-white/[0.06] cursor-pointer" title="Playback Speed (Click to Cycle)">1.0x</button>
+        <!-- Quick Lyrics Toggle -->
+        <button id="btn-quick-lyrics" class="p-2 text-slate-400 hover:text-[var(--accent)] transition-colors cursor-pointer rounded-lg hover:bg-white/[0.04]" title="Karaoke Lyrics" onclick="switchTab('lyrics')">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+        </button>
+        <!-- Quick Equalizer Toggle -->
+        <button id="btn-quick-eq" class="p-2 text-slate-400 hover:text-[var(--accent)] transition-colors cursor-pointer rounded-lg hover:bg-white/[0.04]" title="Studio Equalizer" onclick="switchTab('equalizer')">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line></svg>
+        </button>
+        <!-- Volume Control -->
+        <div class="flex items-center space-x-2">
+          <button id="btn-volume-mute" class="text-slate-400 hover:text-white transition-colors cursor-pointer">
+            <svg id="icon-vol-high" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <svg id="icon-vol-mute" class="w-4 h-4 hidden text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+          </button>
+          <div class="relative w-20 flex items-center">
+            <input type="range" id="volume-range" min="0" max="1" step="0.01" value="0.85" class="w-full accent-[var(--accent)] h-1 bg-white/[0.15] rounded-full cursor-pointer">
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Modal 1: Multi-Platform Playlist Selector -->
+    <div id="modal-playlist" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 hidden">
+      <div class="bg-modal border border-white/[0.12] rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-scaleIn">
+        <!-- Playlist Modal Header -->
+        <div class="p-6 border-b border-white/[0.06] flex items-start justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="w-16 h-16 rounded-xl overflow-hidden bg-black/40 flex-shrink-0 border border-white/[0.08]">
+              <img id="playlist-cover-img" src="" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <span id="playlist-platform-tag" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-400 border border-green-500/30">Spotify Playlist</span>
+              <h2 id="playlist-modal-title" class="text-xl font-extrabold text-white mt-1">Playlist Title</h2>
+              <p class="text-xs text-slate-400"><span id="playlist-tracks-count" class="font-bold text-slate-300">0</span> tracks found</p>
+            </div>
+          </div>
+          <button class="modal-close p-2 text-slate-400 hover:text-white cursor-pointer rounded-lg hover:bg-white/[0.06]" onclick="closeModal('modal-playlist')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <!-- Filter & Selection Row -->
+        <div class="p-4 bg-black/30 border-b border-white/[0.04] flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <button id="btn-playlist-select-all" class="px-3.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-white transition-colors cursor-pointer border border-white/[0.06]" data-i18n="Select All">Select All</button>
+            <button id="btn-playlist-deselect-all" class="px-3.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-400 transition-colors cursor-pointer border border-white/[0.06]" data-i18n="Deselect All">Deselect All</button>
+          </div>
+          <input type="text" id="playlist-filter-input" placeholder="Filter playlist tracks..." class="bg-input-box border border-white/[0.08] rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[var(--accent)]">
+        </div>
+
+        <!-- Scrollable Tracks List -->
+        <div id="playlist-tracks-list" class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+          <!-- Playlist items injected dynamically -->
+        </div>
+
+        <!-- Playlist Footer -->
+        <div class="p-4 border-t border-white/[0.06] bg-sidebar flex items-center justify-between">
+          <span class="text-xs text-slate-400 font-medium" id="playlist-selected-count">0 tracks selected</span>
+          <button id="btn-playlist-download-selected" class="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-black font-extrabold text-xs shadow-[0_0_15px_var(--accent-glow)] hover:brightness-110 transition-all cursor-pointer active:scale-95" data-i18n="Download Selected">Download Selected</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: Audio Trimmer Pro -->
+    <div id="modal-trimmer" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 hidden">
+      <div class="bg-modal border border-white/[0.12] rounded-3xl w-full max-w-lg p-6 space-y-6 shadow-2xl animate-scaleIn">
+        <div class="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <h2 class="text-lg font-extrabold text-white flex items-center space-x-2">
+            <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+            <span data-i18n="Trimmer_Title">Audio Trimmer Pro</span>
+          </h2>
+          <button class="modal-close p-1.5 text-slate-400 hover:text-white cursor-pointer rounded-lg hover:bg-white/[0.06]" onclick="closeModal('modal-trimmer')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="space-y-1">
+          <div id="trimmer-file-title" class="text-sm font-extrabold text-white truncate">Track Name</div>
+          <div id="trimmer-file-path" class="text-xs text-slate-400 font-mono truncate">C:\path\to\song.mp3</div>
+        </div>
+
+        <!-- Trimmer Inputs -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-300" data-i18n="Start Time">Start Time</label>
+            <input type="text" id="trim-start" value="00:00:00" class="w-full bg-input-box border border-white/[0.1] rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-[var(--accent)] focus:outline-none">
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-300" data-i18n="End Time">End Time</label>
+            <input type="text" id="trim-end" value="00:00:30" class="w-full bg-input-box border border-white/[0.1] rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-[var(--accent)] focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Trimmer Quick Presets -->
+        <div class="flex items-center space-x-2 pt-1" id="trimmer-presets-row">
+          <button type="button" class="btn-trim-preset flex-1 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-[11px] font-mono font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06]" data-start="00:00:00" data-end="00:00:30">0-30s</button>
+          <button type="button" class="btn-trim-preset flex-1 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-[11px] font-mono font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06]" data-start="00:00:30" data-end="00:01:00">30-60s</button>
+          <button type="button" class="btn-trim-preset flex-1 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-[11px] font-mono font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06]" data-start="00:01:00" data-end="00:02:00">1-2m</button>
+          <button type="button" class="btn-trim-preset flex-1 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-[11px] font-mono font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06]" id="btn-trim-preset-full">Full</button>
+        </div>
+
+        <!-- Trimmer Quick Buttons -->
+        <div class="flex items-center space-x-2.5">
+          <button id="btn-trim-preview" class="flex-1 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-xs font-bold text-white transition-colors cursor-pointer flex items-center justify-center space-x-2 active:scale-95 border border-white/[0.06]" data-i18n="Preview Slice">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Preview Slice</span>
+          </button>
+          <button id="btn-trim-stop-preview" class="px-4 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-xs font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06] active:scale-95" data-i18n="Stop Preview">
+            Stop
+          </button>
+        </div>
+
+        <!-- Primary Action -->
+        <button id="btn-trim-execute" class="w-full py-3 rounded-xl bg-[var(--accent)] text-black font-extrabold text-sm shadow-[0_0_20px_var(--accent-glow)] hover:brightness-110 transition-all cursor-pointer active:scale-95" data-i18n="Trim Now">Trim & Save Audio</button>
+      </div>
+    </div>
+
+    <!-- Modal 3: Delete Confirmation -->
+    <div id="modal-delete" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 hidden">
+      <div class="bg-modal border border-white/[0.12] rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl animate-scaleIn text-center">
+        <div class="w-12 h-12 rounded-full bg-red-500/20 text-red-400 mx-auto flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <h3 class="text-base font-extrabold text-white">Delete File?</h3>
+        <p id="delete-modal-filename" class="text-xs text-slate-400 break-all leading-relaxed">Are you sure you want to permanently delete this track?</p>
+        <div class="flex items-center space-x-3 pt-2">
+          <button class="flex-1 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-xs font-bold text-white transition-colors cursor-pointer border border-white/[0.06]" onclick="closeModal('modal-delete')">Cancel</button>
+          <button id="btn-confirm-delete" class="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-xs font-extrabold text-white transition-colors cursor-pointer shadow-lg shadow-red-500/30">Delete Permanently</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 4: Studio Audio Transcoder / Converter -->
+    <div id="modal-converter" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 hidden">
+      <div class="bg-modal border border-white/[0.12] rounded-3xl w-full max-w-lg p-6 space-y-6 shadow-2xl animate-scaleIn">
+        <div class="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <h2 class="text-lg font-extrabold text-white flex items-center space-x-2">
+            <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <span data-i18n="Converter_Title">Audio Format Transcoder</span>
+          </h2>
+          <button class="modal-close p-1.5 text-slate-400 hover:text-white cursor-pointer rounded-lg hover:bg-white/[0.06]" onclick="closeModal('modal-converter')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="space-y-1">
+          <div id="converter-file-title" class="text-sm font-extrabold text-white truncate">Track Name</div>
+          <div id="converter-file-path" class="text-xs text-slate-400 font-mono truncate">C:\path\to\song.mp3</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-300" data-i18n="Target Format">Target Format</label>
+            <select id="converter-target-format" class="w-full bg-input-box border border-white/[0.1] rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-[var(--accent)] focus:outline-none">
+              <option value="mp3">MP3 (.mp3)</option>
+              <option value="m4a">AAC / M4A (.m4a)</option>
+              <option value="flac">FLAC Lossless (.flac)</option>
+              <option value="wav">WAV Uncompressed (.wav)</option>
+              <option value="ogg">OGG Vorbis (.ogg)</option>
+              <option value="opus">OPUS HD (.opus)</option>
+            </select>
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-300" data-i18n="Bitrate">Bitrate / Quality</label>
+            <select id="converter-target-bitrate" class="w-full bg-input-box border border-white/[0.1] rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-[var(--accent)] focus:outline-none">
+              <option value="320k">320 kbps (Maximum Studio)</option>
+              <option value="256k">256 kbps (High Quality)</option>
+              <option value="192k">192 kbps (Balanced)</option>
+              <option value="128k">128 kbps (Compact)</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="flex items-center space-x-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
+          <input type="checkbox" id="converter-loudnorm" checked class="w-4 h-4 accent-[var(--accent)] rounded cursor-pointer">
+          <div class="text-xs">
+            <span class="font-bold text-white block">EBU R128 Loudness Normalization</span>
+            <span class="text-slate-400 block">Master track volume to international streaming broadcast standard (-14 LUFS)</span>
+          </div>
+        </label>
+
+        <div class="flex items-center space-x-3 pt-2">
+          <button class="flex-1 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-xs font-bold text-white transition-colors cursor-pointer border border-white/[0.06]" onclick="closeModal('modal-converter')">Cancel</button>
+          <button id="btn-execute-convert" class="flex-1 py-2.5 rounded-xl bg-[var(--accent)] text-black font-extrabold text-xs shadow-[0_0_15px_var(--accent-glow)] hover:brightness-110 transition-all cursor-pointer active:scale-95" data-i18n="Convert Now">Convert & Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 5: Keyboard Shortcuts Cheat Sheet -->
+    <div id="modal-shortcuts" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 hidden">
+      <div class="bg-modal border border-white/[0.12] rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl animate-scaleIn">
+        <div class="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <h2 class="text-lg font-extrabold text-white flex items-center space-x-2">
+            <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"></path></svg>
+            <span data-i18n="Shortcuts_Title">Keyboard Shortcuts</span>
+          </h2>
+          <button class="modal-close p-1.5 text-slate-400 hover:text-white cursor-pointer rounded-lg hover:bg-white/[0.06]" onclick="closeModal('modal-shortcuts')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="space-y-2.5 text-xs">
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Play / Pause</span>
+            <kbd class="key-cap">Space</kbd>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Seek ±5 Seconds</span>
+            <div class="space-x-1"><kbd class="key-cap">←</kbd><kbd class="key-cap">→</kbd></div>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Next / Previous Track</span>
+            <div class="space-x-1"><kbd class="key-cap">Ctrl</kbd><span>+</span><kbd class="key-cap">←</kbd><kbd class="key-cap">→</kbd></div>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Volume Up / Down</span>
+            <div class="space-x-1"><kbd class="key-cap">↑</kbd><kbd class="key-cap">↓</kbd></div>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Mute / Unmute</span>
+            <kbd class="key-cap">M</kbd>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Focus Search</span>
+            <div class="space-x-1"><kbd class="key-cap">Ctrl</kbd><span>+</span><kbd class="key-cap">K</kbd> <span>or</span> <kbd class="key-cap">/</kbd></div>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Switch Views</span>
+            <div class="space-x-1"><kbd class="key-cap">Alt</kbd><span>+</span><kbd class="key-cap">1-6</kbd></div>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Fullscreen Karaoke</span>
+            <kbd class="key-cap">F</kbd>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Ambient Audio Visualizer</span>
+            <kbd class="key-cap">V</kbd>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Mini-Player / Restore Mode</span>
+            <div class="space-x-1"><kbd class="key-cap">M</kbd> <span>/</span> <kbd class="key-cap">Ctrl+Alt+M</kbd> <span>/</span> <kbd class="key-cap">Esc</kbd></div>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Global Play/Pause (Any App)</span>
+            <div class="space-x-1"><kbd class="key-cap">Media Key</kbd> <span>/</span> <kbd class="key-cap">Ctrl+Alt+Space</kbd></div>
+          </div>
+          <div class="flex items-center justify-between py-1.5 border-b border-white/[0.04]">
+            <span class="text-slate-300">Global Next / Prev</span>
+            <div class="space-x-1"><kbd class="key-cap">Ctrl+Alt+←</kbd><kbd class="key-cap">→</kbd></div>
+          </div>
+          <div class="flex items-center justify-between py-1.5">
+            <span class="text-slate-300">Close Modals / Overlays</span>
+            <kbd class="key-cap">Esc</kbd>
+          </div>
+        </div>
+
+        <button class="w-full py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-xs font-bold text-white transition-colors cursor-pointer border border-white/[0.06]" onclick="closeModal('modal-shortcuts')">Got It</button>
+      </div>
+    </div>
+
+    <!-- Modal 6: Sleep Timer Modal -->
+    <div id="modal-sleep-timer" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 hidden">
+      <div class="bg-modal border border-white/[0.12] rounded-3xl w-full max-w-sm p-6 space-y-5 shadow-2xl animate-scaleIn">
+        <div class="flex items-center justify-between border-b border-white/[0.06] pb-3">
+          <h2 class="text-lg font-extrabold text-white flex items-center space-x-2">
+            <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span data-i18n="Sleep Timer">Sleep Timer</span>
+          </h2>
+          <button class="modal-close p-1.5 text-slate-400 hover:text-white cursor-pointer rounded-lg hover:bg-white/[0.06]" onclick="closeModal('modal-sleep-timer')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-400 leading-relaxed">Music will gently stop playing after the selected timer duration expires.</p>
+
+        <div class="grid grid-cols-2 gap-2.5" id="sleep-timer-options">
+          <button class="sleep-option-btn p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-white border border-white/[0.06] text-center transition-all cursor-pointer" data-minutes="15">15 Minutes</button>
+          <button class="sleep-option-btn p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-white border border-white/[0.06] text-center transition-all cursor-pointer" data-minutes="30">30 Minutes</button>
+          <button class="sleep-option-btn p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-white border border-white/[0.06] text-center transition-all cursor-pointer" data-minutes="45">45 Minutes</button>
+          <button class="sleep-option-btn p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-white border border-white/[0.06] text-center transition-all cursor-pointer" data-minutes="60">60 Minutes</button>
+          <button class="sleep-option-btn col-span-2 p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-white border border-white/[0.06] text-center transition-all cursor-pointer" data-minutes="end_of_track">End of Current Track</button>
+          <button id="btn-cancel-sleep-timer" class="col-span-2 p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/20 text-center transition-all cursor-pointer">Turn Off Timer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fullscreen Karaoke Overlay -->
+    <div id="fullscreen-karaoke-modal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-2xl flex flex-col justify-between p-8 sm:p-12 hidden select-none">
+      <!-- Top Bar with Close button -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white/[0.06] border border-white/[0.1] shadow-2xl">
+            <img id="fs-lyrics-thumb" src="" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <h2 id="fs-lyrics-title" class="text-xl sm:text-2xl font-black text-white truncate max-w-md sm:max-w-xl">No track playing</h2>
+            <p id="fs-lyrics-artist" class="text-sm font-semibold text-slate-400 truncate">NexusTube Karaoke</p>
+          </div>
+        </div>
+        <button id="btn-exit-fullscreen-lyrics" class="p-3 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] text-white transition-all cursor-pointer border border-white/[0.08] active:scale-95" title="Exit Fullscreen (Esc)">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Synchronized Karaoke Lyrics Viewport -->
+      <div id="fs-lyrics-scroll-box" class="flex-1 overflow-y-auto py-16 space-y-8 text-center custom-scrollbar max-w-4xl mx-auto w-full flex flex-col justify-center">
+        <!-- Lyrics lines injected dynamically with large glowing text -->
+      </div>
+
+      <!-- Bottom Mini Player Bar in Fullscreen -->
+      <div class="max-w-2xl mx-auto w-full flex flex-col items-center space-y-3">
+        <div class="flex items-center space-x-6">
+          <button id="fs-btn-prev" class="p-2 text-slate-300 hover:text-white transition-colors cursor-pointer active:scale-95">
+            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"></line></svg>
+          </button>
+          <button id="fs-btn-play-pause" class="w-12 h-12 rounded-full bg-[var(--accent)] text-black flex items-center justify-center shadow-[0_0_25px_var(--accent-glow)] hover:scale-105 active:scale-95 transition-transform cursor-pointer">
+            <svg id="fs-icon-play" class="w-6 h-6 fill-current translate-x-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg id="fs-icon-pause" class="w-6 h-6 fill-current hidden" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          </button>
+          <button id="fs-btn-next" class="p-2 text-slate-300 hover:text-white transition-colors cursor-pointer active:scale-95">
+            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line></svg>
+          </button>
+        </div>
+        <div class="flex items-center space-x-3 w-full">
+          <span id="fs-time-current" class="text-xs text-slate-400 font-mono w-10 text-right">00:00</span>
+          <div class="relative flex-1 flex items-center group cursor-pointer" id="fs-seek-bar-track">
+            <div class="w-full h-1.5 bg-white/[0.12] rounded-full overflow-hidden">
+              <div id="fs-seek-bar-fill" class="h-full bg-[var(--accent)] w-0 rounded-full transition-[width] duration-75 shadow-[0_0_8px_var(--accent-glow)]"></div>
+            </div>
+            <input type="range" id="fs-seek-range" min="0" max="100" value="0" class="absolute inset-0 opacity-0 cursor-pointer w-full">
+          </div>
+          <span id="fs-time-total" class="text-xs text-slate-400 font-mono w-10 text-left">00:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MINI-PLAYER / PICTURE-IN-PICTURE FLOATING HUD ================= -->
+    <div id="mini-player-overlay" class="fixed inset-0 z-50 bg-[#05050A]/95 backdrop-blur-2xl flex flex-col justify-between p-3 hidden select-none border border-white/[0.1] rounded-2xl shadow-2xl overflow-hidden">
+      <!-- Mini Title & Window Drag Bar -->
+      <div id="mini-title-bar" class="flex items-center justify-between h-7 px-1 flex-shrink-0 select-none">
+        <div class="pywebview-drag-region flex items-center space-x-2 flex-1 h-full cursor-move pr-2" id="mini-drag-handle" title="Drag to move (Double-click to restore full window)">
+          <div class="w-4 h-4 rounded-md bg-[var(--accent)] flex items-center justify-center shadow-[0_0_8px_var(--accent-glow)] pointer-events-none">
+            <svg class="w-2.5 h-2.5 text-black fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </div>
+          <span class="text-[11px] font-extrabold text-white tracking-tight pointer-events-none">NexusTube Mini</span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.08] text-slate-300 font-mono pointer-events-none">PiP</span>
+        </div>
+        <div class="flex items-center space-x-1.5 flex-shrink-0 z-20 pointer-events-auto">
+          <!-- Prominent Restore / Expand Button -->
+          <button id="mini-btn-restore" class="pywebview-no-drag flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-[var(--accent)] text-black hover:brightness-110 active:scale-95 transition-all font-bold text-[11px] shadow-[0_0_12px_var(--accent-glow)] cursor-pointer select-none" title="Restore Full Window (Esc / Double-click / Ctrl+Alt+M)">
+            <svg class="w-3.5 h-3.5 fill-none stroke-current" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+            <span class="tracking-wide">Restore</span>
+          </button>
+          <button id="mini-btn-close" class="pywebview-no-drag w-7 h-7 rounded-lg hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center text-slate-400 transition-colors cursor-pointer" title="Close">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mini Track Info & Synchronized Lyric Line -->
+      <div class="flex items-center space-x-3 px-1 my-auto">
+        <div id="mini-player-art-box" class="w-13 h-13 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-white/[0.04] border border-white/[0.1] flex-shrink-0 relative shadow-lg group cursor-pointer" title="Click to Restore Full Window">
+          <img id="mini-player-thumb" src="" class="w-full h-full object-cover">
+          <div id="mini-player-thumb-fallback" class="absolute inset-0 flex items-center justify-center text-slate-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+          </div>
+          <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white space-y-0.5 pointer-events-none">
+            <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+            <span class="text-[8px] font-bold text-slate-200 uppercase tracking-wider">Expand</span>
+          </div>
+        </div>
+        <div class="min-w-0 flex-1 space-y-0.5">
+          <div id="mini-player-title" class="text-xs font-black text-white truncate">No track playing</div>
+          <div id="mini-player-artist" class="text-[10px] font-semibold text-slate-400 truncate">NexusTube Music</div>
+          <!-- Synchronized Karaoke Lyric Line -->
+          <div id="mini-player-lyric" class="text-[11px] font-bold text-[var(--accent)] truncate tracking-tight animate-pulse transition-all">♪ NexusTube Studio Audio</div>
+        </div>
+      </div>
+
+      <!-- Mini Scrubber & Controls -->
+      <div class="space-y-1.5 px-1 flex-shrink-0">
+        <div class="flex items-center space-x-2">
+          <span id="mini-time-current" class="text-[9px] font-mono text-slate-400 w-7 text-right">00:00</span>
+          <div class="relative flex-1 flex items-center cursor-pointer" id="mini-seek-bar-track">
+            <div class="w-full h-1 bg-white/[0.12] rounded-full overflow-hidden">
+              <div id="mini-seek-bar-fill" class="h-full bg-[var(--accent)] w-0 rounded-full shadow-[0_0_8px_var(--accent-glow)] transition-[width] duration-75"></div>
+            </div>
+            <input type="range" id="mini-seek-range" min="0" max="100" value="0" class="absolute inset-0 opacity-0 cursor-pointer w-full">
+          </div>
+          <span id="mini-time-total" class="text-[9px] font-mono text-slate-400 w-7 text-left">00:00</span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-1">
+            <button id="mini-btn-shuffle" class="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer" title="Shuffle">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+            </button>
+            <button id="mini-btn-repeat" class="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer" title="Repeat">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <button id="mini-btn-prev" class="p-1 text-slate-300 hover:text-white transition-colors cursor-pointer active:scale-95">
+              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"></line></svg>
+            </button>
+            <button id="mini-btn-play-pause" class="w-7 h-7 rounded-full bg-[var(--accent)] text-black flex items-center justify-center shadow-[0_0_12px_var(--accent-glow)] hover:scale-105 active:scale-95 transition-transform cursor-pointer">
+              <svg id="mini-icon-play" class="w-3.5 h-3.5 fill-current translate-x-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <svg id="mini-icon-pause" class="w-3.5 h-3.5 fill-current hidden" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </button>
+            <button id="mini-btn-next" class="p-1 text-slate-300 hover:text-white transition-colors cursor-pointer active:scale-95">
+              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line></svg>
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-1 text-slate-400">
+            <button id="mini-btn-mute" class="p-1 hover:text-white transition-colors cursor-pointer">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= FULLSCREEN AMBIENT VISUALIZER OVERLAY ================= -->
+    <div id="fullscreen-visualizer-modal" class="fixed inset-0 z-50 bg-black flex flex-col justify-between p-6 sm:p-10 hidden select-none overflow-hidden">
+      <!-- Dynamic Ambient Glow Backdrop (Blurred & Beating with Audio Amplitude) -->
+      <div id="vis-ambient-glow" class="absolute inset-0 pointer-events-none opacity-40 blur-3xl transition-opacity duration-300" style="background: radial-gradient(circle at center, var(--accent) 0%, rgba(99, 102, 241, 0.2) 45%, transparent 70%);"></div>
+
+      <!-- Top Header HUD -->
+      <div class="relative z-10 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-2xl overflow-hidden bg-white/[0.06] border border-white/[0.1] shadow-2xl relative">
+            <img id="vis-hud-thumb" src="" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <h2 id="vis-hud-title" class="text-base sm:text-xl font-black text-white truncate max-w-sm sm:max-w-md">No track playing</h2>
+            <p id="vis-hud-artist" class="text-xs font-semibold text-slate-400 truncate">NexusTube Studio</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <!-- Visualizer Mode Switcher Pill -->
+          <button id="btn-vis-mode-cycle" class="flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.1] text-xs font-bold text-white transition-all cursor-pointer active:scale-95 shadow-lg">
+            <svg class="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <span id="vis-mode-label">Mode: Neon Bars</span>
+          </button>
+          <!-- Exit Button -->
+          <button id="btn-exit-visualizer" class="p-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] text-white transition-all cursor-pointer border border-white/[0.08] active:scale-95" title="Exit Visualizer (Esc / V)">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas Center Area (Audio Reactive 60 FPS Engine) -->
+      <div class="relative z-10 flex-1 flex items-center justify-center my-4 overflow-hidden">
+        <canvas id="ambient-visualizer-canvas" class="w-full h-full block"></canvas>
+      </div>
+
+      <!-- Bottom Playback HUD -->
+      <div class="relative z-10 max-w-2xl mx-auto w-full flex flex-col items-center space-y-3 bg-black/40 backdrop-blur-xl p-4 rounded-2xl border border-white/[0.08] shadow-2xl">
+        <div class="flex items-center space-x-6">
+          <button id="vis-btn-prev" class="p-2 text-slate-300 hover:text-white transition-colors cursor-pointer active:scale-95">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"></line></svg>
+          </button>
+          <button id="vis-btn-play-pause" class="w-11 h-11 rounded-full bg-[var(--accent)] text-black flex items-center justify-center shadow-[0_0_25px_var(--accent-glow)] hover:scale-105 active:scale-95 transition-transform cursor-pointer">
+            <svg id="vis-icon-play" class="w-5 h-5 fill-current translate-x-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg id="vis-icon-pause" class="w-5 h-5 fill-current hidden" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          </button>
+          <button id="vis-btn-next" class="p-2 text-slate-300 hover:text-white transition-colors cursor-pointer active:scale-95">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line></svg>
+          </button>
+        </div>
+        <div class="flex items-center space-x-3 w-full">
+          <span id="vis-time-current" class="text-xs text-slate-400 font-mono w-10 text-right">00:00</span>
+          <div class="relative flex-1 flex items-center group cursor-pointer" id="vis-seek-bar-track">
+            <div class="w-full h-1.5 bg-white/[0.12] rounded-full overflow-hidden">
+              <div id="vis-seek-bar-fill" class="h-full bg-[var(--accent)] w-0 rounded-full transition-[width] duration-75 shadow-[0_0_8px_var(--accent-glow)]"></div>
+            </div>
+            <input type="range" id="vis-seek-range" min="0" max="100" value="0" class="absolute inset-0 opacity-0 cursor-pointer w-full">
+          </div>
+          <span id="vis-time-total" class="text-xs text-slate-400 font-mono w-10 text-left">00:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-24 right-6 z-50 space-y-2 pointer-events-none"></div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

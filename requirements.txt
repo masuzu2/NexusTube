@@ -1,0 +1,10 @@
+customtkinter
+requests
+pyinstaller
+plyer
+pygame
+pillow
+mutagen
+pywebview
+yt-dlp
+sentry-sdk

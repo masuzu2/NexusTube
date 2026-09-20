@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# PyInstaller build outputs
+build/
+dist/
+
+# WiX / Installer build artifacts & tools
+.wix_tools/
+*.wixobj
+*.wixpdb
+installer/.wix_tools/
+
+# Binary & Installer artifacts
+*.exe
+*.msi
+*.tmp
+
+# Logs
+*.log
+
+# Audio / Media files
+*.mp3
+*.mp4
+*.webm
+*.webp
+Audio/
+
+# Test & Lint Cache
+.pytest_cache/
+.ruff_cache/
+
+# Windows
+Thumbs.db
+Desktop.ini

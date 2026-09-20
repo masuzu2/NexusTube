@@ -1,0 +1,325 @@
+# ============================================================
+# NexusTube — CI/CD Pipeline (build.yml)
+# ============================================================
+# Jobs:
+#   lint   → ตรวจ syntax และ ruff linting (ubuntu)
+#   test   → รัน smoke_test + py_compile (windows)
+#   build  → PyInstaller, ZIP, Release / Artifact (windows)
+#   notify → สรุปผล build สำหรับ tag pushes (ubuntu)
+# ============================================================
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    tags:
+      - "v*"
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: "Force build even without tag"
+        type: boolean
+        default: false
+
+# อนุญาตให้สร้าง GitHub Release และ upload artifacts
+permissions:
+  contents: write
+
+# Environment variables ที่ใช้ร่วมกันทุก job
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+
+# ============================================================
+# Job 1: lint — ตรวจ Python syntax และ ruff linting
+# ============================================================
+jobs:
+  lint:
+    name: "🔍 Syntax & Lint Check"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # ตรวจ syntax ทุกไฟล์ .py ด้วย py_compile
+      - name: Check Python Syntax (all .py files)
+        run: |
+          echo "=== Checking Python syntax for all .py files ==="
+          find . -name "*.py" -not -path "./.git/*" -print0 \
+            | xargs -0 python -m py_compile
+          echo "✅ All Python files passed syntax check."
+
+      # ลอง install และรัน ruff — ไม่ fail หาก ruff ไม่พร้อม
+      - name: Ruff Linting (optional)
+        run: |
+          echo "=== Installing ruff ==="
+          pip install ruff --quiet || true
+          echo "=== Running ruff linter ==="
+          ruff check . --select E,W,F --ignore E501 || true
+          echo "✅ Ruff linting complete (non-blocking)."
+        continue-on-error: true
+
+  # ============================================================
+  # Job 2: test — รัน smoke tests บน Windows
+  # ============================================================
+  test:
+    name: "🧪 Smoke Tests (Windows)"
+    runs-on: windows-latest
+    needs: lint
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # Cache pip packages เพื่อเร่งความเร็ว
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ตรวจ compile ไฟล์หลัก — ต้องผ่านทุกไฟล์
+      - name: Compile-check core modules
+        run: |
+          python -m py_compile `
+            YT_Downloader_V2.py `
+            nexus_audio.py `
+            nexus_doctor.py `
+            nexus_hotkeys_tray.py `
+            nexus_discord.py
+          Write-Host "✅ All core modules compiled successfully."
+
+      # รัน smoke_test.py — ตั้ง NEXUSTUBE_CI=1 เพื่อบอกว่ารันใน CI
+      # ใช้ continue-on-error เนื่องจาก Test 3 (WebView2) และ Test 5 (pygame audio)
+      # ต้องการ hardware ที่ไม่มีใน CI environment
+      - name: Run Smoke Tests
+        run: python smoke_test.py
+        env:
+          NEXUSTUBE_CI: "1"
+        continue-on-error: true
+
+  # ============================================================
+  # Job 3: build — สร้าง executable และ release
+  # ============================================================
+  build:
+    name: "🏗️ Build Windows Executable"
+    runs-on: windows-latest
+    needs: test
+    # รันเมื่อ: push tag, push main, หรือ force_build=true
+    if: |
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.ref == 'refs/heads/main' ||
+      github.event.inputs.force_build == 'true'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # Cache pip packages
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # Cache PyInstaller bootloader cache
+      - name: Cache PyInstaller bootloader
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Roaming\pyinstaller
+          key: ${{ runner.os }}-pyinstaller-${{ hashFiles('NexusTube.spec') }}
+          restore-keys: |
+            ${{ runner.os }}-pyinstaller-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ดึง VERSION จาก YT_Downloader_V2.py
+      - name: Extract VERSION from source
+        id: version
+        run: |
+          $ver = python -c "import re; content=open('YT_Downloader_V2.py','r',encoding='utf-8').read(); m=re.search(r'VERSION\s*=\s*[\"\']([\d.]+)[\"\'']', content); print(m.group(1) if m else '0.0.0')"
+          echo "VERSION=$ver" >> $env:GITHUB_OUTPUT
+          echo "✅ Detected VERSION = $ver"
+
+      # Build ด้วย PyInstaller
+      - name: Build with PyInstaller
+        run: |
+          Write-Host "=== Building NexusTube with PyInstaller ==="
+          pyinstaller NexusTube.spec --noconfirm --clean
+          Write-Host "✅ PyInstaller build complete."
+
+      # ตรวจว่า exe สร้างสำเร็จ
+      - name: Verify executable exists
+        run: |
+          if (!(Test-Path "dist\NexusTube.exe")) {
+            Write-Error "❌ dist\NexusTube.exe not found — build failed!"
+            exit 1
+          }
+          $size = (Get-Item "dist\NexusTube.exe").Length
+          Write-Host "✅ dist\NexusTube.exe exists (size: $size bytes)"
+
+      # บีบอัดเป็น ZIP สำหรับ release
+      - name: Compress executable to ZIP
+        run: |
+          Compress-Archive -Path dist\NexusTube.exe -DestinationPath dist\NexusTube_Windows.zip
+          Write-Host "✅ Compressed to dist\NexusTube_Windows.zip"
+
+      # คำนวณ SHA256 checksum ของ exe
+      - name: Compute SHA256 checksum
+        id: checksum
+        run: |
+          $hash = (Get-FileHash "dist\NexusTube.exe" -Algorithm SHA256).Hash
+          $zipHash = (Get-FileHash "dist\NexusTube_Windows.zip" -Algorithm SHA256).Hash
+          $size = (Get-Item "dist\NexusTube.exe").Length
+          $sizeMB = [math]::Round($size / 1MB, 2)
+          echo "SHA256_EXE=$hash" >> $env:GITHUB_OUTPUT
+          echo "SHA256_ZIP=$zipHash" >> $env:GITHUB_OUTPUT
+          echo "SIZE_BYTES=$size" >> $env:GITHUB_OUTPUT
+          echo "SIZE_MB=$sizeMB" >> $env:GITHUB_OUTPUT
+          Write-Host "SHA256 (exe): $hash"
+          Write-Host "SHA256 (zip): $zipHash"
+          Write-Host "Size: $sizeMB MB"
+
+      # เขียน Build Summary ไปยัง GitHub Step Summary
+      - name: Write build summary
+        run: |
+          $ver    = "${{ steps.version.outputs.VERSION }}"
+          $sha    = "${{ steps.checksum.outputs.SHA256_EXE }}"
+          $shaZip = "${{ steps.checksum.outputs.SHA256_ZIP }}"
+          $sizeMB = "${{ steps.checksum.outputs.SIZE_MB }}"
+          $ref    = "${{ github.ref_name }}"
+          $sha8   = "${{ github.sha }}".Substring(0, 8)
+
+          @"
+          ## 🚀 NexusTube Build Summary
+
+          | Field       | Value                       |
+          |-------------|-----------------------------|
+          | **Version** | ``$ver``                   |
+          | **Branch / Tag** | ``$ref``             |
+          | **Commit**  | ``$sha8``                  |
+          | **EXE Size**| $sizeMB MB                  |
+
+          ### 🔐 SHA256 Checksums
+
+          | File                  | SHA256 Hash                                                  |
+          |-----------------------|--------------------------------------------------------------|
+          | ``NexusTube.exe``     | ``$sha``  |
+          | ``NexusTube_Windows.zip`` | ``$shaZip``  |
+
+          > Generated by GitHub Actions on ${{ github.run_id }}
+          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+
+      # Upload artifact สำหรับ dev builds (ไม่ใช่ tag push)
+      - name: Upload Artifact (Dev Build)
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexusTube-Windows-Dev-${{ github.run_number }}
+          path: |
+            dist/NexusTube.exe
+            dist/NexusTube_Windows.zip
+          retention-days: 7
+
+      # สร้าง GitHub Release สำหรับ tag pushes
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "NexusTube v${{ steps.version.outputs.VERSION }}"
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
+          generate_release_notes: true
+          files: |
+            dist/NexusTube.exe
+            dist/NexusTube_Windows.zip
+          body: |
+            ## NexusTube v${{ steps.version.outputs.VERSION }}
+
+            ### 📥 Downloads
+            | File | Description |
+            |------|-------------|
+            | `NexusTube.exe` | Windows standalone executable (no install required) |
+            | `NexusTube_Windows.zip` | ZIP archive of the executable |
+
+            ### 🔐 SHA256 Checksums
+            ```
+            NexusTube.exe         : ${{ steps.checksum.outputs.SHA256_EXE }}
+            NexusTube_Windows.zip : ${{ steps.checksum.outputs.SHA256_ZIP }}
+            ```
+
+            ### ℹ️ Info
+            - **File size**: ${{ steps.checksum.outputs.SIZE_MB }} MB
+            - **Commit**: ${{ github.sha }}
+            - **Built with**: PyInstaller + Python 3.12
+          fail_on_unmatched_files: true
+
+  # ============================================================
+  # Job 4: notify — สรุปผลสำหรับ tag pushes (placeholder)
+  # ============================================================
+  notify:
+    name: "📣 Build Notification"
+    runs-on: ubuntu-latest
+    needs: build
+    # รันเฉพาะ tag pushes
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Build success notification
+        run: |
+          echo "✅ NexusTube ${{ github.ref_name }} built and released successfully!"
+          echo "🔗 Release: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+
+      # เขียน notification summary
+      - name: Write notification summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 📣 Release Notification
+
+          | Field | Value |
+          |-------|-------|
+          | **Tag** | `${{ github.ref_name }}` |
+          | **Repository** | `${{ github.repository }}` |
+          | **Triggered by** | `${{ github.actor }}` |
+          | **Run ID** | `${{ github.run_id }}` |
+
+          > **Note**: This job is a placeholder for future Slack/Discord webhook notifications.
+          > To enable notifications, add `SLACK_WEBHOOK_URL` or `DISCORD_WEBHOOK_URL` as a GitHub secret
+          > and replace this step with the appropriate notification action.
+          EOF
