@@ -1,14 +1,14 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/masuzu2/NexusTube/main/icon.ico" width="100" alt="NexusTube Logo" />
-  <h1>NexusTube v3.2.0</h1>
+  <h1>NexusTube v3.4.0</h1>
   <p><b>Next-Gen YouTube & Multi-Platform Music Suite & Studio Desktop Player</b></p>
   <p><i>Spotify & Apple Music Caliber OLED Dark Glassmorphism · pywebview Edge WebView2 · ui-ux-pro-max · by herlove</i></p>
 
   [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-4338CA?style=flat-square&logo=python&logoColor=white)](https://python.org)
-  [![pywebview](https://img.shields.io/badge/Desktop-pywebview%20Edge%20WebView2-22C55E?style=flat-square)](https://pywebview.flowrl.com/)
-  [![yt-dlp](https://img.shields.io/badge/Engine-yt--dlp-22C55E?style=flat-square)](https://github.com/yt-dlp/yt-dlp)
+  [![Desktop](https://img.shields.io/badge/Desktop-pywebview%20Edge%20WebView2-22C55E?style=flat-square)](https://pywebview.flowrl.com/)
+  [![Engine](https://img.shields.io/badge/Engine-yt--dlp-22C55E?style=flat-square)](https://github.com/yt-dlp/yt-dlp)
   [![FFmpeg](https://img.shields.io/badge/Engine-FFmpeg-EAB308?style=flat-square)](https://ffmpeg.org)
-  [![Tests](https://img.shields.io/badge/Tests-74%2F74%20Passing-22C55E?style=flat-square)](https://github.com/masuzu2/NexusTube)
+  [![Tests](https://img.shields.io/badge/Tests-170%2F170%20Passing-22C55E?style=flat-square)](https://github.com/masuzu2/NexusTube)
   [![Design](https://img.shields.io/badge/Design-ui--ux--pro--max%20Glassmorphism-EC4899?style=flat-square)](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 </div>
 
