@@ -20,6 +20,7 @@ permissions:
 env:
   PYTHONDONTWRITEBYTECODE: "1"
   PYTHONUNBUFFERED: "1"
+  PYTHONIOENCODING: "utf-8"
 
 jobs:
   # ============================================================
@@ -85,7 +86,7 @@ jobs:
           with open('YT_Downloader_V2.py', 'r', encoding='utf-8') as f:
               m = re.search(r'VERSION\s*=\s*["\']([\d.]+)["\']', f.read())
           ver = m.group(1) if m else '3.4.0'
-          print(f"✅ Detected VERSION = {ver}")
+          print(f"[VERSION] Detected VERSION = {ver}")
           with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
               out.write(f"VERSION={ver}\n")
 
