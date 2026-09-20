@@ -5,6 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [3.4.0] - 2026-09-20 — Next-Gen Desktop Music Suite & Professional MSI Installer
+
+### 📦 Packaging & Installation
+- **Professional Windows MSI Installer**:
+  - Added WiX Toolset v3 packaging pipeline generating `NexusTube_Setup_v3.4.0.msi`.
+  - Full support for standard Windows Add/Remove Programs, Desktop and Start Menu shortcuts, and silent enterprise deployment (`msiexec /i NexusTube_Setup.msi /quiet`).
+- **GDI Font Locking & Temp Directory Cleanup Fix**:
+  - Permanently resolved `Failed to remove temporary directory: _MEI...` on application exit.
+  - Redirected font extraction to user local app data (`%LOCALAPPDATA%\NexusTube\fonts`) and added 64-bit HWND pointer safety in system tray.
+
+### 🎛️ Features & Usability
+- **Floating Always-on-Top Mini Player**:
+  - Compact picture-in-picture player mode with persistent coordinate preservation and screen clamping.
+- **In-App yt-dlp One-Click Updater**:
+  - Automatic check and one-click binary update for yt-dlp directly from GitHub releases.
+- **Enterprise-Grade Automated Test Suite**:
+  - 170 automated unit and integration tests covering audio engines, bridge contracts, error resilience, and installer packaging.
+
+---
+
 ## [3.3.0] - 2026-09-07 — State-of-the-Art Music Suite Modernization
 
 ### 🎧 Audio Engine & DSP Mastering Suite
