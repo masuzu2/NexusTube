@@ -122,6 +122,11 @@ jobs:
           NEXUSTUBE_CI: "1"
         continue-on-error: true
 
+      - name: Run Automated Test Suite (Pytest)
+        run: |
+          pip install pytest
+          pytest tests/ -v
+
   # ============================================================
   # Job 3: build — สร้าง executable และ release
   # ============================================================
@@ -171,10 +176,15 @@ jobs:
       # ดึง VERSION จาก YT_Downloader_V2.py
       - name: Extract VERSION from source
         id: version
+        shell: python
         run: |
-          $ver = python -c "import re; content=open('YT_Downloader_V2.py','r',encoding='utf-8').read(); m=re.search(r'VERSION\s*=\s*[\"\']([\d.]+)[\"\'']', content); print(m.group(1) if m else '0.0.0')"
-          echo "VERSION=$ver" >> $env:GITHUB_OUTPUT
-          echo "✅ Detected VERSION = $ver"
+          import os, re
+          with open('YT_Downloader_V2.py', 'r', encoding='utf-8') as f:
+              m = re.search(r'VERSION\s*=\s*["\']([\d.]+)["\']', f.read())
+          ver = m.group(1) if m else '3.4.0'
+          print(f"✅ Detected VERSION = {ver}")
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
+              out.write(f"VERSION={ver}\n")
 
       # Build ด้วย PyInstaller
       - name: Build with PyInstaller
