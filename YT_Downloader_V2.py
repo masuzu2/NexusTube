@@ -1407,7 +1407,12 @@ class AudioPlayer:
             return
         try:
             if not pygame.mixer.get_init():
-                pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=2048)
+                try:
+                    pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=2048)
+                except Exception:
+                    # Headless or CI runners without physical audio hardware
+                    os.environ["SDL_AUDIODRIVER"] = "dummy"
+                    pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=2048)
             pygame.mixer.music.set_volume(self.volume)
             self._initialized = True
         except Exception as e:
@@ -1764,14 +1769,13 @@ class AudioPlayer:
             print(f"[AudioPlayer] Seek error: {e}")
 
     def stop(self):
-        if not self._initialized:
-            return
-        try:
-            pygame.mixer.music.stop()
-            if hasattr(pygame.mixer.music, "unload"):
-                pygame.mixer.music.unload()
-        except Exception:
-            pass
+        if self._initialized:
+            try:
+                pygame.mixer.music.stop()
+                if hasattr(pygame.mixer.music, "unload"):
+                    pygame.mixer.music.unload()
+            except Exception:
+                pass
         self.is_playing = False
         self.is_paused = False
         self.seek_offset = 0.0
@@ -5659,8 +5663,10 @@ class NexusBridgeAPI:
                                     screen_w, screen_h = sw, sh
                             except Exception:
                                 pass
-                        clamped_x = max(0, min(int(orig_x), screen_w - orig_w))
-                        clamped_y = max(0, min(int(orig_y), screen_h - orig_h))
+                        max_x = max(0, screen_w - orig_w) if screen_w > orig_w else 0
+                        max_y = max(0, screen_h - orig_h) if screen_h > orig_h else 0
+                        clamped_x = max(0, min(int(orig_x), max_x)) if max_x > 0 else 0
+                        clamped_y = max(0, min(int(orig_y), max_y)) if max_y > 0 else 0
                         if hasattr(win, "move"):
                             try:
                                 win.move(clamped_x, clamped_y)

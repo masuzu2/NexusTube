@@ -126,6 +126,9 @@ jobs:
         run: |
           pip install pytest
           pytest tests/ -v
+        env:
+          NEXUSTUBE_CI: "1"
+          SDL_AUDIODRIVER: "dummy"
 
   # ============================================================
   # Job 3: build — สร้าง executable และ release

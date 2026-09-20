@@ -275,18 +275,19 @@ class TestV340Features(unittest.TestCase):
         mock_win = MagicMock()
         self.bridge._window = mock_win
 
-        # Pass position coordinates from JS
-        self.bridge.toggle_mini_player(True, width=1280, height=800, x=300, y=200)
-        self.assertEqual(self.bridge._prev_window_pos, (300, 200))
-        mock_win.resize.assert_called_with(400, 230)
+        with patch("ctypes.windll.user32.GetSystemMetrics", side_effect=lambda idx: 1920 if idx == 0 else 1080):
+            # Pass position coordinates from JS
+            self.bridge.toggle_mini_player(True, width=1280, height=800, x=300, y=200)
+            self.assertEqual(self.bridge._prev_window_pos, (300, 200))
+            mock_win.resize.assert_called_with(400, 230)
 
-        # Restore: window should move back to clamped previous position
-        self.bridge.toggle_mini_player(False)
-        mock_win.move.assert_called()
-        clamped_x, clamped_y = mock_win.move.call_args[0]
-        self.assertEqual(clamped_x, 300)
-        self.assertEqual(clamped_y, 200)
-        mock_win.resize.assert_called_with(1280, 800)
+            # Restore: window should move back to clamped previous position
+            self.bridge.toggle_mini_player(False)
+            mock_win.move.assert_called()
+            clamped_x, clamped_y = mock_win.move.call_args[0]
+            self.assertEqual(clamped_x, 300)
+            self.assertEqual(clamped_y, 200)
+            mock_win.resize.assert_called_with(1280, 800)
 
     def test_system_tray_restore_exits_mini_player(self):
         mock_win = MagicMock()
