@@ -10,7 +10,9 @@
 -->
 
 <?define ProductName    = "NexusTube" ?>
-<?define ProductVersion = "3.2.0" ?>
+<?ifndef ProductVersion ?>
+<?define ProductVersion = "3.4.0" ?>
+<?endif ?>
 <?define Manufacturer   = "by herlove" ?>
 <?define UpgradeCode    = "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}" ?>
 <?define HelpUrl        = "https://github.com/masuzu2/NexusTube" ?>
@@ -29,7 +31,7 @@
 
     <Package
       Description="Next-Gen YouTube and Multi-Platform Music Suite"
-      Comments="NexusTube v3.2.0 — by herlove"
+      Comments="NexusTube v$(var.ProductVersion) — by herlove"
       Manufacturer="$(var.Manufacturer)"
       InstallerVersion="301"
       Platform="x64"

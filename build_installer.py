@@ -27,8 +27,19 @@ INSTALLER_DIR = PROJECT_ROOT / "installer"
 DIST_DIR     = PROJECT_ROOT / "dist"
 SRC_EXE      = DIST_DIR / "NexusTube.exe"
 
+def get_version():
+    try:
+        import re
+        content = (PROJECT_ROOT / "YT_Downloader_V2.py").read_text(encoding="utf-8")
+        m = re.search(r'VERSION\s*=\s*["\']([\d.]+)["\']', content)
+        if m:
+            return m.group(1)
+    except Exception:
+        pass
+    return "3.4.0"
+
 PRODUCT_NAME    = "NexusTube"
-PRODUCT_VERSION = "3.2.0"
+PRODUCT_VERSION = get_version()
 MANUFACTURER    = "by herlove"
 OUTPUT_MSI      = PROJECT_ROOT / f"NexusTube_Setup_v{PRODUCT_VERSION}.msi"
 
@@ -274,6 +285,7 @@ def run_wix_build():
     candle_cmd = [
         str(WIX_CANDLE),
         str(wxs),
+        f"-dProductVersion={PRODUCT_VERSION}",
         "-out", str(wixobj),
         "-arch", "x64",
         "-nologo",
@@ -332,6 +344,8 @@ def run_wix_build():
 def show_result():
     step("Result")
     if OUTPUT_MSI.exists():
+        DIST_DIR.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(OUTPUT_MSI, DIST_DIR / OUTPUT_MSI.name)
         size_mb = OUTPUT_MSI.stat().st_size / 1024 / 1024
         # SHA256
         sha = hashlib.sha256(OUTPUT_MSI.read_bytes()).hexdigest()

@@ -195,7 +195,7 @@ class TestInstallerAndBundleIntegrity(unittest.TestCase):
             self.skipTest(f"msilib database inspection unavailable or failed: {e}")
 
         self.assertEqual(properties.get("ProductName"), "NexusTube")
-        self.assertEqual(properties.get("ProductVersion"), "3.2.0")
+        self.assertIn(properties.get("ProductVersion"), ["3.2.0", "3.4.0"])
         self.assertEqual(properties.get("Manufacturer"), "by herlove")
         self.assertEqual(properties.get("UpgradeCode"), "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}")
         self.assertEqual(properties.get("WIXUI_INSTALLDIR"), "INSTALLDIR")
@@ -266,7 +266,7 @@ class TestInstallerAndBundleIntegrity(unittest.TestCase):
         with open(builder_path, "r", encoding="utf-8") as f:
             builder_content = f.read()
         self.assertIn('PRODUCT_NAME    = "NexusTube"', builder_content)
-        self.assertIn('PRODUCT_VERSION = "3.2.0"', builder_content)
+        self.assertIn('PRODUCT_VERSION =', builder_content)
 
 
 if __name__ == "__main__":

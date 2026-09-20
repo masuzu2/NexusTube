@@ -113,6 +113,20 @@ jobs:
           Compress-Archive -Path dist\NexusTube.exe -DestinationPath dist\NexusTube_Windows.zip
           Write-Host "✅ ZIP created."
 
+      # Cache WiX Toolset binaries
+      - name: Cache WiX Toolset
+        uses: actions/cache@v4
+        with:
+          path: installer/.wix_tools
+          key: ${{ runner.os }}-wix-3.14.1
+
+      # สร้าง MSI Installer ด้วย WiX Toolset
+      - name: Build MSI Installer
+        run: |
+          Write-Host "=== Building NexusTube MSI Installer ==="
+          python build_installer.py
+          Write-Host "✅ MSI Installer build complete."
+
       # คำนวณ SHA256
       - name: Compute SHA256 checksums
         id: checksum
@@ -127,6 +141,17 @@ jobs:
           echo "SIZE_MB=$sizeMB"    >> $env:GITHUB_OUTPUT
           Write-Host "SHA256 (exe): $sha"
           Write-Host "SHA256 (zip): $shaZip"
+
+          $msi = Get-ChildItem -Path . -Filter "NexusTube_Setup_*.msi" | Select-Object -First 1
+          if ($msi) {
+            $msiHash = (Get-FileHash $msi.FullName -Algorithm SHA256).Hash
+            $msiSizeMB = [math]::Round($msi.Length / 1MB, 2)
+            echo "SHA256_MSI=$msiHash" >> $env:GITHUB_OUTPUT
+            echo "MSI_NAME=$($msi.Name)" >> $env:GITHUB_OUTPUT
+            echo "MSI_SIZE_MB=$msiSizeMB" >> $env:GITHUB_OUTPUT
+            Write-Host "SHA256 (msi): $msiHash"
+            Write-Host "Size (msi): $msiSizeMB MB"
+          }
 
       # อ่าน CHANGELOG.md และดึง section ของ version ปัจจุบัน
       - name: Extract changelog for this version
@@ -167,11 +192,13 @@ jobs:
       # เขียน Step Summary
       - name: Write release summary
         run: |
-          $ver    = "${{ steps.version.outputs.VERSION }}"
-          $sha    = "${{ steps.checksum.outputs.SHA256_EXE }}"
-          $shaZip = "${{ steps.checksum.outputs.SHA256_ZIP }}"
-          $sizeMB = "${{ steps.checksum.outputs.SIZE_MB }}"
-          $tag    = "${{ github.ref_name }}"
+          $ver     = "${{ steps.version.outputs.VERSION }}"
+          $sha     = "${{ steps.checksum.outputs.SHA256_EXE }}"
+          $shaZip  = "${{ steps.checksum.outputs.SHA256_ZIP }}"
+          $shaMsi  = "${{ steps.checksum.outputs.SHA256_MSI }}"
+          $msiName = "${{ steps.checksum.outputs.MSI_NAME }}"
+          $sizeMB  = "${{ steps.checksum.outputs.SIZE_MB }}"
+          $tag     = "${{ github.ref_name }}"
 
           @"
           ## 🚀 NexusTube Release $tag
@@ -188,6 +215,7 @@ jobs:
           |------|--------|
           | ``NexusTube.exe`` | ``$sha`` |
           | ``NexusTube_Windows.zip`` | ``$shaZip`` |
+          | ``$msiName`` | ``$shaMsi`` |
           "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
 
       # สร้าง GitHub Release พร้อม release notes จาก CHANGELOG.md
@@ -201,6 +229,8 @@ jobs:
           files: |
             dist/NexusTube.exe
             dist/NexusTube_Windows.zip
+            NexusTube_Setup_*.msi
+            dist/*.msi
           body: |
             ## NexusTube v${{ steps.version.outputs.VERSION }}
 
@@ -214,16 +244,18 @@ jobs:
             |------|-------------|
             | `NexusTube.exe` | Windows standalone executable (no installation required) |
             | `NexusTube_Windows.zip` | ZIP archive for manual distribution |
+            | `NexusTube_Setup_v${{ steps.version.outputs.VERSION }}.msi` | Windows professional MSI setup installer |
 
             ### 🔐 SHA256 Checksums (verify your download)
             ```
             NexusTube.exe         : ${{ steps.checksum.outputs.SHA256_EXE }}
             NexusTube_Windows.zip : ${{ steps.checksum.outputs.SHA256_ZIP }}
+            Installer (.msi)      : ${{ steps.checksum.outputs.SHA256_MSI }}
             ```
 
             ### ℹ️ Build Info
             - **Python**: 3.12
-            - **Packager**: PyInstaller
+            - **Packager**: PyInstaller + WiX Toolset
             - **Commit**: `${{ github.sha }}`
             - **Build**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
           fail_on_unmatched_files: true
