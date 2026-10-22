@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
+    "web": "node src/main/web-download.js",
     "test": "node --test tests/*.test.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"

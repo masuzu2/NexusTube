@@ -8,7 +8,8 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { spawn, spawnSync } = require('child_process');
-const NodeID3 = require('node-id3');
+let NodeID3 = null;
+try { NodeID3 = require('node-id3'); } catch {}
 const { fetchLyrics, saveLrc } = require('./lyrics');
 const { resilientArgs, isHealableFailure, isPermanentFailure } = require('./youtube');
 const {
@@ -623,7 +624,7 @@ class DownloadManager {
             } catch {}
           }
 
-          NodeID3.write(tags, destFile);
+          if (NodeID3) NodeID3.write(tags, destFile);
         } catch (e) {
           console.warn("[Downloader] Tagging failed:", e.message);
         }

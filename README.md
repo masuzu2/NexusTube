@@ -10,7 +10,7 @@
 
 <br/>
 
-**NexusTube** เป็นโปรแกรมดาวน์โหลดและเครื่องเล่นเพลงบนเดสก์ท็อป ใช้ Electron กับหน้าเว็บในตัว รองรับ YouTube, Spotify, Apple Music และ SoundCloud
+**NexusTube** มีสองอย่าง เว็บใช้โหลดอย่างเดียว และโปรแกรมเดสก์ท็อปที่เป็นทั้งตัวโหลดและเครื่องเล่น รองรับ YouTube, Spotify, Apple Music และ SoundCloud
 
 ---
 
@@ -39,18 +39,26 @@
 
 ## 🚀 Quickstart (วิธีใช้งาน)
 
-### 1. สำหรับผู้ใช้งานทั่วไป (Windows)
+### 1. เว็บ ใช้โหลดอย่างเดียว
+1. เปิด `START_WEB.bat`
+2. เบราว์เซอร์จะไปที่ `http://127.0.0.1:8787`
+3. วางลิงก์แล้วกดโหลด หน้านี้ไม่มีเครื่องเล่น
+
+### 2. โปรแกรมเดสก์ท็อป
 1. ติดตั้ง `NexusTube_Setup_v3.4.0.msi`
 2. เปิด NexusTube จากช็อตคัตบนเดสก์ท็อปหรือเมนูเริ่ม
+3. โปรแกรมนี้มีทั้งตัวโหลดและเครื่องเล่น
 
-### 2. การดาวน์โหลดเพลงและวิดีโอ
+อย่าเปิดเว็บกับโปรแกรมพร้อมกัน เพราะทั้งคู่ใช้คิวเดียวกัน
+
+### 3. การดาวน์โหลดเพลงและวิดีโอ
 - คัดลอกลิงก์จาก YouTube, Spotify, Apple Music, หรือ SoundCloud
 - วางในกล่องข้อความหน้า **Search & Discover** หรือกดปุ่ม **📋 วางลิงก์**
 - เลือกฟอร์แมตเสียง/วิดีโอที่ต้องการ (MP3 320k, M4A, FLAC, MP4 1080p, 4K)
 - หากเป็นเพลย์ลิสต์ ระบบจะเปิดหน้าต่าง **Universal Playlist Selector** ให้เลือกเฉพาะเพลงที่ต้องการได้ทันที
 - กด **Download** เพื่อเริ่มกระบวนการ และสลับไปดูสถานะที่แท็บ **คิวดาวน์โหลด (Queue)**
 
-### 3. การฟังเพลงและใช้งาน Studio Tools
+### 4. การฟังเพลงในโปรแกรม
 - ไปที่แท็บ **คลังเพลง (Music Library)** เพื่อดูเพลงทั้งหมดที่ดาวน์โหลดแล้ว
 - คลิกที่การ์ดเพลงเพื่อเริ่มเล่นทันที แถบควบคุมด้านล่างจะเริ่มเล่นเพลงพร้อมคลื่นเสียง Spectrum
 - กดปุ่ม **🎤 Karaoke Lyrics** เพื่อดูเนื้อเพลงวิ่งตามเวลาสด หรือคลิกท่อนใดก็ได้เพื่อกระโดดข้ามเวลา
@@ -66,7 +74,10 @@
 
 ### Run and build
 ```powershell
-# Launch the unpacked app
+# Launch the download-only site
+START_WEB.bat
+
+# Launch the unpacked desktop app
 START_ELECTRON.bat
 
 # Build NexusTube_Setup_v3.4.0.msi
@@ -85,6 +96,7 @@ NexusTube/
 ├── build_msi.js                 # WiX MSI builder
 ├── BUILD_INSTALLER.bat          # Build NexusTube_Setup_v3.4.0.msi
 ├── START_ELECTRON.bat           # Launch the unpacked app
+├── START_WEB.bat                # Open the download-only site
 ├── package.json
 ├── installer/                   # WiX layout and license
 ├── tests/                       # Node tests for download policy
