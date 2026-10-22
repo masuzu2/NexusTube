@@ -7,7 +7,6 @@
   [![Desktop](https://img.shields.io/badge/Desktop-Electron-22C55E?style=flat-square)](https://www.electronjs.org/)
   [![Engine](https://img.shields.io/badge/Engine-yt--dlp-22C55E?style=flat-square)](https://github.com/yt-dlp/yt-dlp)
   [![FFmpeg](https://img.shields.io/badge/Engine-FFmpeg-EAB308?style=flat-square)](https://ffmpeg.org)
-  [![Design](https://img.shields.io/badge/Design-ui--ux--pro--max%20Glassmorphism-EC4899?style=flat-square)](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 </div>
 
 <br/>
@@ -95,18 +94,3 @@ NexusTube/
 │   └── USER_GUIDE.md
 └── LICENSE
 ```
-
----
-
-## 📜 Documentation Index
-- 🎨 [DESIGN.md](docs/DESIGN.md) — ระบบการออกแบบหน้าตา
-- 📖 [USER_GUIDE.md](docs/USER_GUIDE.md) — คู่มือการใช้งาน
-- 📜 [CHANGELOG.md](CHANGELOG.md) — ประวัติการอัปเดต
-
----
-
-## ⚖️ License & Credits
-- **Author & Architect**: by herlove
-- **Repository**: [https://github.com/masuzu2/NexusTube](https://github.com/masuzu2/NexusTube)
-- **License**: [MIT License](LICENSE)
-- **Design Standard**: Inspired by [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) and [web-skills](https://github.com/andreasbm/web-skills)
