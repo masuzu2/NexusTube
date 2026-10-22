@@ -1,4 +1,10 @@
 const token = "__NEXUS_TOKEN__";
+const API_ROOT = location.hostname.endsWith("github.io") ? "https://newsletter-boxing-browse-practitioner.trycloudflare.com" : "";
+
+function apiUrl(path) {
+  const clean = String(path || "").replace(/^\//, "");
+  return API_ROOT ? API_ROOT + "/" + clean : clean;
+}
 
 function esc(value) {
   return String(value || "").replace(/[&<>"']/g, (ch) => ({
@@ -13,7 +19,7 @@ function esc(value) {
 async function api(op, extra = {}) {
   let res;
   try {
-    res = await fetch("api", {
+    res = await fetch(apiUrl("api"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -22,11 +28,11 @@ async function api(op, extra = {}) {
       body: JSON.stringify({ op, ...extra })
     });
   } catch {
-    throw new Error("เปิดหน้านี้จาก GitHub ได้ แต่โหลดไฟล์ต้องรัน START_WEB.bat บนเครื่อง");
+    throw new Error("เชื่อมเซิร์ฟเวอร์โหลดไม่ได้");
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    if (!data.error) throw new Error("เปิดหน้านี้จาก GitHub ได้ แต่โหลดไฟล์ต้องรัน START_WEB.bat บนเครื่อง");
+    if (!data.error) throw new Error("เชื่อมเซิร์ฟเวอร์โหลดไม่ได้");
     throw new Error(data.error);
   }
   return data;
@@ -132,7 +138,13 @@ function paintQueueRows(tasks) {
       retry.onclick = () => api("retry", { id: task.id }).then(paintQueue);
       actions.append(retry);
     }
-    if (task.out_file) {
+    if (task.out_file === true || (API_ROOT && task.status === "completed")) {
+      const link = document.createElement("a");
+      link.href = apiUrl("file") + "?id=" + encodeURIComponent(task.id);
+      link.textContent = "ดาวน์โหลด";
+      link.className = "quiet";
+      actions.append(link);
+    } else if (task.out_file) {
       const open = document.createElement("button");
       open.type = "button";
       open.className = "quiet";
@@ -151,6 +163,8 @@ async function paintQueue() {
 
 async function paintState() {
   const state = await api("state");
+  const folder = document.querySelector(".folder");
+  if (state.public && folder) folder.hidden = true;
   document.getElementById("folder").value = state.outdir || "";
   if (state.format) document.getElementById("format").value = state.format;
   const ready = state.engines && state.engines.ytdlp_ready && state.engines.ffmpeg_ready;

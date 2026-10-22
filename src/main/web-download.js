@@ -38,12 +38,14 @@ engine.ensureEngines()
 
 function send(res, code, body, type) {
   const buf = Buffer.isBuffer(body) ? body : Buffer.from(String(body));
-  res.writeHead(code, {
+  const headers = {
     'Content-Type': type,
     'Content-Length': buf.length,
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff'
-  });
+  };
+  if (res.cors) Object.assign(headers, res.cors);
+  res.writeHead(code, headers);
   res.end(buf);
 }
 
@@ -51,9 +53,35 @@ function sendJson(res, code, data) {
   send(res, code, JSON.stringify(data), 'application/json; charset=utf-8');
 }
 
-function localHost(req) {
-  const host = String(req.headers.host || '');
-  return host.startsWith('127.0.0.1:') || host === '127.0.0.1' || host.startsWith('localhost:');
+function allowedHost(req) {
+  const host = String(req.headers.host || '').toLowerCase();
+  return host.startsWith('127.0.0.1') || host.startsWith('localhost') || host.endsWith('.trycloudflare.com');
+}
+
+function fromSite(req) {
+  const origin = String(req.headers.origin || '');
+  const referer = String(req.headers.referer || req.headers.referrer || '');
+  return origin === 'https://masuzu2.github.io' || referer.startsWith('https://masuzu2.github.io/');
+}
+
+function corsHeaders(req) {
+  if (String(req.headers.origin || '') !== 'https://masuzu2.github.io') return null;
+  return {
+    'Access-Control-Allow-Origin': 'https://masuzu2.github.io',
+    'Vary': 'Origin',
+    'Access-Control-Allow-Headers': 'content-type, x-nexus-token',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+  };
+}
+
+function publicMediaUrl(url) {
+  let parsed;
+  try { parsed = new URL(String(url || '').trim()); } catch { return false; }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+  if (parsed.username || parsed.password) return false;
+  const host = parsed.hostname.toLowerCase().replace(/\.$/, '');
+  const names = ['youtube.com', 'youtu.be', 'spotify.com', 'music.apple.com', 'soundcloud.com'];
+  return names.some((name) => host === name || host.endsWith('.' + name));
 }
 
 async function readBody(req) {
@@ -72,9 +100,64 @@ async function readBody(req) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
+function callerKind(req) {
+  if (req.headers['x-nexus-token'] === token) return 'local';
+  if (fromSite(req)) return 'site';
+  return '';
+}
+
+function publicQueue(tasks) {
+  return tasks.map((task) => ({
+    id: task.id,
+    url: task.url,
+    title: task.title,
+    format: task.format,
+    status: task.status,
+    percent: task.percent,
+    speed: task.speed,
+    eta: task.eta,
+    thumbnail: task.thumbnail,
+    error: task.error,
+    out_file: task.status === 'completed' && task.out_file ? true : null
+  }));
+}
+
+function sendCompletedFile(req, res) {
+  if (callerKind(req) === '') {
+    send(res, 403, 'forbidden', 'text/plain; charset=utf-8');
+    return;
+  }
+  let id = '';
+  try { id = new URL(req.url, 'http://127.0.0.1').searchParams.get('id') || ''; } catch {}
+  if (!/^task_[\w-]+$/.test(id)) {
+    send(res, 404, 'not found', 'text/plain; charset=utf-8');
+    return;
+  }
+  const task = downloads.getQueueState().find((item) => item.id === id);
+  const file = task && task.out_file;
+  const dir = config.get('outdir');
+  if (!file || task.status !== 'completed' || !isInsideDir(file, dir) || !fs.existsSync(file)) {
+    send(res, 404, 'not found', 'text/plain; charset=utf-8');
+    return;
+  }
+  const stat = fs.statSync(file);
+  const name = path.basename(file).replace(/[\r\n"]/g, '');
+  const headers = {
+    'Content-Type': 'application/octet-stream',
+    'Content-Length': stat.size,
+    'Content-Disposition': `attachment; filename="${name}"`,
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff'
+  };
+  if (res.cors) Object.assign(headers, res.cors);
+  res.writeHead(200, headers);
+  fs.createReadStream(file).pipe(res);
+}
+
 async function handleApi(req, res) {
-  if (req.headers['x-nexus-token'] !== token) {
-    sendJson(res, 403, { error: 'เปิดหน้าเว็บนี้จากเครื่องนี้เท่านั้น' });
+  const kind = callerKind(req);
+  if (!kind) {
+    sendJson(res, 403, { error: 'เปิดหน้าเว็บจากเครื่องนี้หรือจากหน้า GitHub เท่านั้น' });
     return;
   }
   let body;
@@ -87,11 +170,13 @@ async function handleApi(req, res) {
   const op = String(body.op || '');
   try {
     if (op === 'state') {
-      sendJson(res, 200, {
-        outdir: config.get('outdir'),
+      const state = {
         format: FORMATS.has(config.get('format')) ? config.get('format') : 'mp3_320',
-        engines: engine.getStatus()
-      });
+        engines: engine.getStatus(),
+        public: kind === 'site'
+      };
+      if (kind === 'local') state.outdir = config.get('outdir');
+      sendJson(res, 200, state);
       return;
     }
     if (op === 'search') {
@@ -109,11 +194,23 @@ async function handleApi(req, res) {
     if (op === 'add') {
       const format = FORMATS.has(body.format) ? body.format : 'mp3_320';
       const title = String(body.title || '').slice(0, 300);
+      if (kind === 'site' && !publicMediaUrl(body.url)) {
+        sendJson(res, 400, { error: 'หน้าเว็บโหลดได้จาก YouTube, Spotify, Apple Music และ SoundCloud' });
+        return;
+      }
+      if (kind === 'site') {
+        const busy = downloads.getQueueState().filter((task) => task.status === 'waiting' || task.status === 'downloading' || task.status === 'processing');
+        if (busy.length >= 6) {
+          sendJson(res, 429, { error: 'คิวเต็ม รอให้งานที่กำลังโหลดเสร็จก่อน' });
+          return;
+        }
+      }
       sendJson(res, 200, downloads.addToQueue(body.url, title, format, {}, null));
       return;
     }
     if (op === 'queue') {
-      sendJson(res, 200, downloads.getQueueState());
+      const tasks = downloads.getQueueState();
+      sendJson(res, 200, kind === 'site' ? publicQueue(tasks) : tasks);
       return;
     }
     if (op === 'cancel') {
@@ -126,6 +223,10 @@ async function handleApi(req, res) {
     }
     if (op === 'clear') {
       sendJson(res, 200, { ok: !!downloads.clearFinished() });
+      return;
+    }
+    if (kind === 'site' && (op === 'folder' || op === 'open' || op === 'reveal')) {
+      sendJson(res, 400, { error: 'บนหน้าเว็บให้กดดาวน์โหลดเมื่อไฟล์พร้อม' });
       return;
     }
     if (op === 'folder') {
@@ -189,12 +290,22 @@ function servePage(res, name) {
 }
 
 const server = http.createServer((req, res) => {
-  if (!localHost(req)) {
+  res.cors = corsHeaders(req);
+  if (!allowedHost(req)) {
     send(res, 403, 'local only', 'text/plain; charset=utf-8');
+    return;
+  }
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, res.cors || {});
+    res.end();
     return;
   }
   let pathname = '/';
   try { pathname = new URL(req.url, `http://${HOST}`).pathname; } catch {}
+  if (req.method === 'GET' && pathname === '/file') {
+    sendCompletedFile(req, res);
+    return;
+  }
   if (req.method === 'POST' && pathname === '/api') {
     handleApi(req, res);
     return;
