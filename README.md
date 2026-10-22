@@ -2,7 +2,6 @@
   <img src="https://raw.githubusercontent.com/masuzu2/NexusTube/main/icon.ico" width="100" alt="NexusTube Logo" />
   <h1>NexusTube v3.4.0</h1>
   <p><b>Next-Gen YouTube & Multi-Platform Music Suite & Studio Desktop Player</b></p>
-  <p><i>Spotify & Apple Music Caliber OLED Dark Glassmorphism · Electron · by herlove</i></p>
 
   [![Desktop](https://img.shields.io/badge/Desktop-Electron-22C55E?style=flat-square)](https://www.electronjs.org/)
   [![Engine](https://img.shields.io/badge/Engine-yt--dlp-22C55E?style=flat-square)](https://github.com/yt-dlp/yt-dlp)
