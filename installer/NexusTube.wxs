@@ -53,7 +53,6 @@
     <Property Id="ARPPRODUCTICON"   Value="NexusTubeIcon.ico" />
     <Property Id="ARPHELPLINK"      Value="$(var.HelpUrl)" />
     <Property Id="ARPURLUPDATEINFO" Value="$(var.UpdateUrl)" />
-    <Property Id="ARPNOREPAIR"      Value="1" />
     <Property Id="ARPSYSTEMCOMPONENT" Value="0" />
 
     <!--
@@ -98,45 +97,12 @@
         <Directory Id="ApplicationProgramsFolder" Name="$(var.ProductName)" />
       </Directory>
       <Directory Id="DesktopFolder" Name="Desktop" />
+      <Directory Id="SystemFolder" />
     </Directory>
 
-    <!-- ── Component 1: Main EXE + HKLM registry ────────────── -->
-    <DirectoryRef Id="INSTALLDIR">
+    <!-- App files are harvested into ElectronFiles.wxs -->
 
-      <Component Id="NexusTubeExeComp"
-                 Guid="{B2C3D4E5-F6A7-8901-BCDE-F12345678901}"
-                 Win64="yes">
-        <File Id="NexusTubeExeFile"
-              Name="NexusTube.exe"
-              Source="NexusTube.exe"
-              KeyPath="yes" />
-        <RegistryValue
-          Root="HKLM"
-          Key="Software\$(var.Manufacturer)\$(var.ProductName)"
-          Name="InstallDir"
-          Type="string"
-          Value="[INSTALLDIR]" />
-        <RegistryValue
-          Root="HKLM"
-          Key="Software\$(var.Manufacturer)\$(var.ProductName)"
-          Name="Version"
-          Type="string"
-          Value="$(var.ProductVersion)" />
-      </Component>
-
-      <!-- Icon file -->
-      <Component Id="IconComp"
-                 Guid="{C3D4E5F6-A7B8-9012-CDEF-123456789012}"
-                 Win64="yes">
-        <File Id="NexusTubeIcoFile"
-              Name="NexusTube.ico"
-              Source="NexusTube.ico"
-              KeyPath="yes" />
-      </Component>
-
-    </DirectoryRef>
-
-    <!-- ── Component 2: Desktop shortcut (HKCU KeyPath) ─────── -->
+    <!-- ── Desktop shortcut (HKCU KeyPath) ─────────────────── -->
     <DirectoryRef Id="DesktopFolder">
       <Component Id="DesktopShortcutComp"
                  Guid="{E5F6A7B8-C9D0-1234-EF01-345678901234}"
@@ -180,6 +146,13 @@
           WorkingDirectory="INSTALLDIR"
           Icon="NexusTubeIcon.ico" />
         <Shortcut
+          Id="RepairShortcut"
+          Directory="ApplicationProgramsFolder"
+          Name="Repair NexusTube"
+          Description="Replace damaged or missing NexusTube files and engines"
+          Target="[SystemFolder]msiexec.exe"
+          Arguments="/fa [ProductCode]" />
+        <Shortcut
           Id="UninstallShortcut"
           Directory="ApplicationProgramsFolder"
           Name="Uninstall NexusTube"
@@ -200,8 +173,7 @@
       Level="1"
       Absent="disallow"
       AllowAdvertise="no">
-      <ComponentRef Id="NexusTubeExeComp" />
-      <ComponentRef Id="IconComp" />
+      <ComponentGroupRef Id="ElectronApp" />
       <ComponentRef Id="DesktopShortcutComp" />
       <ComponentRef Id="StartMenuComp" />
     </Feature>
@@ -225,7 +197,24 @@
                   Impersonate="yes"
                   Return="asyncNoWait" />
 
+    <!-- Repair drops the user's engine copies so the shipped copies are used again. -->
+    <CustomAction Id="QueueEngineReset"
+                  Property="EngineBinToReset"
+                  Value="[%APPDATA]\NexusTube\bin" />
+    <CustomAction Id="ResetShippedEngines"
+                  Directory="SystemFolder"
+                  ExeCommand="cmd.exe /c if exist &quot;[EngineBinToReset]&quot; rmdir /s /q &quot;[EngineBinToReset]&quot;"
+                  Execute="immediate"
+                  Impersonate="yes"
+                  Return="ignore" />
+
     <InstallExecuteSequence>
+      <Custom Action="QueueEngineReset" Before="ResetShippedEngines">
+        <![CDATA[REINSTALL AND NOT REMOVE]]>
+      </Custom>
+      <Custom Action="ResetShippedEngines" After="InstallFiles">
+        <![CDATA[REINSTALL AND NOT REMOVE]]>
+      </Custom>
       <Custom Action="LaunchApplication" After="InstallFinalize">
         <![CDATA[WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed]]>
       </Custom>

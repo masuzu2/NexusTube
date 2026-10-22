@@ -1,48 +1,31 @@
 @echo off
 chcp 65001 >nul 2>&1
 title NexusTube -- Build MSI Installer
-color 0B
+cd /d "%~dp0"
 
 echo.
-echo  =====================================================
-echo   NexusTube  MSI Installer Builder  v3.2.0
-echo   Build .msi Windows Installer
-echo  =====================================================
+echo  NexusTube MSI Installer  v3.4.0
 echo.
 
-set PYTHON_CMD=
-where python >nul 2>&1 && set PYTHON_CMD=python
-if "%PYTHON_CMD%"=="" (
-    where python3 >nul 2>&1 && set PYTHON_CMD=python3
+set "NODE_CMD="
+if exist "%LOCALAPPDATA%\Programs\cursor\resources\app\resources\helpers\node.exe" (
+  set "NODE_CMD=%LOCALAPPDATA%\Programs\cursor\resources\app\resources\helpers\node.exe"
 )
-if "%PYTHON_CMD%"=="" (
-    where py >nul 2>&1 && set PYTHON_CMD=py
-)
-
-if "%PYTHON_CMD%"=="" (
-    echo  [ERROR] Python is not found on this system!
-    echo  Please download and install Python 3.11+:
-    echo  https://www.python.org/downloads/
-    pause
-    exit /b 1
+if not defined NODE_CMD where node >nul 2>&1 && set "NODE_CMD=node"
+if not defined NODE_CMD (
+  echo  [ERROR] Node.js was not found.
+  pause
+  exit /b 1
 )
 
-echo  [OK] Python: %PYTHON_CMD%
-echo.
-echo  Building MSI Installer with WiX Toolset...
-echo.
-
-%PYTHON_CMD% "%~dp0build_installer.py"
-
+"%NODE_CMD%" "%~dp0build_msi.js"
 if errorlevel 1 (
-    echo.
-    echo  [!] Build failed -- please check the errors above.
-    echo.
-    pause
-) else (
-    echo.
-    echo  [OK] Build completed successfully!
-    echo  MSI location: %~dp0NexusTube_Setup_v3.2.0.msi
-    echo.
-    pause
+  echo.
+  echo  [!] Build failed.
+  pause
+  exit /b 1
 )
+
+echo.
+echo  [OK] MSI: %~dp0NexusTube_Setup_v3.4.0.msi
+pause

@@ -8,6 +8,10 @@ __pycache__/
 build/
 dist/
 
+# Electron package output
+dist_electron/
+node_modules/
+
 # WiX / Installer build artifacts & tools
 .wix_tools/
 *.wixobj

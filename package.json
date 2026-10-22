@@ -1,0 +1,48 @@
+{
+  "name": "nexustube",
+  "version": "3.4.0",
+  "description": "NexusTube — Next-Gen YouTube & Multi-Platform Music Suite & Studio Desktop Player (Electron Edition)",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/masuzu2/NexusTube.git"
+  },
+  "author": "herlove",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "music-metadata": "^11.16.1",
+    "node-id3": "^0.2.9"
+  },
+  "build": {
+    "appId": "com.herlove.nexustube",
+    "productName": "NexusTube",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "icon.ico"
+    },
+    "files": [
+      "index.js",
+      "src/**/*",
+      "web/**/*",
+      "icon.ico",
+      "package.json"
+    ]
+  }
+}

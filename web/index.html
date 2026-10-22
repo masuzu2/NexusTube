@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="application-name" content="NexusTube v3.2.0 - v3.4.0">
-  <title>NexusTube — Next-Gen Music Suite</title>
+  <title>NexusTube</title>
 
   <!-- Google Fonts Preconnect & High-Fidelity Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Offline Tailwind JIT Core Engine (Pre-configured for Instant Boot) -->
   <script>
@@ -19,8 +19,8 @@
         theme: {
           extend: {
             fontFamily: {
-              sans: ['"Plus Jakarta Sans"', '"Noto Sans Thai"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-              mono: ['"JetBrains Mono"', '"SF Mono"', 'Consolas', 'monospace'],
+              sans: ['Sarabun', 'Leelawadee UI', 'Segoe UI', 'sans-serif'],
+              mono: ['Sarabun', 'Leelawadee UI', 'Segoe UI', 'sans-serif'],
             },
             colors: {
               oled: 'var(--bg-oled)',
@@ -52,7 +52,7 @@
       <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent pointer-events-none"></div>
 
       <div class="flex items-center space-x-3 pointer-events-auto">
-        <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-[var(--accent)] to-indigo-500 flex items-center justify-center shadow-[0_0_14px_var(--accent-glow)]">
+        <div class="desk-mark">
           <svg class="w-3.5 h-3.5 text-black fill-current" viewBox="0 0 24 24">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
@@ -67,7 +67,7 @@
       <!-- Center Subtle Studio Status -->
       <div class="flex items-center space-x-2 text-[11px] text-slate-400 font-medium pointer-events-none">
         <span class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent-glow)]"></span>
-        <span class="tracking-wide text-slate-300">Studio Audio Engine Active</span>
+        <span class="tracking-wide">พร้อมกัน 2 งาน</span>
       </div>
 
       <!-- Engine Health Pill, Sleep Timer, Shortcuts, Mini-Player & Window Controls -->
@@ -192,26 +192,11 @@
         <!-- ================= PAGE 1: SEARCH & DISCOVER ================= -->
         <section id="page-search" class="page-view p-8 space-y-8 max-w-6xl mx-auto w-full">
           <!-- Hero Banner (Linear Caliber Glassmorphism) -->
-          <div class="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-r from-indigo-950/40 via-purple-950/25 to-black/60 border border-white/[0.08] shadow-2xl spotlight-card hero-spotlight">
-            <div class="absolute -right-16 -top-16 w-80 h-80 bg-[var(--accent)]/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="relative z-10 space-y-3">
-              <div class="flex items-center space-x-2.5">
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[var(--accent)] text-black uppercase tracking-wider shadow-[0_0_12px_var(--accent-glow)]">Universal Resolver</span>
-                <span class="text-xs text-slate-300 font-medium">YouTube · Spotify · Apple Music · SoundCloud</span>
-              </div>
-              <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight" data-i18n="Search_Hero">
-                Download Ultra High-Res Audio & 4K Video
-              </h1>
-              <p class="text-sm text-slate-300 max-w-2xl leading-relaxed" data-i18n="Search_Sub">
-                Paste any music link or type any song title to instantly stream, tag with ID3, extract LRC lyrics, and download at studio master quality.
-              </p>
-              <div class="pt-1 flex items-center space-x-2 text-[11px] text-slate-400 font-mono">
-                <span class="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/[0.08] text-slate-300 font-bold">Ctrl + V</span>
-                <span>Instant Paste & Stream</span>
-                <span class="text-slate-600">·</span>
-                <span class="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/[0.08] text-slate-300 font-bold">Ctrl + K</span>
-                <span>Focus Search</span>
-              </div>
+          <div class="desk-hero">
+            <div class="space-y-2">
+              <h1 data-i18n="Search_Hero">วางลิงก์ แล้วคิวลองได้สูงสุด 7 วิธี</h1>
+              <p class="text-sm" data-i18n="Search_Sub">ไฟล์ที่เล็กกว่า 8 KB ไม่นับว่าเสร็จ คิวถูกบันทึกไว้ถ้าปิดแอป</p>
+              <p class="desk-proof">พร้อมกัน 2 งาน. ถ้าไม่มีข้อมูลใหม่ 90 วินาที จะเปลี่ยนวิธี. ปิดแอปแล้วคิวไม่หาย.</p>
             </div>
           </div>
 
@@ -399,16 +384,16 @@
 
         <!-- ================= PAGE 2: DOWNLOAD QUEUE ================= -->
         <section id="page-queue" class="page-view p-8 space-y-6 max-w-6xl mx-auto w-full hidden">
-          <div class="flex items-center justify-between pb-3 border-b border-white/[0.06]">
-            <div>
+          <div class="space-y-2 pb-3 border-b border-white/[0.06]">
+            <div class="flex items-center justify-between gap-3">
               <h1 class="text-2xl font-extrabold text-white tracking-tight" data-i18n="Download Queue">Download Queue</h1>
-              <p class="text-xs text-slate-400" data-i18n="Queue_Sub">Track active downloads with real-time speed, ETA, and progress.</p>
+              <div class="flex items-center space-x-2 flex-shrink-0">
+                <button id="btn-cancel-all-queue" class="px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-400 transition-colors cursor-pointer border border-red-500/20 active:scale-95 whitespace-nowrap" data-i18n="Cancel All">Cancel All</button>
+                <button id="btn-clear-finished-queue" class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06] whitespace-nowrap" data-i18n="Clear Finished">Clear Finished</button>
+                <button id="btn-open-queue-folder" class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06] whitespace-nowrap" data-i18n="Open Downloads Folder">Open Folder</button>
+              </div>
             </div>
-            <div class="flex items-center space-x-2 sm:space-x-3">
-              <button id="btn-cancel-all-queue" class="px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-400 transition-colors cursor-pointer border border-red-500/20 active:scale-95" data-i18n="Cancel All">Cancel All</button>
-              <button id="btn-clear-finished-queue" class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06]" data-i18n="Clear Finished">Clear Finished</button>
-              <button id="btn-open-queue-folder" class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-slate-300 transition-colors cursor-pointer border border-white/[0.06]" data-i18n="Open Downloads Folder">Open Folder</button>
-            </div>
+            <p class="text-xs text-slate-400" data-i18n="Queue_Sub">พร้อมกัน 2 งาน ถ้าเงียบ 90 วินาทีจะเปลี่ยนวิธี</p>
           </div>
 
           <!-- Queue Statistics Bar -->
@@ -884,10 +869,10 @@
               <div class="p-3.5 rounded-xl bg-black/30 border border-white/[0.04] flex items-center justify-between">
                 <div>
                   <div class="text-xs text-slate-300 font-medium">Windows System Tray Icon</div>
-                  <div class="text-[10px] text-slate-500">Enables tray notification icon with right-click menu and quick player controls</div>
+                  <div class="text-[10px] text-slate-500">ปิดไว้เป็นค่าเริ่มต้น โปรแกรมไม่ค้างที่แถบงานหลังปิดหน้าต่าง</div>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="setting-system-tray" checked class="sr-only peer">
+                  <input type="checkbox" id="setting-system-tray" class="sr-only peer">
                   <div class="w-9 h-5 bg-white/[0.15] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)]"></div>
                 </label>
               </div>
@@ -896,7 +881,7 @@
               <div class="p-3.5 rounded-xl bg-black/30 border border-white/[0.04] flex items-center justify-between">
                 <div>
                   <div class="text-xs text-slate-300 font-medium">Minimize to Tray on Close (X)</div>
-                  <div class="text-[10px] text-slate-500">Closing the window keeps music playing seamlessly in the background tray</div>
+                  <div class="text-[10px] text-slate-500">ค่าเริ่มต้นคือปิดหน้าต่างแล้วออกจากหน่วยความจำ คิวที่ยังไม่จบถูกบันทึกไว้ เปิดตัวเลือกนี้เมื่อต้องการให้เพลงเล่นต่อ</div>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" id="setting-minimize-to-tray" class="sr-only peer">

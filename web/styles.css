@@ -3,56 +3,78 @@
    (Spotify, Apple Music & Linear Caliber Aesthetic — ui-ux-pro-max-skill)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Dynamic Theme Accent (Customizable via Live Theming) */
-  --accent: #22C55E;
-  --accent-hover: #16A34A;
-  --accent-active: #15803D;
-  --accent-rgb: 34, 197, 94;
-  --accent-glow: rgba(34, 197, 94, 0.35);
-  --accent-glow-subtle: rgba(34, 197, 94, 0.15);
-  --accent-glow-high: rgba(34, 197, 94, 0.55);
+  /* Recorder lamp: a night desk, warm charcoal, copper jack as the one accent. */
+  --paper: #1A1613;
+  --paper-2: #221C18;
+  --surface: #2A231E;
+  --surface-2: #342B25;
+  --ink: #F4EDE6;
+  --ink-2: #C4B6A8;
+  --ink-3: #8F8276;
+  --signal: #E07A3D;
+  --signal-hover: #C45C26;
+  --signal-ink: #2A1408;
+  --line: rgba(244, 237, 230, 0.14);
+  --line-strong: rgba(244, 237, 230, 0.28);
+  --error: #E15A4A;
+  --few: #E0A15A;
+  --full: #8F8276;
 
-  /* Deep OLED Background Hierarchy */
-  --bg-oled: #030307;
-  --bg-oled-rgb: 3, 3, 7;
-  --bg-sidebar: #06060E;
-  --bg-card: #0A0A14;
-  --bg-card-hover: #101020;
-  --bg-input: #080812;
-  --bg-modal: #0B0B16;
-  --bg-player: #06060C;
+  --r-control: 10px;
+  --r-media: 14px;
+  --r-sheet: 20px;
+  --r-commit: 999px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --header-h: 44px;
+  --tabbar-h: 0px;
+  --z-bar: 45;
+  --ui: "Sarabun", "Leelawadee UI", "Segoe UI", "Noto Sans Thai", sans-serif;
 
-  /* Glassmorphism & Specular Borders */
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-medium: rgba(255, 255, 255, 0.14);
-  --border-highlight: rgba(255, 255, 255, 0.22);
+  --accent: var(--signal);
+  --accent-hover: var(--signal-hover);
+  --accent-active: #A84B1C;
+  --accent-rgb: 224, 122, 61;
+  --accent-glow: rgba(224, 122, 61, 0.28);
+  --accent-glow-subtle: rgba(224, 122, 61, 0.12);
+  --accent-glow-high: rgba(224, 122, 61, 0.4);
+
+  --bg-oled: var(--paper);
+  --bg-oled-rgb: 26, 22, 19;
+  --bg-sidebar: var(--paper-2);
+  --bg-card: var(--surface);
+  --bg-card-hover: var(--surface-2);
+  --bg-input: #1F1A16;
+  --bg-modal: #2C241F;
+  --bg-player: #1F1A16;
+
+  --border-subtle: var(--line);
+  --border-medium: var(--line-strong);
+  --border-highlight: var(--line-strong);
   --border-accent: rgba(var(--accent-rgb), 0.45);
-  --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
-  --glass-blur: 14px;
+  --glass-specular: none;
+  --glass-blur: 0px;
 
-  /* Typography Colors */
-  --text: #F8FAFC;
-  --text-rgb: 248, 250, 252;
-  --text-secondary: #94A3B8;
-  --text-tertiary: #64748B;
-  --text-muted: #475569;
+  --text: var(--ink);
+  --text-rgb: 244, 237, 230;
+  --text-secondary: var(--ink-2);
+  --text-tertiary: var(--ink-3);
+  --text-muted: var(--ink-3);
 
-  /* Semantic Status */
-  --success: #10B981;
-  --success-rgb: 16, 185, 129;
-  --error: #EF4444;
-  --error-rgb: 239, 68, 68;
-  --warning: #F59E0B;
-  --warning-rgb: 245, 158, 11;
-  --info: #38BDF8;
-  --info-rgb: 56, 189, 248;
+  --success: #7D9A6A;
+  --success-rgb: 125, 154, 106;
+  --error-rgb: 225, 90, 74;
+  --warning: var(--few);
+  --warning-rgb: 224, 161, 90;
+  --info: var(--ink-2);
+  --info-rgb: 196, 182, 168;
 
-  /* Typography Families */
-  --font-sans: "Plus Jakarta Sans", "Noto Sans Thai", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
+  --font-sans: var(--ui);
+  --font-mono: var(--ui);
 }
 
 /* ==========================================================================
@@ -76,18 +98,49 @@
 }
 
 body {
-  background-color: var(--bg-oled);
-  color: var(--text);
-  font-family: var(--font-sans);
+  background-color: var(--paper);
+  color: var(--ink) !important;
+  font-family: var(--ui) !important;
+  font-variant-numeric: tabular-nums;
   overflow: hidden;
   user-select: none;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-::selection {
-  background: rgba(var(--accent-rgb), 0.35);
-  color: #FFFFFF;
+.font-sans,
+.font-mono {
+  font-family: var(--ui) !important;
+}
+
+.desk-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-control);
+  background: var(--signal);
+  color: var(--signal-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.desk-hero {
+  padding: var(--s4) var(--s5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sheet);
+}
+
+.desk-hero h1 {
+  font-size: 1.75rem;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.desk-proof {
+  margin-top: var(--s3);
+  font-size: 0.8125rem;
+  color: var(--ink-2);
 }
 
 /* Custom Thin Dark Scrollbars */

@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="cmp9ac8fc9b303d" Guid="*" Win64="yes">
+        <File Id="fil9ac8fc9b303d" Name="chrome_100_percent.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\chrome_100_percent.pak" KeyPath="yes" />
+      </Component>
+      <Component Id="cmpcc774e23b85c" Guid="*" Win64="yes">
+        <File Id="filcc774e23b85c" Name="chrome_200_percent.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\chrome_200_percent.pak" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp8e6897c7a8d8" Guid="*" Win64="yes">
+        <File Id="fil8e6897c7a8d8" Name="d3dcompiler_47.dll" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\d3dcompiler_47.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp3df8d7a76ac2" Guid="*" Win64="yes">
+        <File Id="fil3df8d7a76ac2" Name="dxcompiler.dll" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\dxcompiler.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp27b0488e629b" Guid="*" Win64="yes">
+        <File Id="fil27b0488e629b" Name="dxil.dll" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\dxil.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="cmpee8b8d65fc87" Guid="*" Win64="yes">
+        <File Id="filee8b8d65fc87" Name="ffmpeg.dll" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\ffmpeg.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="cmpfd9419483e88" Guid="*" Win64="yes">
+        <File Id="filfd9419483e88" Name="icudtl.dat" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\icudtl.dat" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp894a4568436f" Guid="*" Win64="yes">
+        <File Id="fil894a4568436f" Name="LICENSE.electron.txt" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\LICENSE.electron.txt" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp24756ce6d6cf" Guid="*" Win64="yes">
+        <File Id="fil24756ce6d6cf" Name="LICENSES.chromium.html" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\LICENSES.chromium.html" KeyPath="yes" />
+      </Component>
+      <Component Id="NexusTubeExeComp" Guid="{B2C3D4E5-F6A7-8901-BCDE-F12345678901}" Win64="yes">
+        <File Id="NexusTubeExeFile" Name="NexusTube.exe" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\NexusTube.exe" KeyPath="yes" />
+        <RegistryValue Root="HKLM" Key="Software\by herlove\NexusTube" Name="InstallDir" Type="string" Value="[INSTALLDIR]" />
+        <RegistryValue Root="HKLM" Key="Software\by herlove\NexusTube" Name="Version" Type="string" Value="3.4.0" />
+      </Component>
+      <Component Id="cmpbfb5589518c8" Guid="*" Win64="yes">
+        <File Id="filbfb5589518c8" Name="resources.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\resources.pak" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp346dfe2d7943" Guid="*" Win64="yes">
+        <File Id="fil346dfe2d7943" Name="snapshot_blob.bin" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\snapshot_blob.bin" KeyPath="yes" />
+      </Component>
+      <Component Id="cmpb5b81c4ac6f2" Guid="*" Win64="yes">
+        <File Id="filb5b81c4ac6f2" Name="v8_context_snapshot.bin" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\v8_context_snapshot.bin" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp9b4492772415" Guid="*" Win64="yes">
+        <File Id="fil9b4492772415" Name="vk_swiftshader.dll" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\vk_swiftshader.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="cmpf13fb907df09" Guid="*" Win64="yes">
+        <File Id="filf13fb907df09" Name="vk_swiftshader_icd.json" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\vk_swiftshader_icd.json" KeyPath="yes" />
+      </Component>
+      <Component Id="cmp63907cd1ef6d" Guid="*" Win64="yes">
+        <File Id="fil63907cd1ef6d" Name="vulkan-1.dll" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\vulkan-1.dll" KeyPath="yes" />
+      </Component>
+      <Directory Id="dir9a5d56716d56" Name="bin">
+        <Component Id="cld9a5d56716d56" Guid="*" Win64="yes">
+          <RemoveFolder Id="rmd9a5d56716d56" On="uninstall" />
+          <RegistryValue Root="HKLM" Key="Software\by herlove\NexusTube\dirs" Name="bin" Type="integer" Value="1" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpfde746caddc0" Guid="*" Win64="yes">
+          <File Id="filfde746caddc0" Name="yt-dlp.exe" Source="C:\Users\Administrator\AppData\Roaming\NexusTube\bin\yt-dlp.exe" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp2fe31b413cbb" Guid="*" Win64="yes">
+          <File Id="fil2fe31b413cbb" Name="ffmpeg.exe" Source="C:\Users\Administrator\AppData\Roaming\NexusTube\bin\ffmpeg.exe" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp96fd0cbeeafa" Guid="*" Win64="yes">
+          <File Id="fil96fd0cbeeafa" Name="ffprobe.exe" Source="C:\Users\Administrator\AppData\Roaming\NexusTube\bin\ffprobe.exe" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpfedb2f8bdf24" Guid="*" Win64="yes">
+          <File Id="filfedb2f8bdf24" Name="ffplay.exe" Source="C:\Users\Administrator\AppData\Roaming\NexusTube\bin\ffplay.exe" KeyPath="yes" />
+        </Component>
+      </Directory>
+      <Directory Id="dir86aeaf8b0274" Name="locales">
+        <Component Id="cld86aeaf8b0274" Guid="*" Win64="yes">
+          <RemoveFolder Id="rmd86aeaf8b0274" On="uninstall" />
+          <RegistryValue Root="HKLM" Key="Software\by herlove\NexusTube\dirs" Name="locales" Type="integer" Value="1" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpf9ba2ce30d25" Guid="*" Win64="yes">
+          <File Id="filf9ba2ce30d25" Name="af.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\af.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpe6ceb54d2990" Guid="*" Win64="yes">
+          <File Id="file6ceb54d2990" Name="am.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\am.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp303f52239f6f" Guid="*" Win64="yes">
+          <File Id="fil303f52239f6f" Name="ar.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\ar.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp1a78bebe323b" Guid="*" Win64="yes">
+          <File Id="fil1a78bebe323b" Name="bg.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\bg.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp3a885432c77b" Guid="*" Win64="yes">
+          <File Id="fil3a885432c77b" Name="bn.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\bn.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp85990be35849" Guid="*" Win64="yes">
+          <File Id="fil85990be35849" Name="ca.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\ca.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp008d071f4973" Guid="*" Win64="yes">
+          <File Id="fil008d071f4973" Name="cs.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\cs.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpbc77fa9c4d1d" Guid="*" Win64="yes">
+          <File Id="filbc77fa9c4d1d" Name="da.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\da.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp0f6ec7b277af" Guid="*" Win64="yes">
+          <File Id="fil0f6ec7b277af" Name="de.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\de.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp99dcc2ee83cd" Guid="*" Win64="yes">
+          <File Id="fil99dcc2ee83cd" Name="el.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\el.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpa135a1f101b9" Guid="*" Win64="yes">
+          <File Id="fila135a1f101b9" Name="en-GB.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\en-GB.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpeaed10fed2c7" Guid="*" Win64="yes">
+          <File Id="fileaed10fed2c7" Name="en-US.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\en-US.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp4a8181e3395f" Guid="*" Win64="yes">
+          <File Id="fil4a8181e3395f" Name="es-419.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\es-419.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpf4d0b1348bda" Guid="*" Win64="yes">
+          <File Id="filf4d0b1348bda" Name="es.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\es.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp7106106bf1a2" Guid="*" Win64="yes">
+          <File Id="fil7106106bf1a2" Name="et.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\et.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpc5e738b2c849" Guid="*" Win64="yes">
+          <File Id="filc5e738b2c849" Name="fa.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\fa.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpe6c2734c651d" Guid="*" Win64="yes">
+          <File Id="file6c2734c651d" Name="fi.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\fi.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp486f1b9f6780" Guid="*" Win64="yes">
+          <File Id="fil486f1b9f6780" Name="fil.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\fil.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp56c11efd2c46" Guid="*" Win64="yes">
+          <File Id="fil56c11efd2c46" Name="fr.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\fr.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp28490726104c" Guid="*" Win64="yes">
+          <File Id="fil28490726104c" Name="gu.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\gu.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpe7c879ecb552" Guid="*" Win64="yes">
+          <File Id="file7c879ecb552" Name="he.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\he.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpc0158fb60637" Guid="*" Win64="yes">
+          <File Id="filc0158fb60637" Name="hi.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\hi.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp89a669d5c0a2" Guid="*" Win64="yes">
+          <File Id="fil89a669d5c0a2" Name="hr.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\hr.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp7193d0d78107" Guid="*" Win64="yes">
+          <File Id="fil7193d0d78107" Name="hu.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\hu.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp82575a283dbc" Guid="*" Win64="yes">
+          <File Id="fil82575a283dbc" Name="id.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\id.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp8150937576e5" Guid="*" Win64="yes">
+          <File Id="fil8150937576e5" Name="it.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\it.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpc8dd93388932" Guid="*" Win64="yes">
+          <File Id="filc8dd93388932" Name="ja.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\ja.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp0f2af43bd228" Guid="*" Win64="yes">
+          <File Id="fil0f2af43bd228" Name="kn.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\kn.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpd064278cab34" Guid="*" Win64="yes">
+          <File Id="fild064278cab34" Name="ko.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\ko.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp77525cb880a3" Guid="*" Win64="yes">
+          <File Id="fil77525cb880a3" Name="lt.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\lt.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpe1f35c548afe" Guid="*" Win64="yes">
+          <File Id="file1f35c548afe" Name="lv.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\lv.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp76c7573d73a3" Guid="*" Win64="yes">
+          <File Id="fil76c7573d73a3" Name="ml.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\ml.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpda2d786be74b" Guid="*" Win64="yes">
+          <File Id="filda2d786be74b" Name="mr.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\mr.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp2592a0c1f0a5" Guid="*" Win64="yes">
+          <File Id="fil2592a0c1f0a5" Name="ms.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\ms.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp4729912cbb95" Guid="*" Win64="yes">
+          <File Id="fil4729912cbb95" Name="nb.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\nb.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp44ffc527796e" Guid="*" Win64="yes">
+          <File Id="fil44ffc527796e" Name="nl.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\nl.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp2a8a50b1f772" Guid="*" Win64="yes">
+          <File Id="fil2a8a50b1f772" Name="pl.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\pl.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpda576bbbc924" Guid="*" Win64="yes">
+          <File Id="filda576bbbc924" Name="pt-BR.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\pt-BR.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp0dd587d389ab" Guid="*" Win64="yes">
+          <File Id="fil0dd587d389ab" Name="pt-PT.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\pt-PT.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpd5af66e04c09" Guid="*" Win64="yes">
+          <File Id="fild5af66e04c09" Name="ro.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\ro.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp690b8b93402c" Guid="*" Win64="yes">
+          <File Id="fil690b8b93402c" Name="ru.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\ru.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpe8c4f0b14922" Guid="*" Win64="yes">
+          <File Id="file8c4f0b14922" Name="sk.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\sk.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp426c24b5d983" Guid="*" Win64="yes">
+          <File Id="fil426c24b5d983" Name="sl.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\sl.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpff516bff8b4b" Guid="*" Win64="yes">
+          <File Id="filff516bff8b4b" Name="sr.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\sr.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp6618bee62013" Guid="*" Win64="yes">
+          <File Id="fil6618bee62013" Name="sv.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\sv.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp3aec34eb5760" Guid="*" Win64="yes">
+          <File Id="fil3aec34eb5760" Name="sw.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\sw.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp248e146c2dcc" Guid="*" Win64="yes">
+          <File Id="fil248e146c2dcc" Name="ta.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\ta.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp7547169a0f4f" Guid="*" Win64="yes">
+          <File Id="fil7547169a0f4f" Name="te.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\te.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp1b165dad181c" Guid="*" Win64="yes">
+          <File Id="fil1b165dad181c" Name="th.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\th.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmpfca327a14f0a" Guid="*" Win64="yes">
+          <File Id="filfca327a14f0a" Name="tr.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\tr.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp4e2fd9c886f5" Guid="*" Win64="yes">
+          <File Id="fil4e2fd9c886f5" Name="uk.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\uk.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp4d6559feab9d" Guid="*" Win64="yes">
+          <File Id="fil4d6559feab9d" Name="ur.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\ur.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp7994eb438c6f" Guid="*" Win64="yes">
+          <File Id="fil7994eb438c6f" Name="vi.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\vi.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp79e8e017212a" Guid="*" Win64="yes">
+          <File Id="fil79e8e017212a" Name="zh-CN.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\zh-CN.pak" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp1a6690c05660" Guid="*" Win64="yes">
+          <File Id="fil1a6690c05660" Name="zh-TW.pak" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\locales\zh-TW.pak" KeyPath="yes" />
+        </Component>
+      </Directory>
+      <Directory Id="dir0189424a5a60" Name="resources">
+        <Component Id="cld0189424a5a60" Guid="*" Win64="yes">
+          <RemoveFolder Id="rmd0189424a5a60" On="uninstall" />
+          <RegistryValue Root="HKLM" Key="Software\by herlove\NexusTube\dirs" Name="resources" Type="integer" Value="1" KeyPath="yes" />
+        </Component>
+        <Component Id="cmp07cb4ec940dc" Guid="*" Win64="yes">
+          <File Id="fil07cb4ec940dc" Name="app.asar" Source="E:\projects_backup\NexusTube - js - Copy\dist_electron\win-unpacked\resources\app.asar" KeyPath="yes" />
+        </Component>
+      </Directory>
+    </DirectoryRef>
+    <ComponentGroup Id="ElectronApp">
+      <ComponentRef Id="cmp9ac8fc9b303d" />
+      <ComponentRef Id="cmpcc774e23b85c" />
+      <ComponentRef Id="cmp8e6897c7a8d8" />
+      <ComponentRef Id="cmp3df8d7a76ac2" />
+      <ComponentRef Id="cmp27b0488e629b" />
+      <ComponentRef Id="cmpee8b8d65fc87" />
+      <ComponentRef Id="cmpfd9419483e88" />
+      <ComponentRef Id="cmp894a4568436f" />
+      <ComponentRef Id="cmp24756ce6d6cf" />
+      <ComponentRef Id="NexusTubeExeComp" />
+      <ComponentRef Id="cmpbfb5589518c8" />
+      <ComponentRef Id="cmp346dfe2d7943" />
+      <ComponentRef Id="cmpb5b81c4ac6f2" />
+      <ComponentRef Id="cmp9b4492772415" />
+      <ComponentRef Id="cmpf13fb907df09" />
+      <ComponentRef Id="cmp63907cd1ef6d" />
+      <ComponentRef Id="cld9a5d56716d56" />
+      <ComponentRef Id="cmpfde746caddc0" />
+      <ComponentRef Id="cmp2fe31b413cbb" />
+      <ComponentRef Id="cmp96fd0cbeeafa" />
+      <ComponentRef Id="cmpfedb2f8bdf24" />
+      <ComponentRef Id="cld86aeaf8b0274" />
+      <ComponentRef Id="cmpf9ba2ce30d25" />
+      <ComponentRef Id="cmpe6ceb54d2990" />
+      <ComponentRef Id="cmp303f52239f6f" />
+      <ComponentRef Id="cmp1a78bebe323b" />
+      <ComponentRef Id="cmp3a885432c77b" />
+      <ComponentRef Id="cmp85990be35849" />
+      <ComponentRef Id="cmp008d071f4973" />
+      <ComponentRef Id="cmpbc77fa9c4d1d" />
+      <ComponentRef Id="cmp0f6ec7b277af" />
+      <ComponentRef Id="cmp99dcc2ee83cd" />
+      <ComponentRef Id="cmpa135a1f101b9" />
+      <ComponentRef Id="cmpeaed10fed2c7" />
+      <ComponentRef Id="cmp4a8181e3395f" />
+      <ComponentRef Id="cmpf4d0b1348bda" />
+      <ComponentRef Id="cmp7106106bf1a2" />
+      <ComponentRef Id="cmpc5e738b2c849" />
+      <ComponentRef Id="cmpe6c2734c651d" />
+      <ComponentRef Id="cmp486f1b9f6780" />
+      <ComponentRef Id="cmp56c11efd2c46" />
+      <ComponentRef Id="cmp28490726104c" />
+      <ComponentRef Id="cmpe7c879ecb552" />
+      <ComponentRef Id="cmpc0158fb60637" />
+      <ComponentRef Id="cmp89a669d5c0a2" />
+      <ComponentRef Id="cmp7193d0d78107" />
+      <ComponentRef Id="cmp82575a283dbc" />
+      <ComponentRef Id="cmp8150937576e5" />
+      <ComponentRef Id="cmpc8dd93388932" />
+      <ComponentRef Id="cmp0f2af43bd228" />
+      <ComponentRef Id="cmpd064278cab34" />
+      <ComponentRef Id="cmp77525cb880a3" />
+      <ComponentRef Id="cmpe1f35c548afe" />
+      <ComponentRef Id="cmp76c7573d73a3" />
+      <ComponentRef Id="cmpda2d786be74b" />
+      <ComponentRef Id="cmp2592a0c1f0a5" />
+      <ComponentRef Id="cmp4729912cbb95" />
+      <ComponentRef Id="cmp44ffc527796e" />
+      <ComponentRef Id="cmp2a8a50b1f772" />
+      <ComponentRef Id="cmpda576bbbc924" />
+      <ComponentRef Id="cmp0dd587d389ab" />
+      <ComponentRef Id="cmpd5af66e04c09" />
+      <ComponentRef Id="cmp690b8b93402c" />
+      <ComponentRef Id="cmpe8c4f0b14922" />
+      <ComponentRef Id="cmp426c24b5d983" />
+      <ComponentRef Id="cmpff516bff8b4b" />
+      <ComponentRef Id="cmp6618bee62013" />
+      <ComponentRef Id="cmp3aec34eb5760" />
+      <ComponentRef Id="cmp248e146c2dcc" />
+      <ComponentRef Id="cmp7547169a0f4f" />
+      <ComponentRef Id="cmp1b165dad181c" />
+      <ComponentRef Id="cmpfca327a14f0a" />
+      <ComponentRef Id="cmp4e2fd9c886f5" />
+      <ComponentRef Id="cmp4d6559feab9d" />
+      <ComponentRef Id="cmp7994eb438c6f" />
+      <ComponentRef Id="cmp79e8e017212a" />
+      <ComponentRef Id="cmp1a6690c05660" />
+      <ComponentRef Id="cld0189424a5a60" />
+      <ComponentRef Id="cmp07cb4ec940dc" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

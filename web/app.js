@@ -589,9 +589,10 @@ function renderSearchResults(items) {
           : (state.currentFormat.startsWith("m4a") ? "badge-cyan" : "badge-gold"));
     const fmtText = state.currentFormat.toUpperCase().replace("_", " ");
 
+    const thumb = /^https?:\/\//i.test(String(item.thumbnail || '')) ? escapeHtml(item.thumbnail) : '';
     card.innerHTML = `
       <div class="relative w-full aspect-video rounded-xl overflow-hidden bg-black/50 group/thumb">
-        <img src="${item.thumbnail || ''}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+        <img src="${thumb}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
         <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
           <button class="btn-preview-item w-10 h-10 rounded-full bg-[var(--accent)] text-black flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer" title="Preview Stream">
             <svg class="w-5 h-5 fill-current translate-x-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -658,6 +659,16 @@ async function addDownloadTask(url, title, metadata = {}) {
 
   try {
     const res = await window.pywebview.api.add_to_queue(url, title, state.currentFormat, options, metadata);
+    if (res?.error) {
+      showToast(res.error, "error");
+      return;
+    }
+    if (res?.duplicate) {
+      showToast("รายการนี้อยู่ในคิวแล้ว", "warning");
+      switchTab("queue");
+      refreshQueue();
+      return;
+    }
     showToast(`Added to queue: ${title || url}`, "success");
     switchTab("queue");
     refreshQueue();
@@ -805,7 +816,7 @@ function renderQueueList(tasks) {
 
       <!-- Metrics and Actions -->
       <div class="flex items-center justify-between text-xs text-slate-400 pt-1 font-mono">
-        <div class="text-[11px] text-slate-400">${metricsStr}</div>
+        <div class="text-[11px] text-slate-400">${escapeHtml(metricsStr)}</div>
         <div class="flex items-center space-x-2">
           ${task.status === "downloading" || task.status === "waiting"
             ? `<button class="btn-cancel-task px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-red-500/20 hover:text-red-400 text-slate-300 font-bold text-xs transition-colors cursor-pointer border border-white/[0.06]" data-id="${task.id}">${t("Cancel")}</button>`
@@ -890,6 +901,28 @@ async function refreshLibrary() {
   }
 }
 
+function coverSrc(info) {
+  if (!info) return "";
+  const raw = info.cover_path || "";
+  if (!raw || raw.indexOf("data:") === 0) return "";
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return "local-media://cover?path=" + encodeURIComponent(raw);
+}
+
+function paintCover(img, fallback, info) {
+  if (!img) return;
+  const src = coverSrc(info);
+  if (src) {
+    if (img.getAttribute("src") !== src) img.src = src;
+    img.classList.remove("hidden");
+    if (fallback) fallback.classList.add("hidden");
+  } else {
+    img.removeAttribute("src");
+    img.classList.add("hidden");
+    if (fallback) fallback.classList.remove("hidden");
+  }
+}
+
 function renderLibrary(rawItems) {
   const gridContainer = document.getElementById("library-items-container");
   const tableContainer = document.getElementById("library-table-container");
@@ -957,8 +990,8 @@ function renderLibraryGrid(items, container) {
 
     card.innerHTML = `
       <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-white/[0.03] group/thumb">
-        ${item.cover_base64
-          ? `<img src="${item.cover_base64}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" alt="">`
+        ${coverSrc(item)
+          ? `<img src="${coverSrc(item)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" alt="">`
           : `<div class="w-full h-full flex items-center justify-center bg-white/[0.03] text-slate-500 group-hover:text-[var(--accent)] transition-colors"><svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>`}
         <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
           <button class="btn-play-card w-12 h-12 rounded-full bg-[var(--accent)] text-black flex items-center justify-center shadow-[0_0_20px_var(--accent-glow)] hover:scale-110 active:scale-95 transition-transform cursor-pointer">
@@ -1030,8 +1063,8 @@ function renderLibraryTable(items, tbody) {
       <td class="py-3 px-3">
         <div class="flex items-center space-x-3 min-w-0">
           <div class="w-10 h-10 rounded-lg overflow-hidden bg-white/[0.03] flex-shrink-0 relative">
-            ${item.cover_base64
-              ? `<img src="${item.cover_base64}" class="w-full h-full object-cover" alt="">`
+            ${coverSrc(item)
+              ? `<img src="${coverSrc(item)}" class="w-full h-full object-cover" alt="">`
               : `<div class="w-full h-full flex items-center justify-center text-slate-500"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>`}
             <button class="btn-play-row absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
               <svg class="w-4 h-4 fill-white translate-x-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -1371,19 +1404,7 @@ async function updatePlayerUI() {
     if (p.info && p.info.title) {
       document.getElementById("player-title").textContent = p.info.title;
       document.getElementById("player-artist").textContent = p.info.artist || "NexusTube";
-      if (p.info.cover_base64) {
-        if (thumbEl) {
-          thumbEl.src = p.info.cover_base64;
-          thumbEl.classList.remove("hidden");
-        }
-        if (fallbackEl) fallbackEl.classList.add("hidden");
-      } else {
-        if (thumbEl) {
-          thumbEl.src = "";
-          thumbEl.classList.add("hidden");
-        }
-        if (fallbackEl) fallbackEl.classList.remove("hidden");
-      }
+      paintCover(thumbEl, fallbackEl, p.info);
     }
 
     const cur = p.current_pos || 0;
@@ -1840,19 +1861,7 @@ function renderLyricsView() {
   titleEl.textContent = info.title || "No track playing";
   artistEl.textContent = info.artist || "NexusTube Karaoke Engine";
   const thumbFallback = document.getElementById("lyrics-thumb-fallback") || document.getElementById("lyrics-track-thumb-fallback");
-  if (info.cover_base64) {
-    if (thumbEl) {
-      thumbEl.src = info.cover_base64;
-      thumbEl.classList.remove("hidden");
-    }
-    if (thumbFallback) thumbFallback.classList.add("hidden");
-  } else {
-    if (thumbEl) {
-      thumbEl.src = "";
-      thumbEl.classList.add("hidden");
-    }
-    if (thumbFallback) thumbFallback.classList.remove("hidden");
-  }
+  paintCover(thumbEl, thumbFallback, info);
 
   const lyr = state.player.lyrics || { synced: [] };
   const synced = lyr.synced || [];
@@ -2045,7 +2054,7 @@ function setupLyricsControls() {
 
 async function streamTrack(url) {
   if (!state.apiReady || !url) return;
-  showToast("Streaming audio preview… please wait.");
+  showToast("Opening full track…");
   try {
     const res = await window.pywebview.api.stream_track(url);
     if (res) {
@@ -2446,15 +2455,18 @@ function closeModal(modalId) {
 // ============================================================================
 function updateEngineStatus(st) {
   if (!st) return;
+  const status = st.status && typeof st.status === 'object' ? st.status : st;
   const dot = document.getElementById("engine-status-dot");
   const text = document.getElementById("engine-status-text");
 
-  const allReady = st.ytdlp_ready && st.ffmpeg_ready;
+  const allReady = status.ytdlp_ready && status.ffmpeg_ready;
   if (allReady) {
-    dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+    dot.className = "w-2 h-2 rounded-full";
+    dot.style.background = "var(--success)";
     text.textContent = "Engines: Ready";
   } else {
-    dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
+    dot.className = "w-2 h-2 rounded-full";
+    dot.style.background = "var(--few)";
     text.textContent = "Engines: Missing/Updating";
   }
 
@@ -2463,21 +2475,22 @@ function updateEngineStatus(st) {
   container.innerHTML = "";
 
   const engines = [
-    { name: "yt-dlp", ready: st.ytdlp_ready, ver: st.ytdlp_version || "OK" },
-    { name: "FFmpeg", ready: st.ffmpeg_ready, ver: "Universal" },
-    { name: "FFprobe", ready: st.ffprobe_ready, ver: "Stream Inspector" },
-    { name: "FFplay", ready: st.ffplay_ready, ver: "Stream Preview" },
+    { name: "yt-dlp", ready: status.ytdlp_ready, ver: status.ytdlp_version || "OK" },
+    { name: "FFmpeg", ready: status.ffmpeg_ready, ver: "Universal" },
+    { name: "FFprobe", ready: status.ffprobe_ready, ver: "Stream Inspector" },
+    { name: "FFplay", ready: status.ffplay_ready, ver: "Stream Preview" },
   ];
 
   engines.forEach((e) => {
     const card = document.createElement("div");
     card.className = "p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-1";
+    const dotColor = e.ready ? "var(--success)" : "var(--error)";
     card.innerHTML = `
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold text-white">${e.name}</span>
-        <span class="w-2 h-2 rounded-full ${e.ready ? 'bg-emerald-400' : 'bg-red-400'}"></span>
+        <span class="w-2 h-2 rounded-full" style="background:${dotColor}"></span>
       </div>
-      <div class="text-[10px] text-slate-400 truncate">${e.ver}</div>
+      <div class="text-[10px] text-slate-400 truncate">${escapeHtml(e.ver)}</div>
     `;
     container.appendChild(card);
   });
@@ -2670,14 +2683,7 @@ function syncFullscreenKaraokeUI(cur, dur, p) {
   if (p.info && p.info.title) {
     if (titleEl) titleEl.textContent = p.info.title;
     if (artistEl) artistEl.textContent = p.info.artist || "NexusTube";
-    if (thumbEl) {
-      if (p.info.cover_base64) {
-        thumbEl.src = p.info.cover_base64;
-        thumbEl.classList.remove("hidden");
-      } else {
-        thumbEl.classList.add("hidden");
-      }
-    }
+    paintCover(thumbEl, null, p.info);
   }
 
   if (playIcon && pauseIcon) {
@@ -3664,17 +3670,7 @@ function syncMiniPlayerUIProgress(cur, dur, p) {
   if (p && p.info && p.info.title) {
     if (titleEl) titleEl.textContent = p.info.title;
     if (artistEl) artistEl.textContent = p.info.artist || "NexusTube";
-    if (thumbEl && fallbackEl) {
-      if (p.info.cover_base64) {
-        thumbEl.src = p.info.cover_base64;
-        thumbEl.classList.remove("hidden");
-        fallbackEl.classList.add("hidden");
-      } else {
-        thumbEl.src = "";
-        thumbEl.classList.add("hidden");
-        fallbackEl.classList.remove("hidden");
-      }
-    }
+    paintCover(thumbEl, fallbackEl, p.info);
   }
 
   if (lyricEl) {
@@ -3758,9 +3754,7 @@ function syncFullscreenVisualizerHUD(cur, dur, p) {
   if (p && p.info && p.info.title) {
     if (titleEl) titleEl.textContent = p.info.title;
     if (artistEl) artistEl.textContent = p.info.artist || "NexusTube";
-    if (thumbEl && p.info.cover_base64) {
-      thumbEl.src = p.info.cover_base64;
-    }
+    paintCover(thumbEl, null, p.info);
   }
 
   const pct = dur > 0 ? (cur / dur) * 100 : 0;
