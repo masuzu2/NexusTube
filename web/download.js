@@ -11,16 +11,24 @@ function esc(value) {
 }
 
 async function api(op, extra = {}) {
-  const res = await fetch("/api", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Nexus-Token": token
-    },
-    body: JSON.stringify({ op, ...extra })
-  });
+  let res;
+  try {
+    res = await fetch("api", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Nexus-Token": token
+      },
+      body: JSON.stringify({ op, ...extra })
+    });
+  } catch {
+    throw new Error("เปิดหน้านี้จาก GitHub ได้ แต่โหลดไฟล์ต้องรัน START_WEB.bat บนเครื่อง");
+  }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "ทำไม่สำเร็จ");
+  if (!res.ok) {
+    if (!data.error) throw new Error("เปิดหน้านี้จาก GitHub ได้ แต่โหลดไฟล์ต้องรัน START_WEB.bat บนเครื่อง");
+    throw new Error(data.error);
+  }
   return data;
 }
 
