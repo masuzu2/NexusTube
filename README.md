@@ -2,19 +2,17 @@
   <img src="https://raw.githubusercontent.com/masuzu2/NexusTube/main/icon.ico" width="100" alt="NexusTube Logo" />
   <h1>NexusTube v3.4.0</h1>
   <p><b>Next-Gen YouTube & Multi-Platform Music Suite & Studio Desktop Player</b></p>
-  <p><i>Spotify & Apple Music Caliber OLED Dark Glassmorphism · pywebview Edge WebView2 · ui-ux-pro-max · by herlove</i></p>
+  <p><i>Spotify & Apple Music Caliber OLED Dark Glassmorphism · Electron · by herlove</i></p>
 
-  [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-4338CA?style=flat-square&logo=python&logoColor=white)](https://python.org)
-  [![Desktop](https://img.shields.io/badge/Desktop-pywebview%20Edge%20WebView2-22C55E?style=flat-square)](https://pywebview.flowrl.com/)
+  [![Desktop](https://img.shields.io/badge/Desktop-Electron-22C55E?style=flat-square)](https://www.electronjs.org/)
   [![Engine](https://img.shields.io/badge/Engine-yt--dlp-22C55E?style=flat-square)](https://github.com/yt-dlp/yt-dlp)
   [![FFmpeg](https://img.shields.io/badge/Engine-FFmpeg-EAB308?style=flat-square)](https://ffmpeg.org)
-  [![Tests](https://img.shields.io/badge/Tests-170%2F170%20Passing-22C55E?style=flat-square)](https://github.com/masuzu2/NexusTube)
   [![Design](https://img.shields.io/badge/Design-ui--ux--pro--max%20Glassmorphism-EC4899?style=flat-square)](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 </div>
 
 <br/>
 
-**NexusTube** เป็นสุดยอดโปรแกรมดาวน์โหลดและเครื่องเล่นเพลงระดับสตูดิโอ ที่ได้รับการยกเครื่องใหม่ทั้งหมดสู่สถาปัตยกรรม **HTML / Tailwind CSS / JavaScript บน Desktop WebView2 (pywebview)** สไตล์ Spotify, Apple Music และ Linear OLED Dark Glassmorphism รองรับ YouTube, Spotify, Apple Music, และ SoundCloud แบบครบวงจร 100% Offline-Ready ปราศจากการพึ่งพา External CDN พร้อมชุดทดสอบอัตโนมัติ 74 รายการผ่านฉลุย 100%
+**NexusTube** เป็นโปรแกรมดาวน์โหลดและเครื่องเล่นเพลงบนเดสก์ท็อป ใช้ Electron กับหน้าเว็บในตัว รองรับ YouTube, Spotify, Apple Music และ SoundCloud
 
 ---
 
@@ -25,7 +23,7 @@
 - **Dedicated Desktop Navigation Sidebar (240px Fixed):** แถบนำทางด้านซ้ายกว้าง 240px พร้อมไอคอน SVG คมชัด, ชื่อเมนูภาษาไทย/อังกฤษครบถ้วน, ตัวนับ Badge, และการ์ดข้อมูลพื้นที่จัดเก็บข้อมูลด้านล่าง
 - **Dynamic 6-Color Live Accent Theming:** สลับธีมสีสด Neon Green, Cyber Indigo, OLED Pink, Electric Cyan, Sunset Amber, และ Ultra Violet ได้ทันทีแบบ Real-time พร้อมปรับแสง Glow และ Dynamic Spectrum Color อัตโนมัติ
 - **Vector SVG Iconography:** ใช้ไอคอน SVG สไตล์ Lucide / Heroicons คุณภาพสูง คมชัดทุกระดับความละเอียด ไร้การใช้ Raw Emoji
-- **Zero-Latency Python-JS Native Bridge (`NexusBridgeAPI`):** ควบคุมเครื่องยนต์เสียง, ดาวน์โหลด, และจัดการไฟล์ผ่าน IPC ความเร็วสูง
+- **Desktop bridge (`NexusBridgeAPI`):** หน้าเว็บสั่งดาวน์โหลด เล่นเพลง และจัดการไฟล์ผ่าน IPC ของ Electron
 
 ### 📥 Real-Time Download Queue & Dashboard
 - **Queue Overview Stats Bar:** แดชบอร์ดสรุปสถิติคิวแบบ Real-time 3 การ์ดย่อย: งานทั้งหมด (Total Tasks), กำลังทำงาน (Active), และเสร็จสมบูรณ์ (Completed)
@@ -70,9 +68,9 @@
 
 ## 🚀 Quickstart (วิธีใช้งาน)
 
-### 1. สำหรับผู้ใช้งานทั่วไป (Windows Standalone)
-1. ไปที่โฟลเดอร์ `C:\Users\Administrator\Downloads\NexusTube\` หรือแตกไฟล์ `NexusTube_v3.2.0_Windows.zip`
-2. ดับเบิลคลิกเปิดไฟล์ `NexusTube.exe` ขึ้นมาใช้งานได้ทันทีโดยไม่ต้องติดตั้ง Python!
+### 1. สำหรับผู้ใช้งานทั่วไป (Windows)
+1. ติดตั้ง `NexusTube_Setup_v3.4.0.msi`
+2. เปิด NexusTube จากช็อตคัตบนเดสก์ท็อปหรือเมนูเริ่ม
 
 ### 2. การดาวน์โหลดเพลงและวิดีโอ
 - คัดลอกลิงก์จาก YouTube, Spotify, Apple Music, หรือ SoundCloud
@@ -92,34 +90,17 @@
 ## 🛠️ Developer Setup & Architecture
 
 ### Prerequisites
-- Windows 10/11 / Windows Server 2022+ (x64)
-- Python 3.11.x หรือ 3.12.x
-- Microsoft Edge WebView2 Runtime (ติดตั้งมาพร้อมกับ Windows 10/11 เป็นมาตรฐาน)
+- Windows 10/11 (x64)
+- Node.js ใช้ตอนพัฒนาและตอนสร้างตัวติดตั้ง
 
-### Installation
+### Run and build
 ```powershell
-# Navigate to the project directory
-cd C:\Users\Administrator\NexusTube
+# Launch the unpacked app
+START_ELECTRON.bat
 
-# Install required dependencies
-pip install -r requirements.txt
-
-# Run complete automated test suite (74 tests)
-pytest -v tests/
-
-# Launch NexusTube in Modern Web Desktop mode
-python YT_Downloader_V2.py
-
-# (Optional) Launch legacy Tkinter fallback mode
-python YT_Downloader_V2.py --legacy
+# Build NexusTube_Setup_v3.4.0.msi
+BUILD_INSTALLER.bat
 ```
-
-### Building Standalone Executable with PyInstaller
-```powershell
-# Build standalone NexusTube.exe with official icon and embedded Web UI
-pyinstaller --noconfirm NexusTube.spec
-```
-ไฟล์ Executable ขนาดกะทัดรัด (~41 MB) จะถูกสร้างไว้ในโฟลเดอร์ `dist/NexusTube.exe`
 
 ---
 
@@ -127,54 +108,27 @@ pyinstaller --noconfirm NexusTube.spec
 
 ```text
 NexusTube/
-├── YT_Downloader_V2.py          # Native Python Application & NexusBridgeAPI IPC
-├── nexus_audio.py               # Audio Subsystem (LRC, 5-Band EQ, URL Resolver, ID3 Tagger)
-├── nexus_discord.py             # Discord Rich Presence Subsystem
-├── nexus_doctor.py              # Environment Diagnostics & Self-Healing Engine
-├── nexus_hotkeys_tray.py        # System Tray, Notification & Global Hotkeys Engine
-├── NexusTube.spec               # PyInstaller Bundling Specification
-├── build_installer.py           # WiX Toolset MSI Installer Builder
-├── NexusTube by herlove.ico     # Official High-Resolution Application Icon
-├── icon.ico                     # Fallback Application Icon
-├── requirements.txt             # Python Package Dependencies
-├── docs/                        # Comprehensive Architecture & Design Specifications
-│   ├── ARCHITECTURE.md          # Technical Architecture, DSP & IPC Deep Dive
-│   ├── API_REFERENCE.md         # Complete NexusBridgeAPI Method Reference
-│   ├── DESIGN.md                # Formal UI/UX Design System Specification
-│   ├── USER_GUIDE.md            # Comprehensive User Manual (TH/EN)
-│   ├── DEVNOTES.md              # Developer Notes & Maintenance Guide
-│   └── BUILD_CHECKLIST.md       # Pre-flight Build & Verification Checklist
-├── web/                         # Self-Contained WebUI Assets (Zero External CDN)
-│   ├── index.html               # Main Single-Page Desktop Application Layout
-│   ├── styles.css               # OLED Dark Glassmorphism Design System Stylesheet
-│   ├── app.js                   # Application State, Navigation, and Bridge Controllers
-│   └── tailwind.js              # Offline Standalone Tailwind Engine Core
-├── tests/                       # Automated Test Suite (170/170 Passing — 100%)
-│   ├── test_nexus_bridge.py     # Bridge IPC, Queue, Thumbnail, and Web UI Tests
-│   ├── test_nexus_tube.py       # Audio Engine, Resolvers, Tagger, and Player Tests
-│   ├── test_error_handling.py   # Crash Handling, Logging, and Diagnostics Tests
-│   ├── test_temp_dir_cleanup.py # GDI Font Redirection & Temporary Cleanup Tests
-│   ├── test_v340_features.py    # v3.4.0 Features Integration Tests
-│   ├── test_exe_lifecycle.py    # Live Standalone Binary Lifecycle & Exit Tests
-│   ├── test_web_contract.py     # Web UI ⟷ Python Bridge Contract Integrity Tests
-│   ├── test_resilience.py       # Network Outage, Rate Limit & File Error Resilience Tests
-│   └── test_installer_integrity.py # MSI & Packaged Bundle Integrity Tests
-├── installer/                   # WiX MSI Packaging Configuration & Assets
-├── README.md                    # Project Master Presentation & Overview
-├── CHANGELOG.md                 # Full Chronological Version History
-└── LICENSE                      # MIT Open-Source License
+├── index.js                     # Electron main process
+├── src/                         # Download queue, engines, player, bridge
+├── web/                         # Desktop UI
+├── build_msi.js                 # WiX MSI builder
+├── BUILD_INSTALLER.bat          # Build NexusTube_Setup_v3.4.0.msi
+├── START_ELECTRON.bat           # Launch the unpacked app
+├── package.json
+├── installer/                   # WiX layout and license
+├── tests/                       # Node tests for download policy
+├── docs/
+│   ├── DESIGN.md
+│   └── USER_GUIDE.md
+└── LICENSE
 ```
 
 ---
 
 ## 📜 Documentation Index
-- 🎨 [DESIGN.md](docs/DESIGN.md) — ระบบการออกแบบ UI/UX Pro Max 9 บทฉบับเต็ม
-- 🏗️ [ARCHITECTURE.md](docs/ARCHITECTURE.md) — สถาปัตยกรรมระบบ, การประมวลผลเสียง, และ IPC
-- 📖 [USER_GUIDE.md](docs/USER_GUIDE.md) — คู่มือการใช้งานอย่างละเอียดแบบสองภาษา
-- 🔌 [API_REFERENCE.md](docs/API_REFERENCE.md) — สเปกและเอกสารของ NexusBridgeAPI ทุกฟังก์ชัน
-- 📝 [DEVNOTES.md](docs/DEVNOTES.md) — บันทึกการพัฒนาและการบำรุงรักษา
-- ✅ [BUILD_CHECKLIST.md](docs/BUILD_CHECKLIST.md) — รายการตรวจสอบความสมบูรณ์ก่อนบิลด์และแจกจ่าย
-- 📜 [CHANGELOG.md](CHANGELOG.md) — ประวัติการอัปเดตและการเปลี่ยนแปลงทุกเวอร์ชัน
+- 🎨 [DESIGN.md](docs/DESIGN.md) — ระบบการออกแบบหน้าตา
+- 📖 [USER_GUIDE.md](docs/USER_GUIDE.md) — คู่มือการใช้งาน
+- 📜 [CHANGELOG.md](CHANGELOG.md) — ประวัติการอัปเดต
 
 ---
 
