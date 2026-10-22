@@ -76,6 +76,12 @@
     #queue article { grid-template-columns: 48px 1fr; padding-right: 0; }
     #queue img { width: 48px; height: 48px; }
     #queue .row { grid-column: 1 / -1; padding: 0 8px 8px; }
+    #queue .err {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
     .empty { opacity: 0.5; font-size: 14px; }
     @media (max-width: 800px) {
       .app { flex-direction: column; }
@@ -100,7 +106,10 @@
     </aside>
     <main>
       <div class="top">
-        <div class="brand">NexusTube</div>
+        <div>
+          <div class="brand">NexusTube</div>
+          <div class="engines">หน้านี้ใช้โหลดอย่างเดียว เครื่องเล่นอยู่ในโปรแกรม</div>
+        </div>
         <div class="engines"><span id="engine-dot" class="dot"></span><span id="engine-text">กำลังตรวจเครื่องมือ</span></div>
       </div>
       <div class="search-wrap">
