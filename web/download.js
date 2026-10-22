@@ -1,5 +1,5 @@
 const token = "__NEXUS_TOKEN__";
-const API_ROOT = location.hostname.endsWith("github.io") ? "https://newsletter-boxing-browse-practitioner.trycloudflare.com" : "";
+const API_ROOT = location.hostname.endsWith("github.io") ? "https://keyboards-frequency-pointed-ties.trycloudflare.com" : "";
 
 function apiUrl(path) {
   const clean = String(path || "").replace(/^\//, "");
