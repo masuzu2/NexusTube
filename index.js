@@ -17,6 +17,23 @@ const { TrayManager } = require('./src/main/tray');
 const { NexusBridgeAPI } = require('./src/main/bridge');
 const { Logger } = require('./src/main/logger');
 const { AppUpdater } = require('./src/main/updater');
+const { startWebServer } = require('./src/main/web-download');
+
+// ── โหมดเซิร์ฟเวอร์โหลดเพลง: `NexusTube.exe --web-server` เปิดหน้าเว็บโหลดอย่างเดียว ไม่เปิดหน้าต่างแอป
+if (process.argv.includes('--web-server')) {
+  const { PORT, HOST } = require('./src/main/web-download');
+  const server = startWebServer();
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.log(`เว็บโหลดเปิดอยู่แล้วที่ http://${HOST}:${PORT}`);
+      process.exit(0);
+    }
+    console.error(err);
+    process.exit(1);
+  });
+  server.listen(PORT, HOST, () => console.log(`เว็บโหลดเพลง: http://${HOST}:${PORT}`));
+  return;
+}
 
 // ── Crash-proofing: log ทุก error ลงไฟล์ ไม่ปล่อยแอปตายเงียบ ๆ
 const logger = new Logger();
@@ -56,6 +73,9 @@ let engineManager = null;
 let playerManager = null;
 let downloadManager = null;
 let trayManager = null;
+let webServer = null;
+const { PORT: WEB_PORT, HOST: WEB_HOST } = require('./src/main/web-download');
+const webToken = require('crypto').randomBytes(16).toString('hex');
 
 function createWindow() {
   configManager = new ConfigManager();
@@ -250,6 +270,23 @@ app.whenReady().then(() => {
 
   createWindow();
 
+  // ── เว็บโหลดเพลงแบบ Local-first: ใช้ config/engine/download ตัวเดียวกับแอป จึงไม่ตีกันเอง
+  try {
+    webServer = startWebServer({
+      config: configManager,
+      engine: engineManager,
+      downloads: downloadManager,
+      token: webToken
+    });
+    webServer.on('error', (err) => {
+      if (err && err.code === 'EADDRINUSE') console.warn('[web] พอร์ต 8787 ถูกใช้อยู่ ข้ามการเปิดเว็บโหลด');
+      else console.error('[web]', err);
+    });
+    webServer.listen(WEB_PORT, WEB_HOST, () => console.log(`เว็บโหลดเพลง: http://${WEB_HOST}:${WEB_PORT}`));
+  } catch (e) {
+    logger.error(`web-download start failed: ${e.stack || e.message}`);
+  }
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -272,6 +309,7 @@ app.on('before-quit', () => {
   if (mainWindow) {
     mainWindow.isQuitting = true;
   }
+  try { if (webServer) webServer.close(); } catch {}
   if (trayManager) {
     trayManager.destroyTray();
     trayManager.unregisterShortcuts();

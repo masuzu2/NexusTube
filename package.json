@@ -1,6 +1,6 @@
 {
   "name": "nexustube",
-  "version": "3.8.0",
+  "version": "3.9.0",
   "description": "NexusTube — Next-Gen YouTube & Multi-Platform Music Suite & Studio Desktop Player (Electron Edition)",
   "main": "index.js",
   "scripts": {
@@ -37,12 +37,30 @@
       ],
       "icon": "icon.ico"
     },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerLanguages": ["th_TH", "en_US"],
+      "license": "LICENSE",
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "NexusTube",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "NexusTube-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "NexusTube-${version}-Portable.${ext}"
+    },
     "asar": false,
     "files": [
       "index.js",
       "src/**/*",
       "web/**/*",
       "icon.ico",
+      "START_WEB.bat",
       "package.json"
     ]
   },

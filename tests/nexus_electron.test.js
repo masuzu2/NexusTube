@@ -92,7 +92,7 @@ describe('2. Configuration & State Management', () => {
   test('Loads default configuration correctly', () => {
     assert.equal(config.get('lang'), 'th');
     assert.equal(config.get('format'), 'mp3_320');
-    assert.equal(config.get('accent'), '#22C55E');
+    assert.equal(config.get('accent'), '#8B5CF6');
     assert.equal(typeof config.get('eq_bands'), 'object');
   });
 
