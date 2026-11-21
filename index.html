@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NexusTube — ดาวน์โหลด</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #0a0a0f; color: #fff; }
+    body { font-family: "Kanit", "Leelawadee UI", "Segoe UI", sans-serif; }
+    a { color: inherit; }
+    .wrap { max-width: 780px; margin: 0 auto; padding: 64px 20px 80px; }
+    .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+    .logo { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, #8B5CF6, #22C55E); display: grid; place-items: center; font-size: 26px; }
+    h1 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: 0.5px; }
+    .tagline { opacity: 0.7; margin: 0 0 28px; font-weight: 300; }
+    .card { background: #17171f; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+    .card h2 { margin: 0 0 12px; font-size: 18px; font-weight: 500; }
+    .btn { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #8B5CF6, #7C3AED); color: #fff; text-decoration: none; border: 0; border-radius: 12px; padding: 12px 22px; font: inherit; font-weight: 500; cursor: pointer; }
+    .btn.alt { background: rgba(255,255,255,0.1); }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .meta { opacity: 0.65; font-size: 14px; }
+    .status { display: inline-block; width: 10px; height: 10px; border-radius: 99px; background: #6b7280; margin-right: 8px; }
+    .status.on { background: #22C55E; box-shadow: 0 0 10px rgba(34,197,94,0.7); }
+    ol { margin: 12px 0 0; padding-left: 22px; line-height: 1.9; }
+    .feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+    .feats li { background: #101018; border-radius: 10px; padding: 12px 14px; font-size: 14px; opacity: 0.85; }
+    #local-note { margin-top: 10px; font-size: 14px; opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo">▶</div>
+      <h1>NexusTube</h1>
+    </div>
+    <p class="tagline">Next-Gen YouTube &amp; Multi-Platform Music Suite &amp; Studio Desktop Player</p>
+
+    <div class="card">
+      <h2>ดาวน์โหลดสำหรับ Windows</h2>
+      <div class="row">
+        <a class="btn" href="https://github.com/masuzu2/NexusTube/releases/latest/download/NexusTube-Setup-3.9.0.exe">⬇ ตัวติดตั้ง NexusTube 3.9.0</a>
+        <a class="btn alt" href="https://github.com/masuzu2/NexusTube/releases/latest/download/NexusTube-3.9.0-Portable.exe">Portable</a>
+      </div>
+      <p class="meta" style="margin-top:12px">ตัวติดตั้งรองรับภาษาไทย/อังกฤษ เลือกโฟลเดอร์ได้ พร้อมปุ่ม Desktop และ Start Menu — <a href="https://github.com/masuzu2/NexusTube/releases" style="color:#a78bfa">ดู release ทั้งหมด</a></p>
+    </div>
+
+    <div class="card">
+      <h2><span id="dot" class="status"></span>เว็บโหลดเพลงในเครื่องคุณ</h2>
+      <p class="meta">เว็บโหลดเพลงของ NexusTube รันอยู่บนเครื่องคุณเอง (Local-first) — เปิดแอป NexusTube ไว้ แล้วหน้านี้จะรู้</p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn alt" id="check" type="button">ตรวจสอบตอนนี้</button>
+        <a class="btn" id="open-local" href="http://127.0.0.1:8787/" hidden>เปิดเว็บโหลดเพลง →</a>
+      </div>
+      <p id="local-note">กำลังตรวจสอบ…</p>
+    </div>
+
+    <div class="card">
+      <h2>วิธีใช้งาน</h2>
+      <ol>
+        <li>ดาวน์โหลดและติดตั้ง NexusTube</li>
+        <li>เปิดแอป — เครื่องมือโหลด (yt-dlp/ffmpeg) จะจัดการให้เองอัตโนมัติ</li>
+        <li>โหลดเพลงได้จากในแอป หรือจากเว็บ <code>127.0.0.1:8787</code> ขณะแอปเปิดอยู่</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>ฟีเจอร์</h2>
+      <ul class="feats">
+        <li>🎵 เครื่องเล่นเพลง + Equalizer + ซับเนื้อเพลง LRC</li>
+        <li>🔍 ค้นหาหลายแพลตฟอร์ม: YouTube, Spotify, Apple Music, SoundCloud</li>
+        <li>⬇ คิวดาวน์โหลด MP3 320k / M4A / FLAC / MP4</li>
+        <li>🎮 Discord Rich Presence + System Tray + Hotkeys</li>
+        <li>🕐 Sleep Timer + เว็บโหลดเพลงในเครื่อง</li>
+      </ul>
+    </div>
+
+    <p class="meta">MIT License · สร้างโดย herlove · <a href="https://github.com/masuzu2/NexusTube">GitHub</a></p>
+  </div>
+  <script>
+    (function () {
+      var dot = document.getElementById("dot");
+      var note = document.getElementById("local-note");
+      var open = document.getElementById("open-local");
+      function check() {
+        note.textContent = "กำลังตรวจสอบ…";
+        fetch("http://127.0.0.1:8787/health", { cache: "no-store" })
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+          .then(function (info) {
+            dot.className = "status on";
+            note.textContent = "พบเว็บโหลดเพลงในเครื่อง กำลังรัน NexusTube v" + (info.version || "?") + " — กดปุ่มเพื่อเปิดได้เลย";
+            open.hidden = false;
+          })
+          .catch(function () {
+            dot.className = "status";
+            open.hidden = true;
+            note.textContent = "ยังไม่พบเว็บโหลดในเครื่อง — เปิดแอป NexusTube ไว้แล้วกด \"ตรวจสอบตอนนี้\" อีกครั้ง";
+          });
+      }
+      document.getElementById("check").onclick = check;
+      check();
+    })();
+  </script>
+</body>
+</html>
