@@ -5,6 +5,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [3.5.1] - 2026-11-18 — Crash-Proof Systems & Update Rollback
+
+### 🛡️ Crash Resilience
+- **File Logger**: log ทุก event/error ลง `%APPDATA%\NexusTube\logs\app-YYYY-MM-DD.log` (ตัด log เก่าอัตโนมัติเกิน 7 วัน) — วินิจฉัยเครื่องเพื่อนระยะไกลได้
+- **uncaughtException / unhandledRejection handlers**: แอปไม่ตายเงียบ ๆ อีกต่อไป ทุก error ถูกบันทึก
+- **Renderer auto-reload**: หน้าจอ crash/OOM → โหลด UI ใหม่อัตโนมัติ ไม่จอดำ
+
+### ⏪ Update Rollback Safety
+- **สำรองก่อนอัปเดต**: ทุกครั้งที่ self-update ก็อปไฟล์เดิมเก็บใน `update-backup` ก่อนเขียนทับ
+- **Startup integrity check**: เปิดแอปแล้วเจอว่าอัปเดตครั้งก่อนโดนขัดจังหวะกลางทาง (ไม่มี marker) → คืนไฟล์เดิมจาก backup อัตโนมัติ กันแอปเปิดไม่ติดแบบเคยเกิด
+
+### 🔄 Engine Self-Healing (รายวัน)
+- เช็ค yt-dlp เวอร์ชันใหม่วันละครั้งแบบเงียบ ๆ (เว้น 20 ชม.) — เจอของใหม่อัปเองโดยไม่ต้องไปกดปุ่มใน Settings
+
+### 🔒 Security
+- **Content-Security-Policy**: จำกัด script/style/img/media/connect sources ที่ชัดเจน ลดพื้นที่โจมตีถ้ามี injection ใน UI
+
+---
+
+## [3.5.0] - 2026-11-18 — App Self-Update System (FLUX-style)
+
+- **Automatic self-update**: เช็ค `version.json` บน GitHub Releases ตอนเปิด + ทุก 5 นาที — เจอเวอร์ชันใหม่โหลด `app-update.zip` แตกไฟล์ทับแล้ว relaunch เองเงียบ ๆ
+- Progress แจ้งผ่าน toast: พบเวอร์ชันใหม่ → กำลังโหลด x% → ติดตั้ง → รีสตาร์ท
+- โหมด dev ข้ามระบบอัตโนมัติ (กันเผลออัปทับ source)
+- `make-app-update.ps1` สร้างแพ็กเกจรวม production node_modules ในคลิกเดียว
+
+---
+
+## [3.4.1] - 2026-11-18 — True Zero-Setup & State Restore
+
+### ⚙️ Engine Auto-Setup (Zero Setup แบบจริงจัง)
+- **Automatic Engine Download on First Launch**:
+  - แอปตรวจจับอัตโนมัติว่ายังไม่มี `yt-dlp` หรือ `FFmpeg` แล้วดาวน์โหลดเองทันทีตอนเปิดโปรแกรมครั้งแรก (ไม่ต้องกดปุ่มในหน้า Settings อีกต่อไป)
+  - Header badge แสดง progress สด ๆ: `Engines: กำลังโหลด 44%` → `Engines: Ready` พร้อม toast แจ้งเมื่อพร้อมใช้งาน
+  - Progress ส่งผ่าน IPC channel ใหม่ `nexus:engine-progress` (main → preload → CustomEvent ใน renderer)
+
+### 🔄 State Restore & Polish
+- **`get_initial_state` ครบสมบูรณ์**:
+  - คืน `sleep_timer`, `mini_player`, `normalize` ให้ UI restore สถานะล่าสุดได้หลังปิด-เปิดแอปใหม่
+- **System Tray version label** อ่านจาก `VERSION` ใน config แทนการ hardcode
+
+### ✅ Verified End-to-End
+- ค้นหา YouTube ผ่าน `yt-dlp` จริง (12 ผลลัพธ์ใน 3.2 วินาที)
+- ดาวน์โหลด → transcode MP3 320k → ฝัง metadata ครบวงจร (ทดสอบกับไฟล์ยาว 6 ชั่วโมง)
+- โหลด engine อัตโนมัติ: yt-dlp 22.5MB + FFmpeg/FFprobe/FFplay ~162MB ต่อตัวเสร็จสมบูรณ์
+
+---
+
 ## [3.4.0] - 2026-09-20 — Next-Gen Desktop Music Suite & Professional MSI Installer
 
 ### 📦 Packaging & Installation

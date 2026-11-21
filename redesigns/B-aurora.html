@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Design B — Deep Aurora</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans','Noto Sans Thai',sans-serif; }
+body { background:#0B0D1C; color:#EEF0FA; height:100vh; overflow:hidden; position:relative; }
+
+/* Aurora orbs */
+.orb { position:fixed; border-radius:50%; filter:blur(110px); pointer-events:none; }
+.o1 { width:600px; height:600px; background:radial-gradient(circle,rgba(129,110,255,.4),transparent 65%); top:-180px; left:-100px; }
+.o2 { width:520px; height:520px; background:radial-gradient(circle,rgba(96,165,250,.3),transparent 65%); bottom:-200px; right:-80px; }
+.o3 { width:380px; height:380px; background:radial-gradient(circle,rgba(244,114,182,.25),transparent 65%); top:34%; left:44%; }
+
+/* Top pill nav */
+.topnav { position:fixed; top:18px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:4px; background:rgba(18,21,45,.65); border:1px solid rgba(255,255,255,.1); border-radius:100px; padding:6px 10px; backdrop-filter:blur(24px); z-index:10; }
+.topnav .brand { font-weight:800; font-size:13px; margin:0 10px 0 4px; background:linear-gradient(100deg,#fff,#C4B5FD 70%,#93C5FD); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.tn { padding:8px 16px; border-radius:100px; font-size:12px; font-weight:600; color:#9CA3C4; cursor:pointer; text-decoration:none; }
+.tn.on { background:linear-gradient(120deg,#8168FF,#6D5AE8); color:#fff; box-shadow:0 4px 18px rgba(129,104,255,.4); }
+.tn:hover:not(.on) { color:#fff; }
+
+.wrap { position:relative; z-index:1; max-width:860px; margin:0 auto; padding:96px 24px 110px; height:100vh; overflow-y:auto; }
+.wrap::-webkit-scrollbar { width:0; }
+
+/* Centered hero */
+.hero { text-align:center; margin-bottom:34px; }
+.hero .pill { display:inline-flex; align-items:center; gap:8px; font-size:10px; font-weight:800; letter-spacing:2px; color:#A5B4FC; background:rgba(129,104,255,.12); border:1px solid rgba(129,104,255,.3); border-radius:100px; padding:6px 14px; margin-bottom:16px; }
+.hero h1 { font-size:34px; font-weight:800; line-height:1.25; background:linear-gradient(105deg,#fff 30%,#C4B5FD 65%,#93C5FD); -webkit-background-clip:text; background-clip:text; color:transparent; margin-bottom:10px; }
+.hero p { font-size:13px; color:#8A90B8; }
+
+/* Glass input */
+.gl-input { display:flex; align-items:center; gap:10px; background:rgba(20,24,50,.6); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:8px 8px 8px 18px; backdrop-filter:blur(20px); box-shadow:0 10px 40px -12px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08); margin-bottom:34px; }
+.gl-input svg { width:17px; height:17px; color:#6A72A8; flex-shrink:0; }
+.gl-input input { flex:1; background:none; border:none; outline:none; color:#fff; font-size:14px; }
+.gl-input input::placeholder { color:#565E8C; }
+.gbtn { background:linear-gradient(120deg,#8168FF,#6D5AE8); color:#fff; border:none; border-radius:12px; padding:12px 26px; font-weight:800; font-size:13px; cursor:pointer; box-shadow:0 6px 20px rgba(129,104,255,.45); }
+.gbtn:hover { filter:brightness(1.12); }
+
+/* Shelves */
+.sect { display:flex; justify-content:space-between; align-items:baseline; margin:28px 0 14px; }
+.sect .t { font-size:14px; font-weight:800; }
+.sect .m { font-size:11px; color:#6A72A8; cursor:pointer; }
+.shelf { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.card { background:rgba(20,24,50,.55); border:1px solid rgba(255,255,255,.09); border-radius:20px; padding:14px; backdrop-filter:blur(18px); transition:transform .2s, border-color .2s; cursor:pointer; }
+.card:hover { transform:translateY(-4px); border-color:rgba(129,104,255,.5); }
+.cov { aspect-ratio:1; border-radius:14px; background:linear-gradient(135deg,rgba(129,104,255,.25),rgba(96,165,250,.15)); display:flex; align-items:center; justify-content:center; font-size:34px; color:rgba(255,255,255,.15); margin-bottom:12px; }
+.card .t { font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card .a { font-size:10.5px; color:#8A90B8; margin-top:3px; }
+.chiprow { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+.chip { font-size:11px; font-weight:600; color:#9CA3C4; background:rgba(20,24,50,.5); border:1px solid rgba(255,255,255,.08); padding:7px 14px; border-radius:100px; cursor:pointer; }
+.chip:hover { color:#fff; border-color:rgba(129,104,255,.5); }
+
+/* Player dock */
+.dock { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); width:720px; background:rgba(18,21,45,.7); border:1px solid rgba(255,255,255,.12); border-radius:22px; backdrop-filter:blur(26px); box-shadow:0 20px 60px -10px rgba(0,0,0,.7); display:flex; align-items:center; gap:16px; padding:12px 20px; z-index:10; }
+.pp { width:46px; height:46px; border-radius:16px; background:linear-gradient(120deg,#8168FF,#6D5AE8); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 6px 22px rgba(129,104,255,.5); }
+.pp svg { width:16px; height:16px; fill:#fff; }
+.dock .bar { flex:1; height:4px; background:rgba(255,255,255,.1); border-radius:2px; }
+.dock .bar i { display:block; height:100%; width:0%; border-radius:2px; background:linear-gradient(90deg,#8168FF,#93C5FD); }
+.dock .time { font-size:10px; color:#6A72A8; font-family:monospace; }
+.dock .now { font-size:11px; font-weight:700; width:150px; }
+.dock .now small { display:block; color:#8A90B8; font-weight:400; font-size:9.5px; }
+</style>
+</head>
+<body>
+  <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+
+  <div class="topnav">
+    <span class="brand">✦ NexusTube</span>
+    <a class="tn on">ค้นหา</a>
+    <a class="tn">ดาวน์โหลด</a>
+    <a class="tn">คลังเพลง</a>
+    <a class="tn">สตูดิโอ</a>
+    <a class="tn">ตั้งค่า</a>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <div class="pill">✦ UNIVERSAL RESOLVER · YouTube · Spotify · Apple Music · SoundCloud</div>
+      <h1>ดาวน์โหลดเพลงระดับสตูดิโอ<br>& วิดีโอ 4K</h1>
+      <p>ค้นหาจาก YouTube หรือวางลิงก์จากแพลตฟอร์มโปรดของคุณ</p>
+    </div>
+
+    <div class="gl-input">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input placeholder="วางลิงก์หรือค้นหาเพลงที่คุณอยากฟัง...">
+      <button class="gbtn">ค้นหาเลย</button>
+    </div>
+
+    <div class="chiprow">
+      <span class="chip">🎧 Lo-Fi Chill</span><span class="chip">🔥 Top Hits 2026</span><span class="chip">🎸 Acoustic</span><span class="chip">🎭 Phonk</span><span class="chip">🌸 Anime OST</span>
+    </div>
+
+    <div class="sect"><span class="t">คุณภาพเสียง</span><span class="m">เลือกด้านล่าง</span></div>
+    <div class="shelf">
+      <div class="card" style="border-color:rgba(129,104,255,.55)"><div class="cov">♫</div><div class="t">MP3 320k</div><div class="a">Extreme Studio CBR</div></div>
+      <div class="card"><div class="cov">♫</div><div class="t">M4A / AAC</div><div class="a">Source Quality</div></div>
+      <div class="card"><div class="cov">♫</div><div class="t">FLAC</div><div class="a">Lossless Master</div></div>
+      <div class="card"><div class="cov">▶</div><div class="t">MP4 1080p</div><div class="a">Full HD Video</div></div>
+    </div>
+
+    <div class="sect"><span class="t">ลงคลังเมื่อกี้</span><span class="m">ดูทั้งหมด →</span></div>
+    <div class="shelf">
+      <div class="card"><div class="cov">♫</div><div class="t">นางฟ้า</div><div class="a">1MILL</div></div>
+      <div class="card"><div class="cov">♫</div><div class="t">Sunset Drive</div><div class="a">Neon Wave</div></div>
+      <div class="card"><div class="cov">♫</div><div class="t">Midnight Coffee</div><div class="a">Lofi Cat</div></div>
+      <div class="card"><div class="cov">♫</div><div class="t">Rainy Window</div><div class="a">Ambient Owl</div></div>
+    </div>
+  </div>
+
+  <div class="dock">
+    <div class="now">ยังไม่มีเพลงเล่น<small>NexusTube Player</small></div>
+    <div class="pp"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+    <span class="time">00:00</span>
+    <div class="bar"><i></i></div>
+    <span class="time">00:00</span>
+  </div>
+</body>
+</html>

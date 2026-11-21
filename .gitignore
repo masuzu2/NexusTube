@@ -33,6 +33,12 @@ Audio/
 .pytest_cache/
 .ruff_cache/
 
+# Node / Electron
+node_modules/
+dist_electron/
+update-package/
+ui-shots/
+
 # Windows
 Thumbs.db
 Desktop.ini

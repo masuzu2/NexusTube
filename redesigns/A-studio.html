@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Design A — Mono Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans','Noto Sans Thai',sans-serif; }
+body { background:#0E0E11; color:#F2F2F5; height:100vh; display:flex; overflow:hidden; }
+
+/* Sidebar */
+.side { width:220px; background:#131318; border-right:1px solid #1F1F26; padding:22px 14px; display:flex; flex-direction:column; }
+.logo { font-size:17px; font-weight:800; letter-spacing:0.5px; margin-bottom:2px; }
+.logo b { color:#F5C451; }
+.sub { font-size:9px; color:#6A6A76; letter-spacing:3px; margin-bottom:26px; }
+.nav { display:flex; flex-direction:column; gap:4px; }
+.nav a { display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:10px; color:#9A9AA6; text-decoration:none; font-size:13px; font-weight:600; }
+.nav a.on { background:#1C1C24; color:#fff; }
+.nav a.on .ic { color:#F5C451; }
+.ic { width:18px; height:18px; }
+.dl { margin-top:auto; background:#1C1C24; border-radius:12px; padding:12px; }
+.dl .t { font-size:10px; color:#6A6A76; margin-bottom:6px; }
+.dl .p { font-size:10px; color:#B9B9C6; font-family:monospace; }
+
+/* Main */
+.main { flex:1; padding:26px 30px; overflow-y:auto; }
+.top { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+.search { flex:1; display:flex; align-items:center; gap:10px; background:#1A1A21; border:1px solid #26262e; border-radius:12px; padding:11px 16px; }
+.search svg { width:16px; height:16px; color:#6A6A76; flex-shrink:0; }
+.search input { flex:1; background:none; border:none; outline:none; color:#fff; font-size:13.5px; }
+.search input::placeholder { color:#5A5A66; }
+.btn { background:#F5C451; color:#141414; border:none; border-radius:12px; padding:11px 24px; font-weight:800; font-size:13px; cursor:pointer; }
+.btn:hover { background:#FFD66B; }
+
+/* Hero band */
+.hero { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:26px; }
+.panel { background:#15151B; border:1px solid #222229; border-radius:16px; padding:22px; }
+.panel h1 { font-size:22px; font-weight:800; line-height:1.3; margin-bottom:6px; }
+.panel h1 span { color:#F5C451; }
+.panel p { font-size:12px; color:#8A8A96; }
+.panel .big { font-size:26px; font-weight:800; }
+.panel .row { display:flex; gap:18px; margin-top:12px; }
+.stat .v { font-size:20px; font-weight:800; color:#F5C451; }
+.stat .k { font-size:10px; color:#6A6A76; letter-spacing:1px; margin-top:2px; }
+
+/* Formats */
+.sect { font-size:11px; font-weight:800; letter-spacing:2px; color:#6A6A76; margin:6px 0 12px; }
+.fmts { display:flex; gap:10px; margin-bottom:26px; }
+.fmt { flex:1; background:#15151B; border:1px solid #222229; border-radius:14px; padding:16px; cursor:pointer; transition:border-color .15s; }
+.fmt:hover { border-color:#F5C451; }
+.fmt.on { border-color:#F5C451; background:#1A1710; }
+.fmt .n { font-weight:800; font-size:13px; }
+.fmt .q { font-size:10px; color:#8A8A96; margin-top:4px; }
+.fmt .badge { display:inline-block; margin-top:10px; font-size:9px; font-weight:800; padding:3px 8px; border-radius:6px; letter-spacing:1px; }
+.b1 { background:#F5C45122; color:#F5C451; }
+.b2 { background:#3B82F622; color:#60A5FA; }
+.b3 { background:#A855F722; color:#C084FC; }
+
+/* Tracks */
+.tracks { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.tk { background:#15151B; border:1px solid #222229; border-radius:14px; padding:12px; }
+.cov { aspect-ratio:1; border-radius:10px; background:linear-gradient(135deg,#2A2A34,#191920); margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#3A3A46; font-size:30px; }
+.tk .t { font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tk .a { font-size:10.5px; color:#8A8A96; margin-top:2px; }
+.tk .f { display:flex; justify-content:space-between; margin-top:8px; font-size:9.5px; color:#6A6A76; font-family:monospace; }
+
+/* Player */
+.player { position:fixed; bottom:0; left:0; right:0; height:72px; background:#131318; border-top:1px solid #1F1F26; display:flex; align-items:center; padding:0 22px; gap:16px; }
+.pp { width:44px; height:44px; border-radius:50%; background:#F5C451; color:#141414; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; }
+.bar { flex:1; height:4px; background:#26262E; border-radius:2px; position:relative; }
+.bar i { position:absolute; left:0; top:0; bottom:0; width:35%; background:#F5C451; border-radius:2px; }
+.time { font-size:10px; color:#6A6A76; font-family:monospace; }
+.now { width:190px; font-size:11px; }
+.now .t { font-weight:700; }
+.now .a { color:#8A8A96; font-size:10px; }
+</style>
+</head>
+<body>
+  <div class="side">
+    <div class="logo">Nexus<b>Tube</b></div>
+    <div class="sub">STUDIO SUITE</div>
+    <div class="nav">
+      <a class="on"><span class="ic">⌕</span> ค้นหา</a>
+      <a><span class="ic">↓</span> ดาวน์โหลด <span style="margin-left:auto;background:#F5C451;color:#141414;font-size:9px;font-weight:800;padding:2px 7px;border-radius:8px">1</span></a>
+      <a><span class="ic">♪</span> คลังเพลง <span style="margin-left:auto;color:#6A6A76;font-size:10px">4</span></a>
+      <a><span class="ic">≡</span> อีควอไลเซอร์</a>
+      <a><span class="ic">✎</span> เนื้อเพลง</a>
+      <a><span class="ic">⚙</span> ตั้งค่า</a>
+    </div>
+    <div class="dl"><div class="t">โฟลเดอร์ดาวน์โหลด</div><div class="p">C:\Users\...\Downloads</div></div>
+  </div>
+  <div class="main">
+    <div class="top">
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="วางลิงก์ YouTube / Spotify หรือค้นหาเพลง..."></div>
+      <button class="btn">ค้นหา</button>
+    </div>
+    <div class="hero">
+      <div class="panel">
+        <h1>ดาวน์โหลดเพลง<span>ระดับสตูดิโอ</span><br>& วิดีโอ <span>4K</span></h1>
+        <p>YouTube · Spotify · Apple Music · SoundCloud</p>
+      </div>
+      <div class="panel">
+        <div class="big">วันนี้ดาวน์โหลดไปแล้ว <span style="color:#F5C451">4</span> ไฟล์</div>
+        <div class="row">
+          <div class="stat"><div class="v">4</div><div class="k">เสร็จสมบูรณ์</div></div>
+          <div class="stat"><div class="v">2.4 GB</div><div class="k">ขนาดรวม</div></div>
+          <div class="stat"><div class="v">15 MB/s</div><div class="k">ความเร็วเฉลี่ย</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="sect">รูปแบบคุณภาพเสียง</div>
+    <div class="fmts">
+      <div class="fmt on"><div class="n">MP3 320k</div><div class="q">Extreme Studio CBR</div><span class="badge b1">320K CBR</span></div>
+      <div class="fmt"><div class="n">M4A / AAC</div><div class="q">Source Audio Quality</div><span class="badge b2">SOURCE</span></div>
+      <div class="fmt"><div class="n">FLAC</div><div class="q">Studio Master Audio</div><span class="badge b3">LOSSLESS</span></div>
+      <div class="fmt"><div class="n">MP4 1080p</div><div class="q">Full HD Video</div><span class="badge b2">1080P FHD</span></div>
+    </div>
+    <div class="sect">เพิ่มลงคลังเมื่อกี้</div>
+    <div class="tracks">
+      <div class="tk"><div class="cov">♫</div><div class="t">นางฟ้า</div><div class="a">1MILL</div><div class="f"><span>MP3</span><span>6.6 MB</span></div></div>
+      <div class="tk"><div class="cov">♫</div><div class="t">Sunset Drive</div><div class="a">Neon Wave</div><div class="f"><span>MP3</span><span>8.0 MB</span></div></div>
+      <div class="tk"><div class="cov">♫</div><div class="t">Midnight Coffee</div><div class="a">Lofi Cat</div><div class="f"><span>MP3</span><span>6.8 MB</span></div></div>
+      <div class="tk"><div class="cov">♫</div><div class="t">Rainy Window</div><div class="a">Ambient Owl</div><div class="f"><span>FLAC</span><span>27 MB</span></div></div>
+    </div>
+  </div>
+  <div class="player">
+    <div class="now"><div class="t">ยังไม่มีเพลงเล่น</div><div class="a">NexusTube Player</div></div>
+    <div class="pp">▶</div>
+    <span class="time">00:00</span>
+    <div class="bar"><i></i></div>
+    <span class="time">00:00</span>
+  </div>
+</body>
+</html>

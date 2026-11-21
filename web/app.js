@@ -27,7 +27,7 @@ const state = {
   currentFormat: "mp3_320",
   isSeeking: false,
   librarySort: "date",
-  libraryViewMode: "grid",
+  libraryViewMode: "table",
   favoritesOnly: false,
   playbackSpeed: 1.0,
   dsp: { preamp: 0.0, bass_boost: 0.0, surround: false },
@@ -658,7 +658,11 @@ async function addDownloadTask(url, title, metadata = {}) {
 
   try {
     const res = await window.pywebview.api.add_to_queue(url, title, state.currentFormat, options, metadata);
-    showToast(`Added to queue: ${title || url}`, "success");
+    if (res && res.duplicate) {
+      showToast(`อยู่ในคิวอยู่แล้ว: ${title || url}`, "info");
+    } else {
+      showToast(`Added to queue: ${title || url}`, "success");
+    }
     switchTab("queue");
     refreshQueue();
   } catch (err) {
@@ -763,9 +767,11 @@ function renderQueueList(tasks) {
 
     const speedLbl = t("Speed");
     const etaLbl = t("ETA");
+    const sizeLbl = task.status === "completed" && task.size_bytes ? formatBytes(task.size_bytes) : null;
+    const sizePart = sizeLbl ? `📦 ${sizeLbl}` : "";
     const speedPart = task.speed ? `${speedLbl}: ${task.speed}` : "";
     const etaPart = task.eta ? `${etaLbl}: ${task.eta}` : "";
-    const metricsStr = [speedPart, etaPart].filter(Boolean).join(" · ");
+    const metricsStr = [sizePart, speedPart, etaPart].filter(Boolean).join(" · ");
 
     let errorDetailHtml = "";
     if (task.status === "failed" && task.error) {
@@ -2522,6 +2528,54 @@ function setupWindowControls() {
 // ============================================================================
 // State Polling Loop & Helpers
 // ============================================================================
+// Zero Setup: แสดง progress ตอนแอปโหลด yt-dlp / ffmpeg เองอัตโนมัติ (event จาก main process)
+window.addEventListener("nexus-engine-progress", (ev) => {
+  const d = ev.detail || {};
+  const dot = document.getElementById("engine-status-dot");
+  const text = document.getElementById("engine-status-text");
+  if (!text) return;
+  if (d.phase === "start") {
+    if (dot) dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
+    text.textContent = "Engines: กำลังติดตั้งอัตโนมัติ...";
+  } else if (d.phase === "downloading") {
+    if (d.total) {
+      const pct = Math.min(100, Math.round((d.done / d.total) * 100));
+      text.textContent = `Engines: กำลังโหลด ${pct}%`;
+    } else {
+      text.textContent = `Engines: กำลังโหลด ${Math.round(d.done / 1024 / 1024)} MB`;
+    }
+  } else if (d.phase === "done") {
+    updateEngineStatus(d.status);
+    if (d.status && d.status.ytdlp_ready && d.status.ffmpeg_ready) {
+      if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+      text.textContent = "Engines: Ready";
+      showToast("ระบบเครื่องยิ้ม (yt-dlp + FFmpeg) พร้อมใช้งานแล้ว ✅", "success");
+    }
+  } else if (d.phase === "error") {
+    if (dot) dot.className = "w-2 h-2 rounded-full bg-red-400";
+    text.textContent = "Engines: ติดตั้งไม่สำเร็จ (เช็คอินเทอร์เน็ต)";
+  }
+});
+
+// App self-update (แบบ FLUX Launcher): toast แจ้งทุก phase — อัปเดตเองเงียบ ๆ ไม่ต้องกด
+window.addEventListener("nexus-app-update-progress", (ev) => {
+  const d = ev.detail || {};
+  if (d.phase === "found") {
+    showToast(`พบเวอร์ชันใหม่ v${d.latest} — กำลังอัปเดตอัตโนมัติ...`, "info", 6000);
+  } else if (d.phase === "downloading") {
+    if (d.total) {
+      const pct = Math.min(100, Math.round((d.done / d.total) * 100));
+      showToast(`กำลังอัปเดตแอป... ${pct}%`, "info", 3000);
+    }
+  } else if (d.phase === "extracting" || d.phase === "installing") {
+    showToast("กำลังติดตั้งเวอร์ชันใหม่...", "info", 3000);
+  } else if (d.phase === "restarting") {
+    showToast("อัปเดตเสร็จ — กำลังรีสตาร์ทแอป", "success", 6000);
+  } else if (d.phase === "error") {
+    showToast("อัปเดตอัตโนมัติไม่สำเร็จ (จะลองใหม่ใน 5 นาที)", "warning", 5000);
+  }
+});
+
 function startPollingLoop() {
   if (state.pollTimer) clearInterval(state.pollTimer);
   state.pollTimer = setInterval(() => {
@@ -2795,17 +2849,27 @@ function setupModernFeatures() {
   const btnTable = document.getElementById("btn-view-table");
 
   if (btnGrid && btnTable) {
+    const setViewBtns = () => {
+      const on = "p-2 rounded-lg bg-white/[0.12] text-white transition-colors cursor-pointer";
+      const off = "p-2 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer";
+      btnGrid.className = state.libraryViewMode === "grid" ? on : off;
+      btnTable.className = state.libraryViewMode === "table" ? on : off;
+    };
+    // restore จาก config ที่เซฟไว้
+    if (state.config.library_view) state.libraryViewMode = state.config.library_view;
+    setViewBtns();
+
     btnGrid.onclick = () => {
       state.libraryViewMode = "grid";
-      btnGrid.className = "p-2 rounded-lg bg-white/[0.12] text-white transition-colors cursor-pointer";
-      btnTable.className = "p-2 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer";
+      setViewBtns();
+      saveConfig({ library_view: "grid" });
       renderLibrary(state.library);
     };
 
     btnTable.onclick = () => {
       state.libraryViewMode = "table";
-      btnTable.className = "p-2 rounded-lg bg-white/[0.12] text-white transition-colors cursor-pointer";
-      btnGrid.className = "p-2 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer";
+      setViewBtns();
+      saveConfig({ library_view: "table" });
       renderLibrary(state.library);
     };
   }
@@ -4080,6 +4144,83 @@ window.addEventListener("resize", () => {
     requestAnimationFrame(drawEqCurve);
   }
 });
+
+// ── Aurora Premium: วงแสงม่วง/ฟ้า/ชมพู นุ่ม ๆ ลอยเบื้องหลัง (visionOS style) ──
+(function nxAurora() {
+  if (document.getElementById('aurora')) return;
+  const host = document.createElement('div');
+  host.id = 'aurora';
+  host.innerHTML = '<i class="a-orb a1"></i><i class="a-orb a2"></i><i class="a-orb a3"></i>';
+  document.body.prepend(host);
+})();
+
+// ── Hue-shifting spotlight ตามเมาส์สำหรับ [data-glow] cards (โทน Aurora) ──
+(function nxGlow() {
+  const els = [...document.querySelectorAll('[data-glow]')];
+  if (els.length === 0) return;
+  let raf = false, mx = -9999, my = -9999;
+  function update() {
+    raf = false;
+    const vw = window.innerWidth || 1;
+    const xp = (mx / vw).toFixed(3);
+    for (const el of els) {
+      const r = el.getBoundingClientRect();
+      const near = mx >= r.left - 360 && mx <= r.right + 360 &&
+                   my >= r.top - 360 && my <= r.bottom + 360;
+      if (near) {
+        el.style.setProperty('--x', (mx - r.left).toFixed(1));
+        el.style.setProperty('--y', (my - r.top).toFixed(1));
+        el.style.setProperty('--xp', xp);
+      } else {
+        el.style.setProperty('--x', '-9999');
+        el.style.setProperty('--y', '-9999');
+      }
+    }
+  }
+  window.addEventListener('pointermove', e => {
+    mx = e.clientX; my = e.clientY;
+    if (!raf) { raf = true; requestAnimationFrame(update); }
+  }, { passive: true });
+})();
+
+// ── NX decorations (tag จุดสำคัญสำหรับธีม) ──
+(function nxDecorate() {
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Brand wordmark + version badge (เก็บ id เดิมไว้ — ห้ามเปลี่ยน id ที่ app.js อื่นใช้)
+  const brand = document.querySelector("header span.font-extrabold.text-sm.tracking-tight, div span.font-extrabold.text-sm.tracking-tight");
+  if (brand && brand.textContent.trim() === "NexusTube") brand.id = "nx-brand";
+  const verBadge = document.getElementById("app-version-badge");
+  if (verBadge) verBadge.classList.add("nx-brand-badge");
+
+  // จุดสถานะ "Studio Audio Engine Active" ให้เป็น PulsePing
+  const liveDot = document.querySelector(".pointer-events-none span.w-1\\.5");
+  if (liveDot) liveDot.id = "nx-live-dot";
+
+  // Hero: เล่น animation เข้ามาครั้งเดียวตอนเปิด
+  const hero = document.querySelector('h1[data-i18n="Search_Hero"]');
+  if (hero && !reduced) hero.id = "nx-hero-reveal";
+
+  // Halo ปุ่ม play เมื่อกำลังเล่นเพลง
+  setInterval(() => {
+    const playing = state.player && (state.player.isPlaying || state.player.is_playing);
+    document.body.classList.toggle("nx-playing", !!playing);
+  }, 1000);
+
+  // Hero stats panel (โครง A): แทร็กในคลัง + ขนาดรวม
+  (async () => {
+    try {
+      const items = await window.pywebview.api.get_library("", "date");
+      const list = Array.isArray(items) ? items : [];
+      const n = list.length;
+      const bytes = list.reduce((s, i) => s + (i.size_bytes || 0), 0);
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      set("nx-stat-count", n);
+      set("nx-stat-tracks", n);
+      set("nx-stat-size", typeof formatBytes === "function" ? formatBytes(bytes) : `${Math.round(bytes / 1048576)} MB`);
+    } catch {}
+  })();
+})();
 
 // Global bootstrap on DOM ready
 if (document.readyState === "loading") {

@@ -6,32 +6,32 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Dynamic Theme Accent (Customizable via Live Theming) */
-  --accent: #22C55E;
-  --accent-hover: #16A34A;
-  --accent-active: #15803D;
-  --accent-rgb: 34, 197, 94;
-  --accent-glow: rgba(34, 197, 94, 0.35);
-  --accent-glow-subtle: rgba(34, 197, 94, 0.15);
-  --accent-glow-high: rgba(34, 197, 94, 0.55);
+  /* Aurora Premium Accent (violet หลัก — เปลี่ยนได้ผ่าน Live Theming) */
+  --accent: #8B5CF6;
+  --accent-hover: #7C3AED;
+  --accent-active: #6D28D9;
+  --accent-rgb: 139, 92, 246;
+  --accent-glow: rgba(139, 92, 246, 0.35);
+  --accent-glow-subtle: rgba(139, 92, 246, 0.15);
+  --accent-glow-high: rgba(139, 92, 246, 0.55);
 
-  /* Deep OLED Background Hierarchy */
-  --bg-oled: #030307;
-  --bg-oled-rgb: 3, 3, 7;
-  --bg-sidebar: #06060E;
-  --bg-card: #0A0A14;
-  --bg-card-hover: #101020;
-  --bg-input: #080812;
-  --bg-modal: #0B0B16;
-  --bg-player: #06060C;
+  /* Aurora Deep Navy Background Hierarchy */
+  --bg-oled: #0a0e1f;
+  --bg-oled-rgb: 10, 14, 31;
+  --bg-sidebar: rgba(13, 17, 36, 0.75);
+  --bg-card: rgba(21, 27, 52, 0.55);
+  --bg-card-hover: rgba(28, 35, 66, 0.65);
+  --bg-input: rgba(14, 19, 40, 0.6);
+  --bg-modal: rgba(16, 21, 42, 0.92);
+  --bg-player: rgba(12, 16, 34, 0.85);
 
   /* Glassmorphism & Specular Borders */
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-medium: rgba(255, 255, 255, 0.14);
-  --border-highlight: rgba(255, 255, 255, 0.22);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.15);
+  --border-highlight: rgba(255, 255, 255, 0.24);
   --border-accent: rgba(var(--accent-rgb), 0.45);
   --glass-specular: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
-  --glass-blur: 14px;
+  --glass-blur: 18px;
 
   /* Typography Colors */
   --text: #F8FAFC;
@@ -1415,3 +1415,573 @@ body:not(.mini-player-mode) #mini-player-overlay {
 }
 
 
+
+/* ==========================================================================
+   NX REDESIGN LAYER v3.5.3 — OLED Aurora (ReactVibe ports + polish)
+   OrbitBorder nav / PulsePing dots / RisingLines bg / shimmer / hero glow
+   ========================================================================== */
+@property --nx-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes nx-spin { to { --nx-angle: 360deg; } }
+@keyframes nx-rise { to { transform: translateY(-140vh); } }
+@keyframes nx-ch-in {
+  from { opacity: 0; transform: translateY(10px); filter: blur(8px); }
+  to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
+}
+@keyframes nx-halo {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.35), 0 0 18px var(--accent-glow); }
+  50%      { box-shadow: 0 0 0 10px rgba(var(--accent-rgb), 0),   0 0 26px var(--accent-glow-high); }
+}
+
+/* ---- RisingLines: เส้นแสงบางๆ ลอยขึ้นด้านหลังทั้งแอป ---- */
+#nx-lines {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.nx-line {
+  display: block;
+  position: absolute;
+  bottom: -320px;
+  width: 1px;
+  background-image: linear-gradient(to top, transparent, var(--nx-c, #22C55E), transparent);
+  animation: nx-rise linear infinite;
+}
+
+/* ---- PulsePing: จุดสถานะไล่สีหมุน (engine/live dots) ---- */
+#engine-status-dot,
+#nx-live-dot {
+  background: conic-gradient(from var(--nx-angle, 0deg),
+    #22C55E, #6EE7B7, #10B981, #A7F3D0, #22C55E) !important;
+  box-shadow: 0 0 8px var(--accent-glow);
+  animation: nx-spin 3.2s linear infinite;
+}
+#nx-live-dot { width: 7px !important; height: 7px !important; }
+
+/* ---- OrbitBorder: ขอบไล่สีหมุนรอบ nav ที่ active ---- */
+.nav-item.active {
+  background: rgba(var(--accent-rgb), 0.08);
+}
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 12px;
+  padding: 1px;
+  background: conic-gradient(from var(--nx-angle, 0deg),
+    rgba(var(--accent-rgb), 0.75), rgba(99, 102, 241, 0.4), rgba(var(--accent-rgb), 0.9), rgba(6, 182, 212, 0.3), rgba(var(--accent-rgb), 0.75));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: nx-spin 8s linear infinite;
+  pointer-events: none;
+}
+
+/* ---- Brand wordmark: ไล่สีเขียว→ฟ้า + glow ---- */
+#nx-brand {
+  background: linear-gradient(100deg, #FFFFFF 30%, #6EE7B7 65%, #22C55E 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  text-shadow: 0 0 22px var(--accent-glow-subtle);
+  letter-spacing: 0.02em;
+}
+.nx-brand-badge {
+  border-color: rgba(var(--accent-rgb), 0.35) !important;
+  color: #6EE7B7 !important;
+  background: rgba(var(--accent-rgb), 0.08) !important;
+}
+
+/* ---- Hero: ชื่อใหญ่ไล่ขาว→เขียว + เจ้าของเข้ามา blur-in ---- */
+h1[data-i18n="Search_Hero"] {
+  background: linear-gradient(105deg, #FFFFFF 40%, #A7F3D0 75%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  filter: drop-shadow(0 4px 24px rgba(var(--accent-rgb), 0.18));
+}
+#nx-hero-reveal {
+  animation: nx-ch-in 0.55s cubic-bezier(.4, 0, .2, 1) both;
+}
+
+/* ---- Shimmer sweep บนปุ่ม primary (hover) ---- */
+button.bg-\[var\(--accent\)\] {
+  position: relative;
+  overflow: hidden;
+}
+button.bg-\[var\(--accent\)\]::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -80%;
+  width: 50%;
+  height: 220%;
+  transform: rotate(18deg) translateX(-120%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  transition: transform 0.6s cubic-bezier(.16, 1, .3, 1);
+  pointer-events: none;
+}
+button.bg-\[var\(--accent\)\]:hover::after {
+  transform: rotate(18deg) translateX(320%);
+}
+
+/* ---- Checkbox สปริงเขียวเรืองแสง ---- */
+input[type="checkbox"].accent-\[var\(--accent\)\] {
+  transition: transform 0.18s cubic-bezier(.34, 1.56, .64, 1), box-shadow 0.2s ease;
+}
+input[type="checkbox"].accent-\[var\(--accent\)\]:checked {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px var(--accent-glow-subtle);
+}
+input[type="checkbox"].accent-\[var\(--accent\)\]:active {
+  transform: scale(0.9);
+}
+
+/* ---- Scrollbar โทนแอคเซนต์ ---- */
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--accent-rgb), 0.22);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb), 0.5);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* ---- ปุ่ม play หลักเต้นเป็นจังหวะเมื่อเล่นเพลง ---- */
+body.nx-playing #btn-play,
+body.nx-playing #play-btn {
+  animation: nx-halo 1.8s ease-in-out infinite;
+}
+
+/* ---- ลด motion ตามระบบ ---- */
+@media (prefers-reduced-motion: reduce) {
+  .nx-line, #engine-status-dot, #nx-live-dot,
+  .nav-item.active::after, #nx-hero-reveal,
+  button.bg-\[var\(--accent\)\]::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   FLUX-STYLE DECOR LAYER — WebGL Waves + GlowCard + LiquidMetal button
+   ========================================================================== */
+#bgWaves {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.16;
+  pointer-events: none;
+  z-index: 0;
+}
+#nx-lines { z-index: 0; }
+
+/* ---- Hue-Shifting GlowCard + Aura (จาก FLUX [data-glow], โทนเขียว) ---- */
+[data-glow] {
+  --border-size: 1.5px;
+  --spotlight-size: 300px;
+  --hue: calc(var(--base, 140) + (var(--xp, 0) * var(--spread, 200)));
+  background-image: radial-gradient(
+    var(--spotlight-size) var(--spotlight-size) at
+      calc(var(--x, -9999) * 1px) calc(var(--y, -9999) * 1px),
+    hsl(var(--hue, 140) 90% 65% / var(--bg-spot-opacity, 0.09)),
+    transparent 100%
+  );
+  background-color: var(--backdrop, rgba(12, 12, 20, 0.72));
+  background-origin: border-box;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border: var(--border-size) solid var(--backup-border, rgba(255, 255, 255, 0.09));
+  border-radius: calc(var(--radius, 20) * 1px);
+}
+[data-glow]::before, [data-glow]::after {
+  pointer-events: none;
+  content: '';
+  position: absolute;
+  inset: calc(var(--border-size) * -1);
+  border: var(--border-size) solid transparent;
+  border-radius: calc(var(--radius, 20) * 1px);
+  background-origin: border-box;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0) border-box;
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0) border-box;
+  mask-composite: exclude;
+}
+[data-glow]::before {
+  z-index: 2;
+  background-image: radial-gradient(
+    calc(var(--spotlight-size) * 0.85) calc(var(--spotlight-size) * 0.85) at
+      calc(var(--x, -9999) * 1px) calc(var(--y, -9999) * 1px),
+    hsl(var(--hue, 140) 90% 55% / var(--border-spot-opacity, 0.9)),
+    transparent 100%
+  );
+  filter: brightness(1.65);
+}
+[data-glow]::after {
+  z-index: 3;
+  background-image: radial-gradient(
+    calc(var(--spotlight-size) * 0.45) calc(var(--spotlight-size) * 0.45) at
+      calc(var(--x, -9999) * 1px) calc(var(--y, -9999) * 1px),
+    hsl(0 100% 100% / var(--border-light-opacity, 0.7)),
+    transparent 100%
+  );
+}
+[data-glow] > [data-glow-aura] {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: var(--outer, 0.7);
+  border-radius: calc(var(--radius, 20) * 1px);
+  filter: blur(18px);
+  pointer-events: none;
+}
+
+/* ---- LiquidMetal 3D button (จาก FLUX) ---- */
+.lm-wrap { position: relative; display: inline-flex; user-select: none; }
+.lm-wrap.lm-disabled { opacity: 0.5; pointer-events: none; }
+.lm-persp { perspective: 1000px; perspective-origin: 50% 50%; }
+.lm-3d {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.lm-3d.lm-sm { height: 44px; }
+.lm-label {
+  position: relative;
+  z-index: 30;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+  transform: translateZ(20px);
+  color: #e4e4e7;
+  transition: color 0.25s ease, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+  white-space: nowrap;
+  font-size: 13px;
+  padding: 0 26px;
+}
+.lm-3d:hover .lm-label { color: #ffffff; }
+.lm-3d.pressed .lm-label { transform: translateZ(20px) translateY(1px) scale(0.98); }
+.lm-mid {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  transform: translateZ(10px);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.lm-3d.pressed .lm-mid { transform: translateZ(10px) translateY(1px) scale(0.985); }
+.lm-pill {
+  position: absolute;
+  inset: 2px;
+  border-radius: 100px;
+  background: linear-gradient(180deg, #1d1d22 0%, #030305 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: background 0.25s ease, box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.lm-3d:hover .lm-pill { background: linear-gradient(180deg, #27272d 0%, #060609 100%); }
+.lm-3d.pressed .lm-pill {
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+.lm-rim {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  transform: translateZ(0);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.lm-3d.pressed .lm-rim { transform: translateY(1px) scale(0.985); }
+.lm-rim-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 100px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(168,85,247,0.45) 50%, rgba(37,99,235,0.55) 100%);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.lm-3d:hover .lm-rim-bg { box-shadow: 0 0 24px rgba(168, 85, 247, 0.28), 0 10px 20px rgba(0, 0, 0, 0.45); }
+.lm-3d.pressed .lm-rim-bg { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 2px 6px rgba(0, 0, 0, 0.5); }
+/* โทนเขียวของ NexusTube */
+.nx-rim-green {
+  background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(34,197,94,0.55) 50%, rgba(6,182,212,0.5) 100%);
+}
+.nx-rim-green:hover, .lm-3d:hover .nx-rim-green { box-shadow: 0 0 24px rgba(34, 197, 94, 0.35), 0 10px 20px rgba(0, 0, 0, 0.45); }
+.lm-shader { border-radius: 100px; overflow: hidden; position: relative; width: 100%; height: 100%; }
+.lm-hit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  z-index: 40;
+  overflow: hidden;
+  border-radius: 100px;
+  display: block;
+  padding: 0;
+}
+.lm-ripple {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+  animation: nx-ripple 0.6s ease-out forwards;
+}
+@keyframes nx-ripple {
+  0% { transform: translate3d(-50%, -50%, 0) scale(0); opacity: 0.6; }
+  100% { transform: translate3d(-50%, -50%, 0) scale(4); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #bgWaves, .lm-ripple { display: none !important; }
+}
+
+/* ==========================================================================
+   AURORA PREMIUM THEME v3.7.0 — น้ำเงินดำ + วงแสงม่วง/ฟ้า/ชมพู + กระจกฝ้า
+   (ยกเลิกของแนว gaming เดิม: waves, rising lines, orbit ring, shimmer, metal)
+   ========================================================================== */
+
+/* ---- วงแสง Aurora เบื้องหลัง ---- */
+#aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.a-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+}
+.a1 {
+  width: 55vw; height: 55vw;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.32), transparent 65%);
+  top: -18vw; left: -12vw;
+  animation: a-drift1 46s ease-in-out infinite alternate;
+}
+.a2 {
+  width: 48vw; height: 48vw;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.26), transparent 65%);
+  bottom: -20vw; right: -10vw;
+  animation: a-drift2 56s ease-in-out infinite alternate;
+}
+.a3 {
+  width: 34vw; height: 34vw;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.20), transparent 65%);
+  top: 28vh; right: 22vw;
+  animation: a-drift3 64s ease-in-out infinite alternate;
+}
+@keyframes a-drift1 { to { transform: translate(9vw, 7vh) scale(1.18); } }
+@keyframes a-drift2 { to { transform: translate(-7vw, -8vh) scale(1.12); } }
+@keyframes a-drift3 { to { transform: translate(-6vw, 9vh) scale(1.2); } }
+
+/* ---- เลิกใช้ของแนว gaming เดิม ---- */
+#nx-lines, #bgWaves { display: none !important; }
+.nav-item.active::after { display: none !important; }
+button.bg-\[var\(--accent\)\]::after { display: none !important; }
+.lm-wrap { display: none !important; }
+#engine-status-dot, #nx-live-dot {
+  animation: none !important;
+  background: var(--accent) !important;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* ---- กระจกฝ้าทุกผิว ---- */
+.bg-sidebar, .bg-card, .bg-modal, .bg-player, .bg-input-box {
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+header, .pywebview-drag-region {
+  background: rgba(12, 16, 34, 0.6) !important;
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+}
+
+/* ---- Nav active สไตล์ Aurora: กระจกม่วงจาง + แถบแสงซ้าย ---- */
+.nav-item.active {
+  background: rgba(var(--accent-rgb), 0.13);
+  border-color: rgba(var(--accent-rgb), 0.3);
+  box-shadow: 0 0 24px var(--accent-glow-subtle), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* ---- Hero: กระจกม่วง-ฟ้า-ชมพู + spotlight ตามเมาส์ (hue ช่วง Aurora) ---- */
+[data-glow] {
+  --base: 262;
+  --spread: 130;
+  --bg-spot-opacity: 0.1;
+  --border-spot-opacity: 0.85;
+  --backdrop: rgba(15, 20, 42, 0.6);
+}
+.nx-hero-glass {
+  background: linear-gradient(115deg,
+    rgba(99, 102, 241, 0.14) 0%,
+    rgba(139, 92, 246, 0.11) 45%,
+    rgba(236, 72, 153, 0.08) 100%),
+    rgba(15, 20, 42, 0.55) !important;
+  backdrop-filter: blur(20px) saturate(1.25);
+  -webkit-backdrop-filter: blur(20px) saturate(1.25);
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* ---- Brand: ไล่ม่วง→ฟ้า→ชมพู ---- */
+#nx-brand {
+  background: linear-gradient(100deg, #FFFFFF 25%, #C4B5FD 50%, #93C5FD 75%, #F9A8D4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  text-shadow: 0 0 22px rgba(139, 92, 246, 0.2);
+}
+.nx-brand-badge {
+  border-color: rgba(var(--accent-rgb), 0.4) !important;
+  color: #C4B5FD !important;
+  background: rgba(var(--accent-rgb), 0.1) !important;
+}
+
+/* ---- Hero heading: ขาว→ม่วงอ่อน ---- */
+h1[data-i18n="Search_Hero"] {
+  background: linear-gradient(105deg, #FFFFFF 40%, #DDD6FE 70%, #C4B5FD 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  filter: drop-shadow(0 4px 24px rgba(139, 92, 246, 0.2));
+}
+
+/* ---- Checkbox โทนม่วง ---- */
+input[type="checkbox"].accent-\[var\(--accent\)\]:checked {
+  transform: scale(1.08);
+  box-shadow: 0 0 10px var(--accent-glow-subtle);
+}
+
+/* ---- ปุ่ม play หลักเต้นแสงตอนเล่น (คงไว้ โทนม่วง) ---- */
+body.nx-playing #btn-play,
+body.nx-playing #play-btn {
+  animation: nx-halo 1.8s ease-in-out infinite;
+}
+
+/* ---- Hero reveal เข้าแบบนุ่ม ---- */
+#nx-hero-reveal { animation: nx-ch-in 0.55s cubic-bezier(.4, 0, .2, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .a-orb, #nx-hero-reveal { animation: none !important; }
+}
+
+/* ==========================================================================
+   MIXED LAYOUT v3.8.0 — โครง A + แถว/ตาราง C + topbar เมฆ B + Aurora ม่วง
+   ========================================================================== */
+
+/* ---- Topbar: เมฆกระจกลอย (แบบ B) ---- */
+header {
+  margin: 14px 18px 0 !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.55);
+}
+
+/* ---- Hero grid: 2 แผง (ชื่อ + สถิติ) แบบ A ---- */
+.nx-hero-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+}
+.nx-stats-panel {
+  background: linear-gradient(160deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.07)),
+    rgba(15, 20, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 24px;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+.nx-sp-big { font-size: 17px; font-weight: 800; line-height: 1.45; color: #EEEBFF; }
+.nx-sp-big b { color: var(--accent); font-size: 22px; text-shadow: 0 0 18px var(--accent-glow); }
+.nx-sp-row { display: flex; gap: 26px; }
+.nx-sp-v { font-size: 21px; font-weight: 800; color: #DDD6FE; }
+.nx-sp-k { font-size: 9.5px; color: #7E86B4; letter-spacing: 1.5px; margin-top: 4px; text-transform: uppercase; }
+@media (max-width: 1080px) {
+  .nx-hero-grid { grid-template-columns: 1fr; }
+}
+
+/* ---- Format selector: เป็นแถวเรียงลง (แบบ C) ---- */
+#format-picker-group {
+  display: flex !important;
+  flex-direction: column;
+  gap: 8px !important;
+}
+.fmt-btn {
+  display: flex !important;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 16px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+.fmt-btn > div:first-child {
+  order: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 190px;
+  flex-shrink: 0;
+}
+.fmt-btn > div:first-child .text-xs { font-size: 13px; }
+.fmt-btn > div:nth-child(2) {
+  order: 2;
+  flex: 1;
+  padding-top: 0 !important;
+}
+.fmt-btn .badge-audio { order: 3; margin-left: auto; }
+.fmt-btn.active, .fmt-btn.active:hover {
+  border-color: var(--accent) !important;
+  background: rgba(var(--accent-rgb), 0.09) !important;
+  box-shadow: 0 0 20px var(--accent-glow-subtle);
+}
+
+/* ---- Library: ตารางคม ๆ แบบ C ---- */
+#library-table-container table, #library-table-container {
+  font-family: var(--font-mono);
+}
+#library-table-container thead th, #library-table-container th {
+  font-size: 9px !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  color: #7E86B4 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09) !important;
+}
+#library-table-container tbody tr { border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+#library-table-container tbody tr:hover { background: rgba(var(--accent-rgb), 0.05); }
+
+/* ---- Player strip แบบล่างแบนสะอาด ---- */
+.bg-player {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 -10px 40px -12px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) { /* คงไว้เหมือนเดิม */ }

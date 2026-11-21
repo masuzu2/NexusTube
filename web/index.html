@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="application-name" content="NexusTube v3.2.0 - v3.4.0">
+  <!-- CSP: ยอมรับเฉพาะสคริปต์/สไตล์ในเครื่อง + ภาพ/เสียงจาก local-media และ https (thumbnail/preview) -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' local-media:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' local-media: https: data: blob:; media-src 'self' local-media: https: blob: http:; connect-src 'self' local-media: https: http:;">
   <title>NexusTube — Next-Gen Music Suite</title>
 
   <!-- Google Fonts Preconnect & High-Fidelity Typography -->
@@ -191,26 +194,35 @@
 
         <!-- ================= PAGE 1: SEARCH & DISCOVER ================= -->
         <section id="page-search" class="page-view p-8 space-y-8 max-w-6xl mx-auto w-full">
-          <!-- Hero Banner (Linear Caliber Glassmorphism) -->
-          <div class="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-r from-indigo-950/40 via-purple-950/25 to-black/60 border border-white/[0.08] shadow-2xl spotlight-card hero-spotlight">
-            <div class="absolute -right-16 -top-16 w-80 h-80 bg-[var(--accent)]/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="relative z-10 space-y-3">
-              <div class="flex items-center space-x-2.5">
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[var(--accent)] text-black uppercase tracking-wider shadow-[0_0_12px_var(--accent-glow)]">Universal Resolver</span>
-                <span class="text-xs text-slate-300 font-medium">YouTube · Spotify · Apple Music · SoundCloud</span>
+          <!-- Hero Banner (โครง A: 2 แผง — ชื่อ + สถิติสด) -->
+          <div class="nx-hero-grid">
+            <div class="relative overflow-hidden rounded-3xl p-7 border border-white/[0.1] shadow-2xl nx-hero-glass" data-glow style="--radius:24px">
+              <div class="relative z-10 space-y-3">
+                <div class="flex items-center space-x-2.5">
+                  <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[var(--accent)] text-white uppercase tracking-wider shadow-[0_0_12px_var(--accent-glow)]">Universal Resolver</span>
+                  <span class="text-xs text-slate-300 font-medium">YouTube · Spotify · Apple Music · SoundCloud</span>
+                </div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-white leading-tight" data-i18n="Search_Hero">
+                  Download Ultra High-Res Audio & 4K Video
+                </h1>
+                <p class="text-sm text-slate-300 max-w-xl leading-relaxed" data-i18n="Search_Sub">
+                  Paste any music link or type any song title to instantly stream, tag with ID3, extract LRC lyrics, and download at studio master quality.
+                </p>
+                <div class="pt-1 flex items-center space-x-2 text-[11px] text-slate-400 font-mono">
+                  <span class="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/[0.08] text-slate-300 font-bold">Ctrl + V</span>
+                  <span>Instant Paste & Stream</span>
+                  <span class="text-slate-600">·</span>
+                  <span class="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/[0.08] text-slate-300 font-bold">Ctrl + K</span>
+                  <span>Focus Search</span>
+                </div>
               </div>
-              <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight" data-i18n="Search_Hero">
-                Download Ultra High-Res Audio & 4K Video
-              </h1>
-              <p class="text-sm text-slate-300 max-w-2xl leading-relaxed" data-i18n="Search_Sub">
-                Paste any music link or type any song title to instantly stream, tag with ID3, extract LRC lyrics, and download at studio master quality.
-              </p>
-              <div class="pt-1 flex items-center space-x-2 text-[11px] text-slate-400 font-mono">
-                <span class="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/[0.08] text-slate-300 font-bold">Ctrl + V</span>
-                <span>Instant Paste & Stream</span>
-                <span class="text-slate-600">·</span>
-                <span class="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/[0.08] text-slate-300 font-bold">Ctrl + K</span>
-                <span>Focus Search</span>
+            </div>
+            <div class="nx-stats-panel">
+              <div class="nx-sp-big">วันนี้ดาวน์โหลดไปแล้ว <b id="nx-stat-count">–</b> ไฟล์</div>
+              <div class="nx-sp-row">
+                <div class="nx-sp"><div class="nx-sp-v" id="nx-stat-tracks">–</div><div class="nx-sp-k">แทร็กในคลัง</div></div>
+                <div class="nx-sp"><div class="nx-sp-v" id="nx-stat-size">–</div><div class="nx-sp-k">ขนาดรวม</div></div>
+                <div class="nx-sp"><div class="nx-sp-v">×4</div><div class="nx-sp-k">สตรีมขนาน</div></div>
               </div>
             </div>
           </div>
@@ -229,7 +241,7 @@
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                   <span data-i18n="Paste">Paste</span>
                 </button>
-                <button id="btn-execute-search" class="px-4 py-2 rounded-xl bg-[var(--accent)] hover:brightness-110 text-black font-extrabold text-xs shadow-[0_0_15px_var(--accent-glow)] transition-all duration-150 flex items-center space-x-1.5 cursor-pointer active:scale-95">
+                <button id="btn-execute-search" class="px-6 py-2.5 rounded-full bg-[var(--accent)] hover:brightness-110 text-white font-extrabold text-xs shadow-[0_0_20px_var(--accent-glow)] transition-all duration-200 flex items-center space-x-1.5 cursor-pointer active:scale-95 border border-white/20">
                   <svg id="search-spinner" class="w-3.5 h-3.5 hidden animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                   <span data-i18n="SearchBtn">Search</span>
                 </button>
