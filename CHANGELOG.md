@@ -5,6 +5,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [3.9.0] - 2026-11-22 — Unified Electron Edition & Local-first Download Site
+
+### 🧹 Cleanup
+- ลบไฟล์ยุค Python ทั้งหมด (PyInstaller, WiX MSI, spec, scripts), media, logs, mockups — repo เหลือแต่แอป Electron จริง
+- ลบ GitHub workflows ยุค Python ออก
+
+### 🌐 Local-first Download Site
+- เว็บโหลดเพลงรันที่ 127.0.0.1:8787 ในตัวแอป (ใช้ config/คิวตัวเดียวกับแอป)
+- เพิ่ม endpoint /health; ตัด Cloudflare tunnel และ site-CORS ออกทั้งหมด
+- หน้า gh-pages เปลี่ยนเป็น portal: ปุ่มดาวน์โหลด + ตรวจจับเว็บในเครื่อง
+- รันแบบไม่เปิดหน้าต่างได้ด้วย NexusTube.exe --web-server หรือ START_WEB.bat
+
+### 🛠 Installer (NSIS)
+- Assisted installer: เลือกภาษา ไทย/อังกฤษ, หน้า license, เลือกโฟลเดอร์, Desktop/Start Menu shortcuts, run-after-finish
+- ชื่อไฟล์มาตรฐาน NexusTube-Setup-3.9.0.exe / NexusTube-3.9.0-Portable.exe
+- ระบบ auto-update (version.json + app-update.zip) กลับมาทำงาน
+
+---
+
 ## [3.5.1] - 2026-11-18 — Crash-Proof Systems & Update Rollback
 
 ### 🛡️ Crash Resilience
