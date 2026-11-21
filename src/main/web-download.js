@@ -224,7 +224,14 @@ function startWebServer(options = {}) {
     let pathname = '/';
     try { pathname = new URL(req.url, `http://${HOST}`).pathname; } catch {}
     if (req.method === 'GET' && pathname === '/health') {
-      sendJson(res, 200, { ok: true, name: 'NexusTube', version: VERSION }, {
+      let queue = { total: 0, active: 0, failed: 0 };
+      try {
+        const tasks = downloads.getQueueState();
+        queue.total = tasks.length;
+        queue.active = tasks.filter((t) => ['waiting', 'downloading', 'processing'].includes(t.status)).length;
+        queue.failed = tasks.filter((t) => t.status === 'failed').length;
+      } catch {}
+      sendJson(res, 200, { ok: true, name: 'NexusTube', version: VERSION, engines: engine.getStatus(), queue }, {
         'Access-Control-Allow-Origin': '*'
       });
       return;

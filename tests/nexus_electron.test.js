@@ -596,3 +596,70 @@ describe('10. Protocol Handlers, Discord RPC, Audio Feedback & Streaming', () =>
   });
 });
 
+
+describe('11. Download Resilience Policy', () => {
+  const R = require('../src/main/download-resilience');
+
+  test('classifyError จำแนก transient / extractor / fatal ได้ถูกต้อง', () => {
+    // transient — เครือข่าย/ชั่วคราว
+    assert.equal(R.classifyError("ERROR: unable to download video data: HTTP Error 503"), 'transient');
+    assert.equal(R.classifyError("[download] Got error: connection reset by peer"), 'transient');
+    assert.equal(R.classifyError("giving up after 10 retries: getaddrinfo ETIMEDOUT"), 'transient');
+    assert.equal(R.classifyError("download stalled — killed by watchdog"), 'transient');
+
+    // extractor — yt-dlp ต้องอัปเดต
+    assert.equal(R.classifyError("Unable to extract player response"), 'extractor');
+    assert.equal(R.classifyError("Requested format is not available"), 'extractor');
+    assert.equal(R.classifyError("nsig extraction failed"), 'extractor');
+
+    // fatal — ลองกี่ครั้งก็ไม่ผ่าน
+    assert.equal(R.classifyError("This video is unavailable"), 'fatal');
+    assert.equal(R.classifyError("Private video. Sign in if you were granted access"), 'fatal');
+
+    // unknown — ไม่ตรงแพทเทิร์นใด
+    assert.equal(R.classifyError("something completely weird happened"), 'unknown');
+    assert.equal(R.classifyError(""), 'unknown');
+  });
+
+  test('shouldAutoRetry ตามนโยบาย: transient 3 ครั้ง, extractor 1, unknown 1, fatal 0', () => {
+    assert.equal(R.shouldAutoRetry('transient', 0), true);
+    assert.equal(R.shouldAutoRetry('transient', 2), true);
+    assert.equal(R.shouldAutoRetry('transient', 3), false);
+    assert.equal(R.shouldAutoRetry('extractor', 0), true);
+    assert.equal(R.shouldAutoRetry('extractor', 1), false);
+    assert.equal(R.shouldAutoRetry('unknown', 0), true);
+    assert.equal(R.shouldAutoRetry('unknown', 1), false);
+    assert.equal(R.shouldAutoRetry('fatal', 0), false);
+  });
+
+  test('backoffMs ไล่ 3s → 10s → 30s และกันค่าเกินขอบ', () => {
+    assert.equal(R.backoffMs(0), 3000);
+    assert.equal(R.backoffMs(1), 10000);
+    assert.equal(R.backoffMs(2), 30000);
+    assert.equal(R.backoffMs(5), 30000); // clamp
+    assert.equal(R.backoffMs(-1), 3000); // clamp
+  });
+
+  test('nextFormatFallback ครบทุกสาย: เสียงกับวิดีโอไม่ข้ามกัน', () => {
+    assert.equal(R.nextFormatFallback('mp3_320'), 'm4a_best');
+    assert.equal(R.nextFormatFallback('flac'), 'mp3_320');
+    assert.equal(R.nextFormatFallback('mp4_1080'), 'mp4_720');
+    assert.equal(R.nextFormatFallback('mp4_720'), 'mp4_best');
+    assert.equal(R.nextFormatFallback('mp4_best'), null);
+    assert.equal(R.nextFormatFallback('weird'), null);
+  });
+
+  test('isAudioFormat แยกสายเสียงกับวิดีโอ', () => {
+    assert.equal(R.isAudioFormat('mp3_320'), true);
+    assert.equal(R.isAudioFormat('flac'), true);
+    assert.equal(R.isAudioFormat('mp4_1080'), false);
+    assert.equal(R.isAudioFormat(undefined), false);
+  });
+
+  test('ค่าคงที่ของระบบกันพังอยู่ในช่วงสมเหตุสมผล', () => {
+    assert.ok(R.MIN_FREE_BYTES >= 200 * 1024 * 1024);
+    assert.ok(R.STALL_MS >= 60 * 1000);
+    assert.ok(R.STALL_CHECK_MS <= R.STALL_MS);
+    assert.ok(R.MAX_PERSISTED_TASKS > 0);
+  });
+});

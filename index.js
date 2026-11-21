@@ -287,6 +287,9 @@ app.whenReady().then(() => {
     logger.error(`web-download start failed: ${e.stack || e.message}`);
   }
 
+  // ── กันพังระยะยาว: เช็ค yt-dlp ใหม่ทุก 12 ชม. — YouTube เปลี่ยนโครงสร้างบ่อย เครื่องมือเก่า = โหลดไม่ได้ทั้งระบบ
+  try { engineManager.startFreshnessLoop(); } catch {}
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();

@@ -369,6 +369,47 @@ class EngineManager {
     }
     return this.getStatus();
   }
+
+  /**
+   * Self-healing ชั้นสุดท้าย: เทียบเวอร์ชัน yt-dlp กับ release ล่าสุดของ yt-dlp/yt-dlp
+   * ถ้าเก่ากว่า → อัปเดตทันที (YouTube เปลี่ยนโครงสร้างบ่อย มิฉะนั้นทั้งระบบจะโหลดไม่ได้)
+   * กลับคืน { refreshed: boolean, from, to, reason }
+   */
+  async ensureFreshYtdlp(reason = 'scheduled') {
+    try {
+      const check = await this.checkYtdlpUpdate();
+      if (!check.has_update) {
+        return { refreshed: false, reason, from: check.current_version, to: check.current_version };
+      }
+      const res = await this.updateYtdlp();
+      return {
+        refreshed: Boolean(res.success),
+        reason,
+        from: check.current_version,
+        to: check.latest_version
+      };
+    } catch (err) {
+      // ตรวจไม่ได้ (เน็ตหาย ฯลฯ) — ไม่ว่างาน ยังโหลดต่อได้ด้วยเวอร์ชันเดิม
+      console.warn('[engine] ensureFreshYtdlp skipped:', err && err.message || err);
+      return { refreshed: false, reason, error: String(err.message || err) };
+    }
+  }
+
+  /** ลูปเช็คความสดของ yt-dlp ทุก 12 ชม. — กันกรณีผู้ใช้ไม่ปิดแอปเป็นสัปดาห์ */
+  startFreshnessLoop(intervalMs = 12 * 60 * 60 * 1000) {
+    if (this._freshnessTimer) return;
+    this._freshnessTimer = setInterval(() => {
+      this.ensureFreshYtdlp('scheduled').catch(() => {});
+    }, intervalMs);
+    if (typeof this._freshnessTimer.unref === 'function') this._freshnessTimer.unref();
+  }
+
+  stopFreshnessLoop() {
+    if (this._freshnessTimer) {
+      clearInterval(this._freshnessTimer);
+      this._freshnessTimer = null;
+    }
+  }
 }
 
 module.exports = { EngineManager };

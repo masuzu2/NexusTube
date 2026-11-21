@@ -8,8 +8,10 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { spawn } = require('child_process');
+const fsp = require('fs').promises;
 const NodeID3 = require('node-id3');
 const { fetchLyrics, saveLrc } = require('./lyrics');
+const R = require('./download-resilience');
 
 class DownloadManager {
   constructor(engineManager, configManager) {
@@ -19,6 +21,52 @@ class DownloadManager {
     this.taskCounter = 0;
     this.maxConcurrent = 3;
     this.activeWorkers = 0;
+    this.queuePath = path.join(this.config.appdataDir, 'queue.json');
+    this._saveTimer = null;
+    this.restoreQueue();
+  }
+
+  // ── คิวอยู่รอดข้ามการปิดแอป ────────────────────────────────────────
+  saveQueue() {
+    if (this._saveTimer) return;
+    this._saveTimer = setTimeout(() => {
+      this._saveTimer = null;
+      try {
+        const snapshot = this.tasks.slice(-R.MAX_PERSISTED_TASKS).map((t) => ({
+          id: t.id, url: t.url, title: t.title, format: t.format,
+          options: t.options, metadata: t.metadata, status: t.status
+        }));
+        fs.writeFileSync(this.queuePath, JSON.stringify({ version: 1, tasks: snapshot }, null, 1), 'utf8');
+      } catch {}
+    }, 500);
+  }
+
+  restoreQueue() {
+    try {
+      if (!fs.existsSync(this.queuePath)) return;
+      const data = JSON.parse(fs.readFileSync(this.queuePath, 'utf8'));
+      const kept = [];
+      for (const t of (Array.isArray(data.tasks) ? data.tasks : [])) {
+        if (!t || !t.url) continue;
+        if (t.status === 'completed') continue; // เสร็จแล้วไม่ต้องกู้
+        // งานที่กำลังโหลดค้างตอนปิดแอป → ให้กลับมาเข้าคิวใหม่
+        kept.push({
+          ...t,
+          status: t.status === 'failed' ? 'failed' : 'waiting',
+          percent: 0, speed: '0 KiB/s', eta: '--:--',
+          thumbnail: t.thumbnail || '', out_file: null, size_bytes: null,
+          error: t.status === 'failed' ? (t.error || null) : null,
+          proc: null, cancelled: false,
+          _retryAttempts: {}
+        });
+      }
+      if (kept.length) {
+        this.tasks = kept;
+        this.taskCounter = kept.length;
+        // งานที่ติดค้างเดิมกลับเข้าคิวอัตโนมัติ
+        setTimeout(() => this.processQueue(), 3000);
+      }
+    } catch {}
   }
 
   sanitizeFilename(name) {
@@ -78,6 +126,7 @@ class DownloadManager {
     };
 
     this.tasks.push(task);
+    this.saveQueue();
     this.processQueue();
     return { task_id: taskId, duplicate: false };
   }
@@ -133,13 +182,16 @@ class DownloadManager {
     task.out_file = null;
     task.size_bytes = null;
     task._retried = false;
+    task._retryAttempts = {}; // กด retry เอง = เริ่มนับ auto-retry ใหม่
 
+    this.saveQueue();
     this.processQueue();
     return true;
   }
 
   clearFinished() {
     this.tasks = this.tasks.filter(t => t.status === "waiting" || t.status === "downloading" || t.status === "processing");
+    this.saveQueue();
     return true;
   }
 
@@ -157,7 +209,8 @@ class DownloadManager {
   processQueue() {
     if (this.activeWorkers >= this.maxConcurrent) return;
 
-    const nextTask = this.tasks.find(t => t.status === "waiting" && !t.cancelled);
+    // _holdUntil = งานที่จะถูกลองใหม่อัตโนมัติตาม backoff — ยังไม่ถึงเวลาไม่หยิบมาทำ
+    const nextTask = this.tasks.find(t => t.status === "waiting" && !t.cancelled && !(t._holdUntil && t._holdUntil > Date.now()));
     if (!nextTask) return;
 
     this.activeWorkers++;
@@ -196,6 +249,30 @@ class DownloadManager {
 
     task.status = "downloading";
     task.percent = 0.01;
+
+    // ── กันพังชั้นที่ 1: เช็คพื้นที่ดิสก์ก่อนเริ่ม (เต็มแล้วรู้ตัวก่อน ไม่ให้ไฟล์เสียหาย)
+    try {
+      const stats = await fsp.statfs(outdir);
+      const freeBytes = Number(stats.bavail) * Number(stats.bsize);
+      if (freeBytes < R.MIN_FREE_BYTES) {
+        task.status = "failed";
+        task.error = "พื้นที่ดิสก์เหลือน้อยกว่า 250 MB — เคลียร์พื้นที่แล้วกดลองใหม่";
+        this.saveQueue();
+        return;
+      }
+    } catch {} // ระบบไฟล์ไม่รองรับ statfs → ข้ามไป ไม่ให้เป็นอุปสรรค
+
+    // ── กันพังชั้นที่ 2: watchdog จับงานค้าง (เน็ตตาย/เซิร์ฟเวอร์ห้อย) — ไม่มีความคืบหน้า 90 วิ → ฆ่าแล้วลองใหม่
+    task._lastProgress = Date.now();
+    const watchdog = setInterval(() => {
+      if (task.cancelled || task.status !== "downloading") return;
+      if (Date.now() - (task._lastProgress || 0) > R.STALL_MS) {
+        task._stalled = true;
+        try { proc && proc.kill(); } catch {}
+        clearInterval(watchdog);
+      }
+    }, R.STALL_CHECK_MS);
+    if (typeof watchdog.unref === 'function') watchdog.unref();
 
     // Filename template
     let outTemplate;
@@ -312,6 +389,7 @@ class DownloadManager {
           const mPct = line.match(pctRegex);
           if (mPct) {
             task.percent = Math.min(0.99, parseFloat(mPct[1]) / 100);
+            task._lastProgress = Date.now(); // ให้ watchdog รู้ว่ายังมีชีวิตอยู่
           }
 
           // Check speed
@@ -362,8 +440,10 @@ class DownloadManager {
 
       proc.on('close', async (code) => {
         task.proc = null;
+        clearInterval(watchdog);
         if (task.cancelled) {
           task.status = "cancelled";
+          this.saveQueue();
           return resolve();
         }
 
@@ -394,9 +474,7 @@ class DownloadManager {
 
           // ตรวจว่าไฟล์มีจริง + ขนาดสมเหตุสมผล
           if (!destFile || !fs.existsSync(destFile) || fs.statSync(destFile).size < 10240) {
-            task.status = "failed";
-            task.error = "ดาวน์โหลดจบแต่ไม่พบไฟล์ผลลัพธ์ (อาจโดนเครือข่ายตัดกลางทาง)";
-            return resolve();
+            return resolve(this._handleFailure(task, "incomplete download — missing output file (connection cut mid-way)"));
           }
           task.size_bytes = fs.statSync(destFile).size;
 
@@ -453,6 +531,8 @@ class DownloadManager {
           task.status = "completed";
           task.speed = "Done";
           task.eta = "00:00";
+          task.error = null;
+          this.saveQueue();
 
           // Janitor: งานแบบ -x (แปลงเป็นไฟล์เสียง) → ลบ raw ต้นทาง (.webm/.m4a/…) ที่ตกค้าง
           const isAudioFmt = ["mp3_320", "m4a_best", "flac"].includes(task.format);
@@ -467,31 +547,94 @@ class DownloadManager {
             }
           }
         } else {
-          // Auto-retry ครั้งเดียวสำหรับ network error ชั่วคราว
-          if (!task._retried) {
-            task._retried = true;
-            task.status = "waiting";
-            task.percent = 0.0;
-            task.speed = "0 KiB/s";
-            task.eta = "--:--";
-            procOutput.length = 0;
-            return resolve();
-          }
+          // กันพังชั้นที่ 3: จำแนกสาเหตุ → auto-retry ตามนโยบาย / อัปเดต yt-dlp / สลับ format
           const cleanAnsi = s => String(s).replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').trim();
-          const rawErr = procOutput.slice(-3).map(cleanAnsi).filter(Boolean).join(' | ');
-          task.status = "failed";
-          task.error = (rawErr || `Process exited with error code ${code}`).slice(0, 220);
+          let rawErr = procOutput.slice(-3).map(cleanAnsi).filter(Boolean).join(' | ');
+          if (task._stalled) {
+            rawErr = "download stalled — no progress for 90s, killed by watchdog";
+            task._stalled = false;
+          }
+          return resolve(this._handleFailure(task, rawErr || `Process exited with error code ${code}`));
         }
         resolve();
       });
 
       proc.on('error', (err) => {
         task.proc = null;
-        task.status = "failed";
-        task.error = String(err.message || err);
-        resolve();
+        clearInterval(watchdog);
+        return resolve(this._handleFailure(task, `spawn failed: ${err && err.message || err}`));
       });
     });
+  }
+
+  /**
+   * ศูนย์กลางจัดการงานที่ล้ม — พิจารณาจาก download-resilience ว่า:
+   *  1. format ใช้ไม่ได้กับคลิป → สลับรูปแบบสำรอง (fallback chain) แล้วลองทันที
+   *  2. yt-dlp เก่า (extractor error) → อัปเดตเครื่องมืออัตโนมัติ แล้วลองใหม่ 1 ครั้ง
+   *  3. เครือข่าย/ชั่วคราว → ลองใหม่เองได้ถึง 3 ครั้ง ถอยหลัง 3s → 10s → 30s
+   *  4. เสียถาวร (คลิปลบ/private/copyright) → รายงานเลย ไม่เปลืองเวลา
+   */
+  _handleFailure(task, rawErr) {
+    const kind = R.classifyError(rawErr);
+    task._retryAttempts = task._retryAttempts || {};
+    const attempt = task._retryAttempts[kind] || 0;
+
+    // ── format ไม่มีให้โหลด → สลับเป็นรูปแบบสำรอง (ไม่นับเป็น retry)
+    if (kind === 'extractor' && /requested format is not available/i.test(String(rawErr))) {
+      const nextFmt = R.nextFormatFallback(task.format);
+      if (nextFmt) {
+        task.format = nextFmt;
+        task._retryAttempts = {};
+        task.error = `รูปแบบเดิมไม่มีให้โหลด — สลับเป็น ${nextFmt} ให้อัตโนมัติ`;
+        task.status = "waiting";
+        task.percent = 0; task.speed = "0 KiB/s"; task.eta = "--:--"; task.out_file = null;
+        task.note = task.error;
+        this.saveQueue();
+        setTimeout(() => this.processQueue(), 1000);
+        return task;
+      }
+    }
+
+    // ── เสียถาวร หรือหมดสิทธิ์ลองใหม่ → รายงานจริง
+    if (kind === 'fatal' || !R.shouldAutoRetry(kind, attempt)) {
+      const cleanAnsi = s => String(s).replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').trim();
+      const friendly = {
+        fatal: "คลิปนี้โหลดไม่ได้ (อาจถูกลบ เป็นแบบ private หรือถูกจำกัดสิทธิ์)",
+        extractor: "โหลดไม่สำเร็จแม้อัปเดตเครื่องมือแล้ว — รอ yt-dlp ออกเวอร์ชันแก้แล้วกดลองใหม่",
+        transient: "เครือข่ายมีปัญหาซ้ำหลายครั้ง — ตรวจอินเทอร์เน็ตแล้วกดลองใหม่",
+        unknown: "ดาวน์โหลดไม่สำเร็จ — กดลองใหม่ได้"
+      }[kind];
+      task.status = "failed";
+      const detail = (String(rawErr).replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').trim()).slice(-160);
+      task.error = friendly + (detail ? ` (${detail})` : "");
+      this.saveQueue();
+      return task;
+    }
+
+    task._retryAttempts[kind] = attempt + 1;
+    const waitMs = R.backoffMs(attempt);
+    task.status = "waiting";
+    task.percent = 0; task.speed = "0 KiB/s"; task.eta = "--:--"; task.out_file = null;
+
+    if (kind === 'extractor') {
+      // yt-dlp อาจเก่ากว่าที่ YouTube ต้องการ → อัปเดตก่อนแล้วลองใหม่
+      task.error = "ตรวจพบเครื่องมืออาจเก่า — กำลังอัปเดต yt-dlp แล้วจะลองใหม่อัตโนมัติ";
+      this.saveQueue();
+      Promise.resolve(this.engine.ensureFreshYtdlp ? this.engine.ensureFreshYtdlp('extractor-error') : null)
+        .catch(() => {})
+        .finally(() => {
+          setTimeout(() => { if (!task.cancelled) this.processQueue(); }, R.backoffMs(attempt));
+        });
+      return task;
+    }
+
+    // ── ชั่วคราว/ไม่ทราบสาเหตุ → ถอยหลังแล้วลองใหม่เอง
+    const maxTries = kind === 'transient' ? R.MAX_TRANSIENT_RETRIES : 1;
+    task.error = `ขัดข้องชั่วคราว — จะลองใหม่อัตโนมัติใน ${Math.round(waitMs / 1000)} วิ (ครั้งที่ ${attempt + 1}/${maxTries})`;
+    this.saveQueue();
+    task._holdUntil = Date.now() + waitMs;
+    setTimeout(() => { if (!task.cancelled) this.processQueue(); }, waitMs);
+    return task;
   }
 
   downloadBuffer(url) {

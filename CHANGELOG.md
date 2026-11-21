@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [3.9.0] - 2026-11-22 — Unified Electron Edition & Local-first Download Site
 
+### 🛡️ Download Resilience — ระบบโหลดกันพัง 7 ชั้น
+- **Watchdog จับงานค้าง**: ไม่มีความคืบหน้า 90 วิ → ฆ่าแล้วลองใหม่อัตโนมัติ (ตรวจทุก 15 วิ)
+- **จำแนก error อัตโนมัติ** (download-resilience.js): transient → retry 3 ครั้งถอยหลัง 3s/10s/30s · extractor → อัปเดต yt-dlp แล้วลองใหม่ · fatal → รายงานเหตุผลเป็นภาษาไทยทันที
+- **yt-dlp self-healing**: ensureFreshYtdlp เทียบเวอร์ชันจริงกับ GitHub แล้วอัปเดตเอง + ลูปเช็คทุก 12 ชม.
+- **Format fallback chain**: flac→mp3→m4a, mp4_1080→720→best — สลับให้เองเมื่อคลิปไม่มีรูปแบบที่ขอ
+- **คิวอยู่รอด**: เซฟลง queue.json — ปิดแอปกลางคัน เปิดใหม่งานกลับเข้าคิวเอง
+- **เช็คพื้นที่ดิสก์**: เหลือ < 250 MB แจ้งเตือนก่อนเริ่มงาน ไม่ให้ไฟล์เสียหาย
+- **/health ครบขึ้น**: รายงานสถานะเครื่องมือ + สถิติคิว
+
+---
 ### 🧹 Cleanup
 - ลบไฟล์ยุค Python ทั้งหมด (PyInstaller, WiX MSI, spec, scripts), media, logs, mockups — repo เหลือแต่แอป Electron จริง
 - ลบ GitHub workflows ยุค Python ออก

@@ -55,6 +55,20 @@ NexusTube เป็นแอป Electron (main + preload + renderer) ที่�
 - **Endpoints**: `POST /api` (ops: state/search/add/queue/cancel/retry/clear/folder/open/reveal), `GET /file?id=…` (ดาวน์โหลดไฟล์ที่เสร็จ), `GET /health` (CORS เปิดให้หน้า portal ตรวจ)
 - **Standalone**: `node src/main/web-download.js` หรือ `NexusTube.exe --web-server` — สร้าง manager ชุดใหม่ของตัวเอง
 
+## ระบบโหลดกันพัง 7 ชั้น (`download-resilience.js` + `downloader.js`)
+
+| ชั้น | อาการที่กัน | กลไก |
+|------|------------|------|
+| 1 | พื้นที่ดิสก์ใกล้เต็ม | ตรวจ `fs.statfs` ก่อนเริ่มงาน ต้องเหลือ ≥ 250 MB |
+| 2 | งานค้าง (เน็ตตาย/เซิร์ฟเวอร์ห้อย) | watchdog ตรวจทุก 15 วิ — ไม่มีความคืบหน้า 90 วิ ฆ่าแล้วลองใหม่ |
+| 3 | error ต่างสาเหตุต้องการการจัดการต่างกัน | `classifyError()` แยก transient / extractor / fatal จากข้อความ yt-dlp |
+| 4 | เครือข่ายสะดุดชั่วคราว | auto-retry ถึง 3 ครั้ง ถอยหลัง 3s → 10s → 30s โดยไม่ต้องกดเอง |
+| 5 | yt-dlp เก่าเมื่อ YouTube เปลี่ยน | โหลดพังแบบ extractor → อัปเดต yt-dlp ทันทีแล้วลองใหม่ / ลูปเช็คทุก 12 ชม. (`ensureFreshYtdlp`) |
+| 6 | format ที่ขอไม่มีให้โหลดกับคลิปนั้น | fallback chain: mp3_320→m4a, flac→mp3, mp4_1080→720→best สลับให้อัตโนมัติ |
+| 7 | ปิดแอปแล้วคิวหาย | คิวถูกเซฟลง `queue.json` (debounced) — เปิดใหม่งานกลับเข้าคิวเอง |
+
+งานที่เสียถาวรจริง ๆ (คลิปถูกลบ / private / copyright) ระบบรายงานทันทีด้วยข้อความภาษาไทยที่บอกสาเหตุ — ไม่เปลืองเวลา retry ให้ทุกอย่างอย่างเดียวกัน
+
 ## Auto-Update
 
 1. แอปดึง `https://github.com/masuzu2/NexusTube/releases/latest/download/version.json`
