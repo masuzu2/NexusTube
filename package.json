@@ -54,7 +54,7 @@
     "portable": {
       "artifactName": "NexusTube-${version}-Portable.${ext}"
     },
-    "asar": false,
+    "asar": true,
     "files": [
       "index.js",
       "src/**/*",

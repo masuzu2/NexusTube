@@ -2,6 +2,10 @@
  * NexusTube — App Self-Updater (แบบเดียวกับ FLUX Launcher)
  * เช็ค version.json บน GitHub Releases → โหลด app-update.zip → แตก staging
  * → ก็อปทับตัวติดตั้ง → relaunch อัตโนมัติ ทำงานเงียบ ๆ ไม่ต้องกดอะไร
+ *
+ * รองรับ 2 layout:
+ *  - asar (ปกติ): target คือ `resources/` — zip ข้างในมี `app.asar` ไฟล์เดียว
+ *  - loose (เดิม): target คือ `resources/app/` — zip ข้างในเป็นไฟล์แอปหลวม ๆ
  */
 
 const fs = require('fs');
@@ -29,7 +33,7 @@ function fetchBuffer(url, timeoutMs = 120000) {
       if (redirects > 5) return reject(new Error('Too many HTTP redirects'));
       const client = targetUrl.startsWith('https') ? https : http;
       const req = client.get(targetUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NexusTube/3.5.0' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NexusTube/3.9.0' },
         timeout: timeoutMs
       }, (res) => {
         if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
@@ -57,12 +61,29 @@ class AppUpdater {
     this.busy = false;
   }
 
-  // โฟลเดอร์แอปจริง (installed = resources/app, dev = โฟลเดอร์ electron)
-  static appDir() {
+  // ── Layout helpers ────────────────────────────────────────────────
+  static resourcesDir() {
     const exeDir = path.dirname(process.execPath);
-    return fs.existsSync(path.join(exeDir, 'resources', 'app'))
-      ? path.join(exeDir, 'resources', 'app')
-      : exeDir;
+    const res = path.join(exeDir, 'resources');
+    return fs.existsSync(res) ? res : exeDir;
+  }
+
+  // asar = มี resources/app.asar (ไฟล์เดียว) · loose = มี resources/app/ (โฟลเดอร์)
+  static appMode() {
+    return fs.existsSync(path.join(AppUpdater.resourcesDir(), 'app.asar')) ? 'asar' : 'loose';
+  }
+
+  // โฟลเดอร์ที่ zip จะถูกคัดลอกทับ
+  static targetDir() {
+    return AppUpdater.appMode() === 'asar' ? AppUpdater.resourcesDir() : path.join(AppUpdater.resourcesDir(), 'app');
+  }
+
+  static backupDir() {
+    return path.join(path.dirname(AppUpdater.resourcesDir()), 'update-backup');
+  }
+
+  static isPackagedLike() {
+    return AppUpdater.appMode() === 'asar' || fs.existsSync(path.join(AppUpdater.resourcesDir(), 'app'));
   }
 
   /**
@@ -72,36 +93,19 @@ class AppUpdater {
    */
   static startupIntegrityCheck() {
     try {
-      const appDir = AppUpdater.appDir();
-      if (!app.isPackagedLike()) return false;
-      const backupDir = path.join(path.dirname(appDir), 'update-backup');
-      const marker = path.join(appDir, '.update-success');
+      if (!AppUpdater.isPackagedLike()) return false;
+      const target = AppUpdater.targetDir();
+      const backup = AppUpdater.backupDir();
+      const marker = path.join(target, '.update-success');
 
-      if (!fs.existsSync(marker) && fs.existsSync(path.join(backupDir, 'package.json'))) {
-        // อัปเดตครั้งก่อนไม่สมบูรณ์ → คืนไฟล์เดิม
-        const copyTree = (src, dest) => {
-          fs.mkdirSync(dest, { recursive: true });
-          for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-            const s = path.join(src, entry.name);
-            const d = path.join(dest, entry.name);
-            if (entry.isDirectory()) copyTree(s, d);
-            else {
-              try { if (fs.existsSync(d)) fs.unlinkSync(d); } catch {}
-              fs.copyFileSync(s, d);
-            }
-          }
-        };
-        copyTree(backupDir, appDir);
+      const backupKey = AppUpdater.appMode() === 'asar' ? 'app.asar' : 'package.json';
+      if (!fs.existsSync(marker) && fs.existsSync(path.join(backup, backupKey))) {
+        copyTreeSync(backup, target);
         fs.writeFileSync(marker, new Date().toISOString() + ' (restored)\n', 'utf8');
         return true;
       }
     } catch {}
     return false;
-  }
-
-  static isPackagedLike() {
-    const exeDir = path.dirname(process.execPath);
-    return fs.existsSync(path.join(exeDir, 'resources', 'app'));
   }
 
   async check() {
@@ -138,6 +142,7 @@ class AppUpdater {
       report('extracting', 0, 0);
       let extracted = false;
       try {
+        fs.mkdirSync(staging, { recursive: true });
         const r = spawnSync('tar', ['-xf', zipPath, '-C', staging], { windowsHide: true, timeout: 120000 });
         extracted = r.status === 0;
       } catch {}
@@ -148,43 +153,24 @@ class AppUpdater {
           { windowsHide: true, timeout: 180000 });
       }
 
-      // ก็อปทับโฟลเดอร์แอปจริง (installed = resources/app)
-      const target = AppUpdater.appDir();
+      const target = AppUpdater.targetDir();
+      const backup = AppUpdater.backupDir();
 
       report('installing', 0, 0);
 
-      // Rollback safety: สำรองไฟล์เดิมก่อนทับทุกครั้ง
+      // Rollback safety: สำรองไฟล์แอปเดิมก่อนทับทุกครั้ง
       try {
-        const backupDir = path.join(path.dirname(target), 'update-backup');
-        try { fs.rmSync(backupDir, { recursive: true, force: true }); } catch {}
-        const backupTree = (src, dest) => {
-          fs.mkdirSync(dest, { recursive: true });
-          for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-            const s = path.join(src, entry.name);
-            const d = path.join(dest, entry.name);
-            if (entry.isDirectory()) {
-              // ข้าม backup ของตัวเอง + node_modules ที่ไม่ได้อยู่ใน zip จะถูก zip ใหม่ทับอยู่แล้ว
-              backupTree(s, d);
-            } else {
-              fs.copyFileSync(s, d);
-            }
-          }
-        };
-        backupTree(target, backupDir);
-      } catch {}
-      const copyTree = (src, dest) => {
-        fs.mkdirSync(dest, { recursive: true });
-        for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-          const s = path.join(src, entry.name);
-          const d = path.join(dest, entry.name);
-          if (entry.isDirectory()) copyTree(s, d);
-          else {
-            try { if (fs.existsSync(d)) fs.unlinkSync(d); } catch {}
-            fs.copyFileSync(s, d);
-          }
+        try { fs.rmSync(backup, { recursive: true, force: true }); } catch {}
+        fs.mkdirSync(backup, { recursive: true });
+        if (AppUpdater.appMode() === 'asar') {
+          const asar = path.join(target, 'app.asar');
+          if (fs.existsSync(asar)) fs.copyFileSync(asar, path.join(backup, 'app.asar'));
+        } else {
+          backupTreeSync(target, backup);
         }
-      };
-      copyTree(staging, target);
+      } catch {}
+
+      copyTreeSync(staging, target);
 
       // เก็บไว้เผื่อ relaunch
       fs.writeFileSync(path.join(target, '.update-success'), new Date().toISOString(), 'utf8');
@@ -195,6 +181,32 @@ class AppUpdater {
     } catch (e) {
       this.busy = false;
       return { success: false, error: String(e.message || e) };
+    }
+  }
+}
+
+function backupTreeSync(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, entry.name);
+    const d = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      backupTreeSync(s, d);
+    } else {
+      fs.copyFileSync(s, d);
+    }
+  }
+}
+
+function copyTreeSync(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, entry.name);
+    const d = path.join(dest, entry.name);
+    if (entry.isDirectory()) copyTreeSync(s, d);
+    else {
+      try { if (fs.existsSync(d)) fs.unlinkSync(d); } catch {}
+      fs.copyFileSync(s, d);
     }
   }
 }

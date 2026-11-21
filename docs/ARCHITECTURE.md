@@ -1,138 +1,70 @@
-# NexusTube — Technical Architecture & Systems Engineering
+# NexusTube — Architecture (Electron Edition v3.9.0)
 
-> Next-Gen Studio Desktop Music Suite Architecture
-> Author: by herlove | Version: 3.2.0
+## ภาพรวม
 
----
+NexusTube เป็นแอป Electron (main + preload + renderer) ที่รวมเครื่องเล่นเพลง, คลังเพลง,
+ตัวดาวน์โหลด และเว็บโหลดเพลง Local-first ไว้ในโปรเซสสถาปัตยกรรมเดียว
 
-## 1. High-Level Architectural Topology
-
-NexusTube utilizes a hybrid **Native Python Engine + Modern Web Frontend** architecture connected through **Microsoft Edge WebView2 (`edgechromium`) via `pywebview` IPC**.
-
-```mermaid
-flowchart TB
-    subgraph UI ["Presentation Layer (WebUI Engine)"]
-        A[index.html - Single Page Desktop App]
-        B[styles.css - OLED Glassmorphism Design System]
-        C[tailwind.js - Offline JIT Styling Core]
-        D[app.js - State Machine & Navigation Controller]
-        E[Canvas 2D - 60 FPS Visualizer & EQ Spline]
-    end
-
-    subgraph IPC ["Native IPC Bridge"]
-        F[window.pywebview.api] <==> G[NexusBridgeAPI in Python]
-    end
-
-    subgraph Python ["Application & Business Logic Layer (Python 3.11)"]
-        H[YT_Downloader_V2.py - Core Orchestrator]
-        I[ThreadPoolExecutor - Async Download & Search Workers]
-        J[AudioPlayer - pygame mixer & Transcode Cache]
-        K[Self-Healing Binary Manager - yt-dlp / FFmpeg]
-    end
-
-    subgraph AudioSubsystem ["Audio & Resolver Subsystem (nexus_audio.py)"]
-        L[Multiplatform URL Resolvers - Spotify, Apple, SoundCloud, YouTube]
-        M[LRC Karaoke Engine - Parser, LRCLIB API, Click-to-Seek]
-        N[5-Band Studio Equalizer - FFmpeg Biquad Filters]
-        O[Smart Audio Tagger - Mutagen ID3v2.4, MP4, FLAC Vorbis]
-    end
-
-    subgraph External ["Underlying System Executables & Storage"]
-        P[yt-dlp.exe]
-        Q[ffmpeg.exe / ffprobe.exe / ffplay.exe]
-        R[Music Library Folder & .LRC Sidecars]
-        S[AppData Config & Transcode Cache]
-    end
-
-    UI <--> IPC
-    IPC <--> Python
-    Python <--> AudioSubsystem
-    Python <--> External
+```
+┌────────────────────────────── Electron main process ──────────────────────────────┐
+│ index.js                                                                          │
+│  ├── ConfigManager     (config.json ใน %APPDATA%\NexusTube)                       │
+│  ├── EngineManager     (yt-dlp / ffmpeg — self-healing, โหลดเองถ้าไม่มี)          │
+│  ├── DownloadManager   (คิวดาวน์โหลด 1 งานพร้อมกัน + metadata tagging)            │
+│  ├── PlayerManager     (playback state, equalizer, sleep timer)                   │
+│  ├── LibraryManager    (สแกนคลังเพลง, M3U8)                                       │
+│  ├── LyricsEngine      (LRC parse/format/lookup)                                  │
+│  ├── TrayManager       (system tray + global hotkeys)                             │
+│  ├── DiscordRPC        (Rich Presence)                                            │
+│  ├── AppUpdater        (auto-update จาก GitHub Releases + rollback)               │
+│  ├── Logger            (ไฟล์ log ใน appdata, เก็บ 7 วัน)                          │
+│  └── web-download.js   (HTTP server 127.0.0.1:8787 — ใช้ manager ตัวเดียวกับแอป)   │
+└───────────────────────────────────────────────────────────────────────────────────┘
+                 │ contextBridge (src/preload/preload.js)
+                 ▼
+┌─────────────── Renderer (web/index.html + app.js) ────────────────────────────────┐
+│  UI OLED Dark Glassmorphism — เรียกผ่าน window.pywebview.api (ชื่อเดิมคงไว้)       │
+└───────────────────────────────────────────────────────────────────────────────────┘
+                 │ (แยกต่างหาก — ไม่แชร์ state กับแอปหลัก)
+┌─────────────── เว็บโหลดเพลง (http://127.0.0.1:8787) ──────────────────────────────┐
+│  web/download.html + download.js — เสิร์ฟจาก main process, auth ด้วย session token │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
----
+## โมดูลฝั่ง main (`src/main/`)
 
-## 2. Layer Specifications
+| ไฟล์ | หน้าที่ |
+|------|--------|
+| `config.js` | ค่าตั้งทั้งหมด (VERSION, theme, EQ presets, locale ไทย/อังกฤษ) เก็บที่ `%APPDATA%\NexusTube\config.json` |
+| `engine.js` | หา/ตรวจ/ดาวน์โหลด yt-dlp + ffmpeg (`ensureEngines`, `getStatus`) เก็บ binary ใน appdata |
+| `downloader.js` | คิวงาน (`addToQueue/getQueueState/cancelTask/retryTask/clearFinished`), รัน yt-dlp, ฝัง tag + cover |
+| `resolver.js` | `searchYoutube`, `detectPlatformUrl` (YouTube/Spotify/Apple Music/SoundCloud), title sanitizer |
+| `library.js` | สแกนไฟล์เสียงในโฟลเดอร์, export M3U8, ลบไฟล์ + sidecar |
+| `lyrics.js` | parse/format LRC, `getActiveLyricIndex`, save `.lrc` |
+| `player.js` | เข้าควบคุม playback + equalizer + sleep timer (clamps ค่าให้ปลอดภัย) |
+| `web-download.js` | `startWebServer({config, engine, downloads})` — HTTP API แบบ token-auth; รันเองได้เมื่อถูกเรียกตรง (`require.main === module`) |
+| `download-plan.js` | pure helpers: ตรวจ URL, ขนาดไฟล์ขั้นต่ำ, เนื้อที่ว่าง, `isInsideDir` (มี test ครอบ) |
+| `updater.js` | ดึง `version.json` + `app-update.zip` จาก releases/latest, backup เดิมก่อนเขียนทับ, คืนค่าถ้าอัปครึ่งทาง |
+| `tray.js`, `discord.js`, `bridge.js`, `logger.js` | tray/hotkeys, Rich Presence, IPC surface, ไฟล์ log |
 
-### 2.1 Presentation Layer (`web/`)
-- **Self-Contained & 100% Offline**: Contains no external CDN scripts or remote stylesheet dependencies. All styles, fonts, and scripts reside locally within `web/`.
-- **OLED Dark Glassmorphism Design System**:
-  - Base background: `#030307` (pure OLED black).
-  - Surface cards: `rgba(255, 255, 255, 0.03)` with `backdrop-filter: blur(14px)`.
-  - Dynamic Accent Theme System: 6 live user-switchable accent palettes (`#22C55E`, `#6366F1`, `#EC4899`, `#06B6D4`, `#F59E0B`, `#A855F7`).
-  - Specular lighting and mouse-tracking spotlight effects (`--mx`, `--my` updated on 60 FPS `requestAnimationFrame`).
-- **Dynamic 16-Bar Spectrum Visualizer**:
-  - Synthesized FFT spectrum animation running in a 60 FPS rAF loop with organic decay, reactive to player state, playback position, and volume.
-- **Interactive Equalizer Spline**:
-  - Live HTML5 Canvas bezier spline plotting frequency gains across 60Hz, 250Hz, 1kHz, 4kHz, and 12kHz bands in real-time.
+## เว็บโหลดเพลง (Local-first)
 
-### 2.2 IPC & Bridge Layer (`NexusBridgeAPI`)
-- **Zero-Latency Two-Way Communication**:
-  - Python registers `NexusBridgeAPI` instance as the JS API handler on `webview.create_window()`.
-  - JavaScript invokes Python methods through `await window.pywebview.api.<method_name>(...args)`.
-- **Thread Safety & Background Worker Decoupling**:
-  - Heavy I/O (video metadata resolution, YouTube searches, yt-dlp execution) is dispatched to a Python `ThreadPoolExecutor(max_workers=4)`.
-  - The UI remains completely non-blocking and responsive during downloads and streaming.
-- **Reactive State Polling**:
-  - `app.js` runs a smooth 300ms polling loop (`startPollingLoop()`) querying player position and queue task progress without UI jank.
+- **Binding**: `index.js` เริ่มเซิร์ฟเวอร์พร้อมแอปโดยส่ง manager ตัวเดียวกันเข้าไป — คิว/ค่าตั้งตรงกันทุกอย่าง
+- **Auth**: ทุก POST `/api` ต้องมี header `X-Nexus-Token` (token สุ่มต่อ session, ฝังในหน้า HTML ตอนเสิร์ฟ)
+- **Host check**: รับเฉพาะ `127.0.0.1` / `localhost` — ไม่มีทางเรียกจากภายนอกเครื่อง
+- **Endpoints**: `POST /api` (ops: state/search/add/queue/cancel/retry/clear/folder/open/reveal), `GET /file?id=…` (ดาวน์โหลดไฟล์ที่เสร็จ), `GET /health` (CORS เปิดให้หน้า portal ตรวจ)
+- **Standalone**: `node src/main/web-download.js` หรือ `NexusTube.exe --web-server` — สร้าง manager ชุดใหม่ของตัวเอง
 
-### 2.3 Audio Processing & Playback Engine (`nexus_audio.py`)
-- **Playback Architecture**:
-  - Built on `pygame.mixer.music` for ultra-low latency playback of standard WAV and MP3 formats.
-  - Non-native formats (M4A/AAC, Opus, FLAC, OGG) are automatically transcoded on-demand into an isolated temporary cache using `ffmpeg`, ensuring seamless playback of any downloaded media.
-- **5-Band Equalizer Engine**:
-  - Applies 5 precision biquad peaking equalizer filters:
-    - **Band 1**: `equalizer=f=60:width_type=o:w=1.0:g={bass}`
-    - **Band 2**: `equalizer=f=250:width_type=o:w=1.0:g={low_mid}`
-    - **Band 3**: `equalizer=f=1000:width_type=o:w=1.0:g={mid}`
-    - **Band 4**: `equalizer=f=4000:width_type=o:w=1.0:g={high_mid}`
-    - **Band 5**: `equalizer=f=12000:width_type=o:w=1.0:g={treble}`
-  - Safety gain clamping ensures values stay strictly within `[-15.0 dB, +15.0 dB]` to prevent clipping.
+## Auto-Update
 
-### 2.4 Multi-Platform Universal URL Resolver Pipeline
-```mermaid
-sequenceDiagram
-    participant User
-    participant WebUI as app.js
-    participant Bridge as NexusBridgeAPI
-    participant Resolver as nexus_audio.py
-    participant External as Spotify/Apple/SoundCloud/YT
+1. แอปดึง `https://github.com/masuzu2/NexusTube/releases/latest/download/version.json`
+2. ถ้าเวอร์ชันใหม่กว่า → โหลด `app-update.zip` (ข้างในคือไฟล์แอปทั้งก้อน)
+3. แตกเป็น staging → backup ไฟล์เดิมลง `update-backup/` → คัดลอกทับ → เขียน marker `.update-success`
+4. เปิดครั้งถัดไป: ถ้าไม่มี marker (อัปครึ่งทาง) → คืนไฟล์จาก backup อัตโนมัติ
 
-    User->>WebUI: Pastes URL (e.g. Spotify Playlist)
-    WebUI->>Bridge: resolve_url(url)
-    Bridge->>Resolver: detect_platform_url(url)
-    Resolver->>External: Fetch metadata / API response
-    External-->>Resolver: Return JSON tracks & metadata
-    Resolver-->>Bridge: Formatted Track List + Platform Info
-    Bridge-->>WebUI: Returns tracks array & playlist title
-    WebUI->>User: Displays Universal Playlist Modal
-    User->>WebUI: Clicks "Download Selected"
-    WebUI->>Bridge: add_to_queue(...) for each track
-    Bridge->>Bridge: Spawn background worker with ytsearch query
-```
+## Build & Release
 
----
-
-## 3. Directory Layout & Runtime Paths
-
-| Component | Path on Windows | Description |
-| :--- | :--- | :--- |
-| **Executable** | `C:\Users\Administrator\Downloads\NexusTube\NexusTube.exe` | Compiled standalone binary |
-| **Engine Binaries** | `%APPDATA%\YTDownloaderPro\` | Location of `yt-dlp.exe`, `ffmpeg.exe`, `ffprobe.exe` |
-| **Configuration** | `%APPDATA%\YTDownloaderPro\config.json` | JSON storing accent color, output directory, format preference |
-| **Transcode Cache** | `%TEMP%\NexusTube_Cache\` | Temporary transcoded audio files cleaned up on exit |
-| **Music Library** | User defined (Default: `%USERPROFILE%\Downloads\NexusTube`) | Downloaded audio/video files and `.lrc` lyrics |
-
----
-
-## 4. Verification & Testing Framework
-
-The project includes an automated test harness covering 74 unit and integration tests across two test modules:
-- `tests/test_nexus_tube.py`: Tests audio decoders, metadata sanitizers, LRC parser, ID3 tagging, 5-band EQ filters, and platform resolvers.
-- `tests/test_nexus_bridge.py`: Tests bridge initialization, IPC methods, queue lifecycle, thumbnail propagation, bilingual dictionaries, and WebUI asset integrity.
-
-Execution command:
-```powershell
-pytest -v tests/
-```
-All 74 tests run hermetically without external network dependencies by using mock responses and temporary directories.
+- `npm run dist` → electron-builder → `dist_electron/` (NSIS assisted + portable + `latest.yml`)
+- Package ที่แนบ release: Setup exe, Portable exe, `latest.yml`, `.blockmap`, `version.json`, `app-update.zip`
+- GitHub Actions: `ci.yml` (test ทุก push สาย main), `release.yml` (build + attach ไฟล์อัตโนมัติเมื่อ push tag `v*`)
+- เวอร์ชันปรับพร้อมกัน 2 ที่: `package.json` และ `src/main/config.js` (`VERSION`)
