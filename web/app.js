@@ -2557,22 +2557,66 @@ window.addEventListener("nexus-engine-progress", (ev) => {
   }
 });
 
-// App self-update (แบบ FLUX Launcher): toast แจ้งทุก phase — อัปเดตเองเงียบ ๆ ไม่ต้องกด
+// App self-update (แบบ FLUX Launcher): แถบสถานะถาวร 1 อัน อัปเดต % ในตัว — ไม่สแปม toast
+// (progress "downloading" ถูกส่งทุก chunk จึงต้องรวมเป็น pill เดียว ไม่ใช่ toast ใหม่ทุกครั้ง)
+let updatePillEl = null;
+
+function showUpdatePill(text, status = "active") {
+  if (!updatePillEl || !updatePillEl.isConnected) {
+    updatePillEl = document.createElement("div");
+    updatePillEl.className = "update-pill";
+    updatePillEl.setAttribute("role", "status");
+    const bar = document.createElement("div");
+    bar.className = "update-pill-bar";
+    const fill = document.createElement("div");
+    fill.className = "update-pill-fill";
+    bar.appendChild(fill);
+    const label = document.createElement("span");
+    label.className = "update-pill-text";
+    updatePillEl.appendChild(bar);
+    updatePillEl.appendChild(label);
+    document.body.appendChild(updatePillEl);
+    // เข้าฉาก
+    requestAnimationFrame(() => updatePillEl.classList.add("update-pill-show"));
+  }
+  const label = updatePillEl.querySelector(".update-pill-text");
+  const fill = updatePillEl.querySelector(".update-pill-fill");
+  label.textContent = text;
+  updatePillEl.dataset.status = status;
+  const pct = text.match(/(\d+)%/);
+  fill.style.width = pct ? `${pct[1]}%` : "100%";
+  fill.classList.toggle("update-pill-fill-indeterminate", !pct);
+}
+
+function hideUpdatePill(delayMs = 2500) {
+  if (!updatePillEl) return;
+  const el = updatePillEl;
+  updatePillEl = null;
+  setTimeout(() => {
+    el.classList.remove("update-pill-show");
+    setTimeout(() => el.remove(), 400);
+  }, delayMs);
+}
+
 window.addEventListener("nexus-app-update-progress", (ev) => {
   const d = ev.detail || {};
   if (d.phase === "found") {
-    showToast(`พบเวอร์ชันใหม่ v${d.latest} — กำลังอัปเดตอัตโนมัติ...`, "info", 6000);
+    showUpdatePill(`พบเวอร์ชันใหม่ v${d.latest} — กำลังอัปเดตอัตโนมัติ…`, "active");
   } else if (d.phase === "downloading") {
     if (d.total) {
       const pct = Math.min(100, Math.round((d.done / d.total) * 100));
-      showToast(`กำลังอัปเดตแอป... ${pct}%`, "info", 3000);
+      showUpdatePill(`กำลังอัปเดตแอป… ${pct}%`, "active");
+    } else {
+      showUpdatePill(`กำลังอัปเดตแอป… ${Math.round(d.done / 1024 / 1024)} MB`, "active");
     }
   } else if (d.phase === "extracting" || d.phase === "installing") {
-    showToast("กำลังติดตั้งเวอร์ชันใหม่...", "info", 3000);
+    showUpdatePill("กำลังติดตั้งเวอร์ชันใหม่…", "active");
   } else if (d.phase === "restarting") {
-    showToast("อัปเดตเสร็จ — กำลังรีสตาร์ทแอป", "success", 6000);
+    showUpdatePill("อัปเดตเสร็จ — กำลังรีสตาร์ทแอป", "success");
+    hideUpdatePill(3000);
   } else if (d.phase === "error") {
-    showToast("อัปเดตอัตโนมัติไม่สำเร็จ (จะลองใหม่ใน 5 นาที)", "warning", 5000);
+    showUpdatePill("อัปเดตอัตโนมัติไม่สำเร็จ (จะลองใหม่ใน 5 นาที)", "error");
+    hideUpdatePill(5000);
   }
 });
 

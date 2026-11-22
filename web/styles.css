@@ -1985,3 +1985,67 @@ header {
 }
 
 @media (prefers-reduced-motion: reduce) { /* คงไว้เหมือนเดิม */ }
+
+/* ── Update progress pill (self-updater) ─────────────────────────── */
+.update-pill {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  display: grid;
+  gap: 6px;
+  min-width: 240px;
+  max-width: 320px;
+  padding: 10px 14px;
+  background: rgba(20, 20, 28, 0.92);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+.update-pill.update-pill-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.update-pill-bar {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.update-pill-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #8B5CF6, #22C55E);
+  transition: width 0.4s ease;
+}
+.update-pill-fill-indeterminate {
+  width: 40% !important;
+  animation: update-pill-indeterminate 1.4s ease-in-out infinite;
+}
+@keyframes update-pill-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(320%); }
+}
+.update-pill-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.2px;
+}
+.update-pill[data-status="success"] {
+  border-color: rgba(34, 197, 94, 0.5);
+}
+.update-pill[data-status="success"] .update-pill-text::before {
+  content: "✅ ";
+}
+.update-pill[data-status="error"] {
+  border-color: rgba(253, 164, 175, 0.5);
+}
+.update-pill[data-status="error"] .update-pill-fill {
+  background: #FDA4AF;
+}

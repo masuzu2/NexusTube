@@ -19,8 +19,8 @@
 
 | ไฟล์ | คำอธิบาย |
 |------|----------|
-| [NexusTube-Setup-3.9.0.exe](https://github.com/masuzu2/NexusTube/releases/latest/download/NexusTube-Setup-3.9.0.exe) | **ตัวติดตั้ง (แนะนำ)** — assisted installer เลือกภาษา ไทย/อังกฤษ, หน้า license, เลือกโฟลเดอร์, ปุ่ม Desktop + Start Menu |
-| [NexusTube-3.9.0-Portable.exe](https://github.com/masuzu2/NexusTube/releases/latest/download/NexusTube-3.9.0-Portable.exe) | Portable — เปิดใช้ได้ทันที ไม่ต้องติดตั้ง |
+| [⬇ ตัวติดตั้ง (แนะนำ)](https://github.com/masuzu2/NexusTube/releases/latest) | assisted installer เลือกภาษา ไทย/อังกฤษ, หน้า license, เลือกโฟลเดอร์, ปุ่ม Desktop + Start Menu — ดาวน์โหลด `NexusTube-Setup-*.exe` ตัวล่าสุดจากหน้า release |
+| [Portable](https://github.com/masuzu2/NexusTube/releases/latest) | เปิดใช้ได้ทันที ไม่ต้องติดตั้ง — ดาวน์โหลด `NexusTube-*-Portable.exe` ตัวล่าสุด |
 
 > ทุกเวอร์ชัน: [Releases](https://github.com/masuzu2/NexusTube/releases) · เว็บไซต์ดาวน์โหลด: [masuzu2.github.io/NexusTube](https://masuzu2.github.io/NexusTube/)
 
