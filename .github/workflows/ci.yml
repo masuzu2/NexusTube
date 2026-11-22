@@ -18,3 +18,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: Guard — no AI co-author trailers
+        run: |
+          $bad = git log -30 --format=%b | Select-String -Pattern "co-authored-by" -CaseSensitive:$false | Select-String -Pattern "claude|cursor|copilot|openai|anthropic|gemini"
+          if ($bad) { Write-Error "AI co-author trailer detected in commit messages:`n$bad"; exit 1 } else { Write-Host "commit messages clean ✓" }

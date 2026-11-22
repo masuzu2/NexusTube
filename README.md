@@ -117,6 +117,12 @@ tests/                # ชุดทดสอบ node:test
 npm test
 ```
 
+## 👤 Created By
+
+**herlove** ([@masuzu2](https://github.com/masuzu2)) — design, architecture & development
+
+[![Contributors](https://img.shields.io/badge/Contributors-1-8B5CF6?style=flat-square)](https://github.com/masuzu2)
+
 ## 📄 License
 
 [MIT](LICENSE) — สร้างโดย **herlove**
