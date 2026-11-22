@@ -663,3 +663,33 @@ describe('11. Download Resilience Policy', () => {
     assert.ok(R.MAX_PERSISTED_TASKS > 0);
   });
 });
+
+describe('12. Updater Safety Net', () => {
+  const { AppUpdater, isNewerVersion, sha256Hex, verifyZipHash } = require('../src/main/updater');
+
+  test('isNewerVersion เทียบถูกทุกขอบรวมทั้งเลขสองหลัก', () => {
+    assert.equal(isNewerVersion('3.9.1', '3.9.0'), true);
+    assert.equal(isNewerVersion('3.10.0', '3.9.9'), true);   // 10 > 9 แบบเลข ไม่ใช่ string
+    assert.equal(isNewerVersion('3.9.0', '3.10.0'), false);
+    assert.equal(isNewerVersion('3.9.0', '3.9.0'), false);
+    assert.equal(isNewerVersion('4.0.0', '3.99.99'), true);
+    assert.equal(isNewerVersion('', '3.9.0'), false);        // version.json พัง → ไม่อัป
+    assert.equal(isNewerVersion(undefined, '3.9.0'), false);
+  });
+
+  test('verifyZipHash ตรวจ SHA-256 และผ่อนปรนเมื่อไม่ประกาศ hash', () => {
+    const buf = Buffer.from('nexus-update-payload');
+    const good = sha256Hex(buf);
+    assert.equal(verifyZipHash(buf, good), true);
+    assert.equal(verifyZipHash(buf, good.toUpperCase()), true); // case-insensitive
+    assert.equal(verifyZipHash(buf, 'deadbeef'), false);
+    assert.equal(verifyZipHash(buf, ''), true);                 // version.json เก่าไม่มี hash → ผ่าน
+    assert.equal(verifyZipHash(buf, undefined), true);
+    assert.equal(verifyZipHash(Buffer.from('tampered'), good), false); // ไฟล์ถูกแก้
+  });
+
+  test('markStable/recordBoot ปลอดภัยบนเครื่อง dev (ไม่ packaged)', () => {
+    assert.equal(['clean', 'counting', 'rolled-back', 'no-backup'].includes(AppUpdater.recordBoot()), true);
+    assert.equal(typeof AppUpdater.markStable(), 'boolean');
+  });
+});

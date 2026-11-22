@@ -69,12 +69,13 @@ NexusTube เป็นแอป Electron (main + preload + renderer) ที่�
 
 งานที่เสียถาวรจริง ๆ (คลิปถูกลบ / private / copyright) ระบบรายงานทันทีด้วยข้อความภาษาไทยที่บอกสาเหตุ — ไม่เปลืองเวลา retry ให้ทุกอย่างอย่างเดียวกัน
 
-## Auto-Update
+## Auto-Update (กันพังครบวงจร)
 
-1. แอปดึง `https://github.com/masuzu2/NexusTube/releases/latest/download/version.json`
-2. ถ้าเวอร์ชันใหม่กว่า → โหลด `app-update.zip` (ข้างในคือไฟล์แอปทั้งก้อน)
-3. แตกเป็น staging → backup ไฟล์เดิมลง `update-backup/` → คัดลอกทับ → เขียน marker `.update-success`
-4. เปิดครั้งถัดไป: ถ้าไม่มี marker (อัปครึ่งทาง) → คืนไฟล์จาก backup อัตโนมัติ
+1. แอปเช็ค `version.json` จาก releases/latest ตอนเปิด + ทุก 5 นาที — เจอเวอร์ชันใหม่ → ดาวน์โหลด → ตรวจ **SHA-256** (จาก `zip_sha256` ใน version.json) → backup เดิม → เขียนทับ → relaunch เอง ไม่ต้องกด
+2. ดาวน์โหลดมี retry 3 รอบ (กัน CDN/เน็ตสะดุดช่วงสั้น) · ไฟล์ไม่ตรง hash = ทิ้งรอบนั้นทันที ไม่แตะไฟล์แอป
+3. **อัปเดตเสียจับได้**: นับจำนวนบูตหลังอัปเดต — ล้มซ้ำ ≥ 3 ครั้ง = อัปเดตเสีย → คืนเวอร์ชันเดิมจาก backup อัตโนมัติ · รันเนียน 90 วิ = ยืนยันดี → เคลียร์ backup
+4. อัปครึ่งทาง/โดนปิดกลางคัน → `startupIntegrityCheck` คืนไฟล์จาก backup ตอนบูตถัดไป
+5. ปล่อยอัปเดต: `npm run update-package` → ได้ `app-update.zip` + `version.json` พร้อม hash ให้เอง → `gh release upload --clobber`
 
 ## Build & Release
 

@@ -86,6 +86,11 @@ function createWindow() {
     const restored = AppUpdater.startupIntegrityCheck();
     if (restored) logger.warn('Update integrity check: restored previous version from backup');
   } catch {}
+  // จับอัปเดตเสีย: บูตหลังอัปเดตแล้วล้มซ้ำ ≥ 3 ครั้ง → คืนเวอร์ชันเดิมอัตโนมัติ
+  try {
+    const bootState = AppUpdater.recordBoot();
+    if (bootState === 'rolled-back') logger.warn('Bad update detected (crash loop) — rolled back to previous version');
+  } catch {}
 
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -167,6 +172,8 @@ function createWindow() {
     };
     setTimeout(checkForAppUpdate, 6000);
     setInterval(checkForAppUpdate, 5 * 60 * 1000);
+    // รันเนียน 90 วิ = อัปเดตล่าสุดใช้ได้ → เคลียร์ boot counter + backup เก่า
+    setTimeout(() => { try { AppUpdater.markStable(); } catch {} }, 90 * 1000);
   }
 
   // Zero Setup: ถ้ายังไม่มี yt-dlp / ffmpeg ให้โหลดอัตโนมัติตอนเปิดแอปครั้งแรก
