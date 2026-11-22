@@ -1,10 +1,10 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/masuzu2/NexusTube/main/icon.png" width="100" alt="NexusTube Logo" />
-  <h1>NexusTube v3.9.0</h1>
+  <h1>NexusTube</h1>
   <p><b>Next-Gen YouTube & Multi-Platform Music Suite & Studio Desktop Player</b></p>
   <p><i>Electron Edition · OLED Dark Glassmorphism · Local-first Download Site · by herlove</i></p>
 
-  [![Release](https://img.shields.io/badge/Release-v3.9.0-8B5CF6?style=flat-square)](https://github.com/masuzu2/NexusTube/releases/latest)
+  [![Release](https://img.shields.io/github/v/release/masuzu2/NexusTube?style=flat-square&label=Release&color=8B5CF6)](https://github.com/masuzu2/NexusTube/releases/latest)
   [![Electron](https://img.shields.io/badge/Electron-44.x-47848F?style=flat-square&logo=electron&logoColor=white)](https://www.electronjs.org)
   [![Engine](https://img.shields.io/badge/Engine-yt--dlp%20%2B%20FFmpeg-22C55E?style=flat-square)](https://github.com/yt-dlp/yt-dlp)
   [![Tests](https://img.shields.io/badge/Tests-37%2F37%20Passing-22C55E?style=flat-square)](#-ทดสอบ)
@@ -65,7 +65,7 @@
 
 ## 🚀 เริ่มใช้งาน
 
-1. ดาวน์โหลด [NexusTube-Setup-3.9.0.exe](https://github.com/masuzu2/NexusTube/releases/latest/download/NexusTube-Setup-3.9.0.exe) แล้วติดตั้ง (เลือกภาษาไทยได้ในตัวติดตั้ง)
+1. ดาวน์โหลด [ตัวติดตั้งตัวล่าสุด](https://github.com/masuzu2/NexusTube/releases/latest) (`NexusTube-Setup-*.exe`) แล้วติดตั้ง (เลือกภาษาไทยได้ในตัวติดตั้ง)
 2. เปิด NexusTube — เครื่องมือโหลด (yt-dlp/ffmpeg) จะถูกจัดการให้อัตโนมัติ
 3. โหลดเพลงจากในแอป หรือเปิด `http://127.0.0.1:8787` ในเบราว์เซอร์ขณะแอปทำงานอยู่
 
