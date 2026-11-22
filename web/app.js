@@ -2286,8 +2286,9 @@ function setupModals() {
     updateEnginesBtn.onclick = async () => {
       if (state.apiReady) {
         showToast("Checking and updating download engines…");
-        const st = await window.pywebview.api.update_engines();
-        updateEngineStatus(st);
+        const res = await window.pywebview.api.update_engines();
+        // update_engines คืน { success, message, status: getStatus() } — ต้องใช้ .status ไม่ใช่ก้อน wrapper
+        updateEngineStatus(res.status || res);
         showToast("Engines verified and updated!");
       }
     };

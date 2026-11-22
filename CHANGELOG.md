@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [3.10.2] - 2026-11-23 — Fix: Engine Status Cards
+
+- แก้บั๊ก: กดปุ่ม "ตรวจสอบและอัปเดตเครื่องมือ" แล้วจุดสถานะการ์ดทั้ง 4 กลายเป็นสีแดง ทั้งที่เครื่องมือพร้อม — เกิดจากส่งก้อน wrapper {success, message, status} เข้าฟังก์ชัน render ที่อ่าน flag ตรง ๆ (ตอนนี้ใช้ .status ให้ถูกชั้น)
+
+---
 ## [3.10.1] - 2026-11-22 — Source Badges in App Search
 
 - badge ▶ YouTube / ♪ Apple Music บนการ์ดผลค้นหา**ในแอป**ด้วย (ก่อนหน้ามีแค่บนเว็บโหลด)
