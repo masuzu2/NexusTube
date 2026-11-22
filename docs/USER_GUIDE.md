@@ -73,3 +73,14 @@ npm run dist   # build installer
 - เว็บโหลด (127.0.0.1:8787) มีแถบ ⚙️ ตั้งค่า: ฝังปก/metadata/เนื้อเพลง, SponsorBlock, normalize, และจำนวนโหลดพร้อมกัน 1–6
 - เว็บโหลดรองรับสองภาษา (ไทย/EN) — เปลี่ยนได้ที่มุมบนซ้าย
 - เมนู tray มีปุ่ม 🌐 เปิดเว็บโหลด และ 🐞 รายงานปัญหา (แนบ log ให้อัตโนมัติ)
+
+## 🧪 เครื่องมือสำหรับนักพัฒนา (`scripts/`)
+
+| สคริปต์ | ทำอะไร |
+|---------|--------|
+| `make-update-package.js` (`npm run update-package`) | สร้าง app-update.zip + version.json พร้อม SHA-256 |
+| `sweep-ui.py` | กดทุกปุ่มในทุก tab ของแอปจริง จับ JS error รายปุ่ม (ใช้ CDP — เปิดแอปก่อนแล้วรัน) |
+| `test-electron-ui.py` | ทดสอบ UI หลักทั้ง 6 tab ผ่าน Electron จริง |
+| `test-download-site.py` | ทดสอบเว็บโหลดครบ: ค้นหาข้ามแพลตฟอร์ม, ตั้งค่า, สองภาษา (ต้องเปิดแอป/server ไว้ก่อน) |
+
+ต้องมี Python + Playwright (`pip install playwright`)
