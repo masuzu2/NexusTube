@@ -604,7 +604,7 @@ function renderSearchResults(items) {
       </div>
       <div class="space-y-1">
         <h4 class="text-sm font-bold text-white line-clamp-2 leading-snug" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h4>
-        <p class="text-xs text-slate-400 truncate">${escapeHtml(item.channel || item.uploader || '')}</p>
+        <p class="text-xs text-slate-400 truncate">${item.source === 'apple_music' ? '<span class="src-badge src-apple">♪ Apple Music</span> ' : '<span class="src-badge src-youtube">▶ YouTube</span> '}${escapeHtml(item.channel || item.uploader || '')}</p>
       </div>
       <div class="flex items-center space-x-2 pt-1">
         <button class="btn-dl-item flex-1 py-2.5 rounded-xl bg-[var(--accent)] text-black font-extrabold text-xs hover:brightness-110 active:scale-95 transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-[0_0_12px_var(--accent-glow-subtle)]">
