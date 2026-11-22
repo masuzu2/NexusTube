@@ -17,6 +17,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **/health ครบขึ้น**: รายงานสถานะเครื่องมือ + สถิติคิว
 
 ---
+### 🔄 Self-Updater แข็งแรงขึ้น 5 ชั้น
+- **ตรวจ SHA-256 ก่อนติดตั้ง**: zip ไม่ตรงลายเซ็น (จาก zip_sha256 ใน version.json) = ทิ้งทันที ไม่แตะไฟล์แอป
+- **ดาวน์โหลดมี retry** 3 รอบ กัน CDN/เน็ตสะดุดช่วงสั้น
+- **จับอัปเดตเสีย**: นับจำนวนบูตหลังอัปเดต ล้มซ้ำ ≥ 3 ครั้ง → คืนเวอร์ชันเดิมอัตโนมัติ
+- **ยืนยันความเสถียร**: รันเนียน 90 วิ = เคลียร์ boot counter + backup เก่า
+- **npm run update-package**: สร้าง app-update.zip + version.json พร้อม hash ในคำสั่งเดียว
+
+---
 ### 🧹 Cleanup
 - ลบไฟล์ยุค Python ทั้งหมด (PyInstaller, WiX MSI, spec, scripts), media, logs, mockups — repo เหลือแต่แอป Electron จริง
 - ลบ GitHub workflows ยุค Python ออก
