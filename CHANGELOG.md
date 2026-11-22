@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [3.10.1] - 2026-11-22 — Source Badges in App Search
+
+- badge ▶ YouTube / ♪ Apple Music บนการ์ดผลค้นหา**ในแอป**ด้วย (ก่อนหน้ามีแค่บนเว็บโหลด)
+- ลบไฟล์ test ยุค Python ที่ติดตั้งอยู่ใน repo อีก 10 ไฟล์ (conftest.py + test_*.py)
+
+---
 ## [3.10.0] - 2026-11-22 — Cross-Platform Search & Download Settings
 
 ### 🔍 ค้นหาข้ามแพลตฟอร์ม
