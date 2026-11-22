@@ -83,3 +83,10 @@ NexusTube เป็นแอป Electron (main + preload + renderer) ที่�
 - Package ที่แนบ release: Setup exe, Portable exe, `latest.yml`, `.blockmap`, `version.json`, `app-update.zip`
 - GitHub Actions: `ci.yml` (test ทุก push สาย main), `release.yml` (build + attach ไฟล์อัตโนมัติเมื่อ push tag `v*`)
 - เวอร์ชันปรับพร้อมกัน 2 ที่: `package.json` และ `src/main/config.js` (`VERSION`)
+
+## ค้นหาข้ามแพลตฟอร์ม & ตั้งค่า (v3.10.0)
+
+- `searchAll(query, engine)`: YouTube (yt-dlp ytsearch) + Apple Music (iTunes Search API) — dedupe ตามชื่อ+ศิลปิน, badge แหล่งที่มา
+- `resolveAppleToYoutube`: ลิงก์ Apple Music → คลิปคู่บน YouTube + คง metadata ของ Apple
+- เว็บโหลด: op `set_settings` (whitelist: max_concurrent 1–6, embed_thumb/meta/lyrics, sponsorblock, normalize) + toggle ภาษา th/en (localStorage)
+- `DownloadManager.maxConcurrent` เป็น getter อ่าน config สด — ปรับได้ขณะรัน

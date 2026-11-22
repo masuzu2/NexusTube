@@ -5,6 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [3.10.0] - 2026-11-22 — Cross-Platform Search & Download Settings
+
+### 🔍 ค้นหาข้ามแพลตฟอร์ม
+- ค้นหาครั้งเดียวได้ผลจาก **YouTube + Apple Music** (iTunes Search API สาธารณะ) — dedupe ตามชื่อ+ศิลปินอัตโนมัติ
+- badge แหล่งที่มาบนผลค้นหา (▶ YouTube / ♪ Apple Music)
+- วางลิงก์ Apple Music → หาคลิปคู่บน YouTube ให้อัตโนมัติแล้วคง metadata คุณภาพสูงของ Apple
+- กันค้นหาชนตอน self-update กำลังแทนที่ yt-dlp (gate รอ engine พร้อม)
+
+### ⚙️ ตั้งค่าในเว็บโหลด (ใหม่)
+- ฝังภาพปก / metadata / เนื้อเพลง / SponsorBlock / normalize — เปลี่ยนแล้วบันทึกทันที
+- **จำนวนดาวน์โหลดพร้อมกันปรับได้ 1–6** (เดิมล็อก 3 ตายตัว) อ่านสดจาก config
+
+### 🧰 Desktop
+- เมนู tray ใหม่: **🌐 เปิดเว็บโหลดเพลง** (เปิดเบราว์เซอร์ 127.0.0.1:8787 ให้เลย)
+- เมนู tray: **🐞 รายงานปัญหา…** — เปิด GitHub Issues พร้อม log 60 บรรทัดล่าสุด (opt-in)
+
+### 🌐 เว็บโหลดสองภาษา
+- toggle ไทย/English ทั้งหน้า (จำความต้องการไว้) — queue, ตั้งค่า, สถานะงาน, ปุ่มทุกตัว
+
+---
 ## [3.9.2] - 2026-11-22 — Update Progress UI
 
 - **แถบสถานะอัปเดตถาวร** (update pill): แทน toast ที่ระเบิดทุก chunk ระหว่างดาวน์โหลด — เห็น % แบบเรียลไทม์ในแถบเดียว พร้อม progress bar ไล่สี ม่วง→เขียว, indeterminate ตอนติดตั้ง, เปลี่ยนสีตามผลสำเร็จ/ล้มเหลว

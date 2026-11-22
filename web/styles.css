@@ -2049,3 +2049,51 @@ header {
 .update-pill[data-status="error"] .update-pill-fill {
   background: #FDA4AF;
 }
+
+/* ── Source badge (cross-platform search results) ────────────────── */
+.src-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.src-youtube { background: rgba(255, 0, 0, 0.15); color: #ff6b6b; }
+.src-apple { background: rgba(250, 115, 200, 0.18); color: #fa73c8; }
+
+/* ── Settings block (download site sidebar) ─────────────────────── */
+.settings-block {
+  display: grid;
+  gap: 7px;
+  padding: 14px 16px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.settings-title {
+  font-size: 13px;
+  opacity: 0.7;
+}
+.settings-block .chk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.settings-block .chk input {
+  accent-color: #8B5CF6;
+}
+.settings-block .chk-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.settings-block select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 0;
+  border-radius: 8px;
+  padding: 4px 8px;
+  color: inherit;
+  outline: none;
+}

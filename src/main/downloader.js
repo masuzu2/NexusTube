@@ -19,11 +19,16 @@ class DownloadManager {
     this.config = configManager;
     this.tasks = [];
     this.taskCounter = 0;
-    this.maxConcurrent = 3;
     this.activeWorkers = 0;
     this.queuePath = path.join(this.config.appdataDir, 'queue.json');
     this._saveTimer = null;
     this.restoreQueue();
+  }
+
+  // จำนวนงานพร้อมกันอ่านจาก config ทุกครั้ง — ปรับได้สดจากหน้าเว็บ/ตั้งค่า (1–6)
+  get maxConcurrent() {
+    const n = Number(this.config.get('max_concurrent', 3));
+    return Math.min(6, Math.max(1, Number.isFinite(n) ? Math.round(n) : 3));
   }
 
   // ── คิวอยู่รอดข้ามการปิดแอป ────────────────────────────────────────

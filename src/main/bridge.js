@@ -7,7 +7,7 @@
 const { clipboard, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { searchYoutube, resolveUrl } = require('./resolver');
+const { searchYoutube, searchAll, resolveAppleToYoutube, resolveUrl } = require('./resolver');
 const { scanLibrary, deleteFile, exportM3u8Playlist, trimAudioFile, convertTrack } = require('./library');
 const { fetchLyrics, searchLyrics, saveLrc } = require('./lyrics');
 const { VERSION, LOCALES, ACCENT_PALETTE, EQ_PRESETS } = require('./config');
@@ -121,7 +121,8 @@ class NexusBridgeAPI {
   // ── 2. Search & URL Resolvers ──────────────────────────────────────────────
 
   async search_youtube(query) {
-    return searchYoutube(query, this.engine);
+    // ค้นหาข้ามแพลตฟอร์ม: YouTube + Apple Music (iTunes Search) — dedupe แล้ว
+    return searchAll(query, this.engine);
   }
 
   async resolve_url(url) {
@@ -130,7 +131,15 @@ class NexusBridgeAPI {
 
   // ── 3. Download Queue Operations ───────────────────────────────────────────
 
-  add_to_queue(url, title = "", fmt_choice = "mp3_320", options = {}, metadata = null) {
+  async add_to_queue(url, title = "", fmt_choice = "mp3_320", options = {}, metadata = null) {
+    // ลิงก์ Apple Music โหลดตรงไม่ได้ → หาคลิปคู่บน YouTube แล้วคง metadata ของ Apple ไว้
+    try {
+      const resolved = await resolveAppleToYoutube(url, title || (metadata && metadata.title), this.engine);
+      if (resolved) {
+        url = resolved.url;
+        metadata = { ...(metadata || {}), source: 'apple_music' };
+      }
+    } catch {}
     return this.downloader.addToQueue(url, title, fmt_choice, options, metadata);
   }
 

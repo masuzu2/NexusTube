@@ -15,7 +15,7 @@ const { spawn } = require('child_process');
 const { ConfigManager } = require('./config');
 const { EngineManager } = require('./engine');
 const { DownloadManager } = require('./downloader');
-const { searchYoutube } = require('./resolver');
+const { searchYoutube, searchAll, resolveAppleToYoutube } = require('./resolver');
 const { isInsideDir } = require('./download-plan');
 
 const VERSION = require('./config').VERSION || '3.9.0';
@@ -100,6 +100,13 @@ function startWebServer(options = {}) {
     fs.createReadStream(file).pipe(res);
   }
 
+  // กันค้นหาชนตอน self-update กำลังแทนที่ yt-dlp.exe (ช่วง startup) — รอเครื่องมือพร้อมก่อนเสมอ
+  async function ensureSearchReady() {
+    try {
+      if (!engine.getStatus().ytdlp_ready) await engine.ensureEngines();
+    } catch {}
+  }
+
   async function handleApi(req, res) {
     if (req.headers['x-nexus-token'] !== token) {
       sendJson(res, 403, { error: 'เปิดหน้าเว็บจากเครื่องนี้เท่านั้น' });
@@ -118,26 +125,61 @@ function startWebServer(options = {}) {
         sendJson(res, 200, {
           format: FORMATS.has(config.get('format')) ? config.get('format') : 'mp3_320',
           engines: engine.getStatus(),
-          outdir: config.get('outdir')
+          outdir: config.get('outdir'),
+          settings: {
+            max_concurrent: Number(config.get('max_concurrent', 3)) || 3,
+            embed_thumb: Boolean(config.get('embed_thumb', true)),
+            embed_meta: Boolean(config.get('embed_meta', true)),
+            embed_lyrics: Boolean(config.get('embed_lyrics', false)),
+            sponsorblock: Boolean(config.get('sponsorblock', false)),
+            normalize: Boolean(config.get('normalize', false))
+          }
         });
         return;
       }
+      if (op === 'set_settings') {
+        // whitelist เท่านั้น — ไม่รับ key อื่นเด็ดขาด
+        const ALLOWED = new Set(['max_concurrent', 'embed_thumb', 'embed_meta', 'embed_lyrics', 'sponsorblock', 'normalize']);
+        const changed = {};
+        for (const [key, value] of Object.entries(body.settings || {})) {
+          if (!ALLOWED.has(key)) continue;
+          if (key === 'max_concurrent') {
+            const n = Math.min(6, Math.max(1, Math.round(Number(value) || 3)));
+            config.set('max_concurrent', n);
+            changed[key] = n;
+          } else {
+            config.set(key, Boolean(value));
+            changed[key] = Boolean(value);
+          }
+        }
+        sendJson(res, 200, { ok: true, settings: changed });
+        return;
+      }
       if (op === 'search') {
+        await ensureSearchReady();
         const query = String(body.query || '').trim().slice(0, 200);
-        const items = query ? await searchYoutube(query, engine) : [];
-        sendJson(res, 200, items.slice(0, 12).map((item) => ({
+        const items = query ? await searchAll(query, engine) : [];
+        sendJson(res, 200, items.slice(0, 15).map((item) => ({
           title: item.title || '',
           channel: item.channel || '',
           url: item.url || '',
           thumbnail: /^https?:\/\//i.test(item.thumbnail || '') ? item.thumbnail : '',
-          duration: Number(item.duration) || 0
+          duration: Number(item.duration) || 0,
+          source: item.source || 'youtube'
         })));
         return;
       }
       if (op === 'add') {
+        await ensureSearchReady();
         const format = FORMATS.has(body.format) ? body.format : 'mp3_320';
         const title = String(body.title || '').slice(0, 300);
-        sendJson(res, 200, downloads.addToQueue(body.url, title, format, {}, null));
+        let url = String(body.url || '').trim();
+        // Apple Music โหลดตรงไม่ได้ → หาคลิปคู่บน YouTube แล้วคง metadata ของ Apple
+        try {
+          const resolved = await resolveAppleToYoutube(url, title, engine);
+          if (resolved) url = resolved.url;
+        } catch {}
+        sendJson(res, 200, downloads.addToQueue(url, title, format, {}, null));
         return;
       }
       if (op === 'queue') {

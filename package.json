@@ -1,6 +1,6 @@
 {
   "name": "nexustube",
-  "version": "3.9.2",
+  "version": "3.10.0",
   "description": "NexusTube — Next-Gen YouTube & Multi-Platform Music Suite & Studio Desktop Player (Electron Edition)",
   "main": "index.js",
   "scripts": {

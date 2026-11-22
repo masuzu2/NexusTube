@@ -486,10 +486,81 @@ async function resolveUrl(url, engineManager) {
   return { platform: plat, type: pType, url, title: url };
 }
 
+// ── ค้นหาข้ามแพลตฟอร์ม ──────────────────────────────────────────────
+
+/** กุญแจเทียบชื่อหยาบ ๆ สำหรับ dedupe ผลค้นหาข้ามแพลตฟอร์ม */
+function normalizeSearchKey(title, channel) {
+  return String(title || '').toLowerCase()
+    .replace(/\((official|lyric[s]?|audio|mv|visualizer|remaster(ed)?)[^)]*\)/g, '')
+    .replace(/\[(official|lyric[s]?|audio|mv|4k|hd)[^\]]*\]/g, '')
+    .replace(/feat\.?.*$/g, '')
+    .replace(/[^a-z0-9฀-๿ ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim() + '|' + String(channel || '').toLowerCase().trim();
+}
+
+/** ค้นหาแคตตาล็อก Apple Music ผ่าน iTunes Search API (สาธารณะ ไม่ต้องมี key) */
+async function searchAppleMusic(query, limit = 6) {
+  if (!query) return [];
+  const res = await fetchHttp(
+    `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=${limit}`,
+    {}, 8000
+  );
+  if (!res || res.status !== 200) return [];
+  try {
+    const data = JSON.parse(res.text);
+    return (data.results || []).map((r) => ({
+      id: `am-${r.trackId}`,
+      title: r.trackName || '',
+      channel: r.artistName || '',
+      duration: r.trackTimeMillis ? Math.round(r.trackTimeMillis / 1000) : 0,
+      thumbnail: r.artworkUrl100 ? String(r.artworkUrl100).replace('100x100', '300x300') : '',
+      url: r.trackViewUrl || '',
+      album: r.collectionName || '',
+      source: 'apple_music'
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** ค้นหาหลายแพลตฟอร์มพร้อมกัน: YouTube (โหลดได้จริง) + Apple Music (ข้อมูลแม่น) — dedupe ตามชื่อ+ศิลปิน */
+async function searchAll(query, engineManager) {
+  const [yt, am] = await Promise.all([
+    searchYoutube(query, engineManager),
+    searchAppleMusic(query).catch(() => [])
+  ]);
+  const ytItems = (yt || []).map((i) => ({ ...i, source: 'youtube' }));
+  const seen = new Set(ytItems.map((i) => normalizeSearchKey(i.title, i.channel)));
+  const amUnique = (am || []).filter((i) => {
+    const key = normalizeSearchKey(i.title, i.channel);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return [...ytItems, ...amUnique].slice(0, 15);
+}
+
+/**
+ * ลิงก์ Apple Music โหลดตรงไม่ได้ → หา "คลิปเดียวกันบน YouTube" แล้วคืน URL นั้น
+ * พร้อมคง metadata คุณภาพสูงของ Apple (ชื่อเพลง/ศิลปิน/ปก แม่นกว่า YouTube)
+ * คืน null ถ้าหาคลิปคู่ไม่เจอ
+ */
+async function resolveAppleToYoutube(url, title, engineManager) {
+  const [plat] = detectPlatformUrl(url);
+  if (plat !== 'apple_music') return null;
+  const items = await searchYoutube(String(title || '').slice(0, 120) || url, engineManager);
+  if (!items || !items.length) return null;
+  return { url: items[0].url, youtubeId: items[0].id };
+}
+
 module.exports = {
   cleanMusicTitle,
   parseMusicMetadata,
   detectPlatformUrl,
   searchYoutube,
+  searchAppleMusic,
+  searchAll,
+  resolveAppleToYoutube,
   resolveUrl
 };

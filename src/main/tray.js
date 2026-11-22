@@ -4,10 +4,51 @@
  * and background minimize-to-tray handling.
  */
 
-const { Tray, Menu, nativeImage, globalShortcut, app } = require('electron');
+const { Tray, Menu, nativeImage, globalShortcut, app, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
+const { spawn } = require('child_process');
 const { VERSION } = require('./config');
+
+/** เปิดเว็บโหลดเพลงในเบราว์เซอร์ (server มากับแอป — เปิดแอปไว้ = ใช้ได้เลย) */
+function openWebDownload() {
+  try {
+    spawn('cmd', ['/c', 'start', '', 'http://127.0.0.1:8787'], { windowsHide: true, detached: true, stdio: 'ignore' }).unref();
+  } catch {}
+}
+
+/** รายงานปัญหา: เปิดหน้า GitHub Issues พร้อม log ล่าสุดฝังในเนื้อรายงาน (opt-in — ไม่ส่งเองแน่นอน) */
+function createIssueReport() {
+  try {
+    const logsDir = path.join(process.env.APPDATA || os.homedir(), 'NexusTube', 'logs');
+    const d = new Date();
+    const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const logPath = path.join(logsDir, `app-${ymd}.log`);
+    let tail = '';
+    try {
+      const lines = fs.readFileSync(logPath, 'utf8').split('\n').filter(Boolean);
+      tail = lines.slice(-60).join('\n').slice(-6000);
+    } catch {}
+    const body = [
+      '**อาการที่เจอ:** (เขียนอาการสั้น ๆ ตรงนี้)',
+      '',
+      '**ข้อมูลระบบ**',
+      `- NexusTube v${VERSION}`,
+      `- Windows: ${os.release()}`,
+      `- วันที่: ${new Date().toISOString()}`,
+      '',
+      '**Log ล่าสุด (60 บรรทัดท้าย)**',
+      '```',
+      tail || '(ไม่มี log วันนี้)',
+      '```'
+    ].join('\n');
+    const url = 'https://github.com/masuzu2/NexusTube/issues/new?title='
+      + encodeURIComponent(`[Bug] ปัญหาการใช้งาน v${VERSION}`)
+      + '&body=' + encodeURIComponent(body);
+    shell.openExternal(url);
+  } catch {}
+}
 
 class TrayManager {
   constructor(mainWindow, playerManager, configManager, onToggleMini = null) {
@@ -62,6 +103,15 @@ class TrayManager {
         {
           label: "⏮ Previous Track",
           click: () => this.player.playerControl("prev")
+        },
+        { type: "separator" },
+        {
+          label: "🌐 เปิดเว็บโหลดเพลง",
+          click: () => openWebDownload()
+        },
+        {
+          label: "🐞 รายงานปัญหา…",
+          click: () => createIssueReport()
         },
         { type: "separator" },
         {

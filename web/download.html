@@ -94,29 +94,48 @@
   <div class="app">
     <aside>
       <div class="side-head">
-        <h1>คิวโหลด</h1>
-        <button type="button" id="clear-done" class="quiet">ล้างที่จบ</button>
+        <h1 data-i18n="queue.title">คิวโหลด</h1>
+        <select id="lang" aria-label="ภาษา" style="background:rgba(255,255,255,.1);border:0;border-radius:8px;color:inherit;padding:4px 6px;outline:none">
+          <option value="th">ไทย</option>
+          <option value="en">EN</option>
+        </select>
+        <button type="button" id="clear-done" class="quiet" data-i18n="clear.done">ล้างที่จบ</button>
       </div>
       <hr>
-      <div id="queue" class="empty">ยังไม่มีงาน</div>
+      <div id="queue" class="empty" data-i18n="queue.empty">ยังไม่มีงาน</div>
       <div class="folder">
-        <input id="folder" type="text" aria-label="โฟลเดอร์เก็บไฟล์">
-        <button type="button" id="save-folder" class="quiet">ตั้งโฟลเดอร์</button>
-        <button type="button" id="open-folder" class="quiet">เปิดโฟลเดอร์</button>
+        <input id="folder" type="text" data-i18n-ph="folder.ph" aria-label="โฟลเดอร์เก็บไฟล์">
+        <button type="button" id="save-folder" class="quiet" data-i18n="folder.save">ตั้งโฟลเดอร์</button>
+        <button type="button" id="open-folder" class="quiet" data-i18n="folder.open">เปิดโฟลเดอร์</button>
+      </div>
+      <div class="settings-block">
+        <div class="settings-title" data-i18n="settings.title">⚙️ ตั้งค่า</div>
+        <label class="chk"><input type="checkbox" id="set-thumb"> <span data-i18n="settings.thumb">ฝังภาพปก</span></label>
+        <label class="chk"><input type="checkbox" id="set-meta"> <span data-i18n="settings.meta">ฝัง metadata</span></label>
+        <label class="chk"><input type="checkbox" id="set-lyrics"> <span data-i18n="settings.lyrics">ฝังเนื้อเพลง</span></label>
+        <label class="chk"><input type="checkbox" id="set-sponsor"> <span data-i18n="settings.sponsor">ตัดช่วง sponsor (SponsorBlock)</span></label>
+        <label class="chk"><input type="checkbox" id="set-normalize"> <span data-i18n="settings.normalize">ปรับความดังให้สม่ำเสมอ</span></label>
+        <label class="chk-inline"><span data-i18n="conc.pre">โหลดพร้อมกัน</span>
+          <select id="set-conc">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+          </select> <span data-i18n="conc.post">งาน</span>
+        </label>
+        <div id="settings-note" class="quiet" style="min-height:1em"></div>
       </div>
     </aside>
     <main>
       <div class="top">
         <div>
           <div class="brand">NexusTube</div>
-          <div class="engines">หน้านี้ใช้โหลดอย่างเดียว เครื่องเล่นอยู่ในโปรแกรม</div>
+          <div class="engines" data-i18n="header.note">หน้านี้ใช้โหลดอย่างเดียว เครื่องเล่นอยู่ในโปรแกรม</div>
         </div>
-        <div class="engines"><span id="engine-dot" class="dot"></span><span id="engine-text">กำลังตรวจเครื่องมือ</span></div>
+        <div class="engines"><span id="engine-dot" class="dot"></span><span id="engine-text" data-i18n="engine.checking">กำลังตรวจเครื่องมือ</span></div>
       </div>
       <div class="search-wrap">
         <form id="grab">
-          <input id="query" type="text" placeholder="ค้นหาเพลง" autocomplete="off" required>
-          <button type="submit" id="go">โหลด</button>
+          <input id="query" type="text" data-i18n-ph="search.ph" placeholder="ค้นหาเพลง" autocomplete="off" required>
+          <button type="submit" id="go" data-i18n="go">โหลด</button>
         </form>
         <select id="format" aria-label="รูปแบบไฟล์">
           <option value="mp3_320">MP3 320k</option>
@@ -131,6 +150,6 @@
       <div id="results"></div>
     </main>
   </div>
-  <script src="download.js?v=5"></script>
+  <script src="download.js?v=7"></script>
 </body>
 </html>
