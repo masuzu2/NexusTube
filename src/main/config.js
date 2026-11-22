@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const VERSION = "3.9.1";
+const VERSION = "3.9.2";
 
 const DEFAULT_CONFIG = {
   accent: "#8B5CF6",

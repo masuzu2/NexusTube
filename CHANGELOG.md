@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [3.9.2] - 2026-11-22 — Update Progress UI
+
+- **แถบสถานะอัปเดตถาวร** (update pill): แทน toast ที่ระเบิดทุก chunk ระหว่างดาวน์โหลด — เห็น % แบบเรียลไทม์ในแถบเดียว พร้อม progress bar ไล่สี ม่วง→เขียว, indeterminate ตอนติดตั้ง, เปลี่ยนสีตามผลสำเร็จ/ล้มเหลว
+- ลิงก์ดาวน์โหลดบนเว็บ portal เป็นแบบ dynamic ดึงจาก GitHub API — เปลี่ยนเวอร์ชันกี่ครั้งปุ่มก็ถูกต้องเสมอ
+
+---
 ## [3.9.1] - 2026-11-22 — Hardened Build
 
 รีลีส build ใหม่ให้ผู้ใช้ที่ติดตั้ง 3.9.0 ไว้ก่อนหน้า ผ่านระบบ auto-update (เวอร์ชันเดิมเลขเดียวกัน อัปเดตไม่ trigger) — build นี้มีครบ:
